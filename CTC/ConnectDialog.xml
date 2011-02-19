@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Dialog Name="Connect">
+  <Title xml:lang="en">Connect</Title>
+  <Dimensions Width="400" Height="200" Resizable="False"></Dimensions>
+  
+  <Element ID="Close"></Element>
+
+  <Element Type="Label" Align="Right">
+    <Position X="20" Y="20" Width="100"></Position>
+    <Text xml:lang="en">Server</Text>
+  </Element>
+  <Element ID="Server" Type="ComboBox">
+    <Position X="140" Y="20" Width="100"></Position>
+    <Text xml:lang="en">localhost</Text>
+  </Element>
+
+  <Element Type="Label" Align="Right">
+    <Position X="20" Y="45" Width="100"></Position>
+    <Text xml:lang="en">Account</Text>
+  </Element>
+  <Element ID="Account" Type="TextInput">
+    <Position X="140" Y="45" Width="100"></Position>
+    <Text xml:lang="en"></Text>
+  </Element>
+
+  <Element Type="Label" Align="Right">
+    <Position X="20" Y="70" Width="100"></Position>
+    <Text xml:lang="en">Password</Text>
+  </Element>
+  <Element ID="Password" Type="TextInput" Hidden="True">
+    <Position X="140" Y="70" Width="100"></Position>
+    <Text xml:lang="en"></Text>
+  </Element>
+
+  <Element ID="Login" Type="Button">
+    <Position X="50" Y="100" Width="60"></Position>
+    <Text xml:lang="en">Login</Text>
+  </Element>
+  
+  <Element ID="BrowseMovie" Type="Button">
+    <Position X="110" Y="100" Width="60"></Position>
+    <Text xml:lang="en">Open Movie</Text>
+  </Element>
+</Dialog>

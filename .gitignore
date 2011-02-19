@@ -1,0 +1,6 @@
+#Visual studio files
+*.suo
+*.cachefile
+*Thumbs.db
+bin/x86/
+obj/x86/

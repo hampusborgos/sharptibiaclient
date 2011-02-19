@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Skin Version="1">
+  <Config>
+    <Name short="Default" xml:lang="en">Default Tibia Skin</Name>
+    <Author href="http://tibia.com" email="contact@cipsoft.com">CIPSoft</Author>
+    <Description xml:lang="en">This is the default skin that Tibia has been using since version 7.0.</Description>
+    <Miniature>Minature.bmp</Miniature>
+  </Config>
+  
+  <Spritesheet Name="Background" File="Sheets/0.bmp"></Spritesheet>
+  <Spritesheet Name="Main" File="Sheets/3.bmp"></Spritesheet>
+  
+  <Element name="Frame" UseSpriteMeasurements="True">
+    <Component Align="TopLeft">
+      <Sprite Sheet="Main" X="106" Y="183" W="4" H="17"></Sprite>
+    </Component>
+    <Component Align="Top">
+      <Sprite Sheet="Main" X="114" Y="183" W="96" H="17"></Sprite>
+    </Component>
+    <Component Align="TopRight">
+      <Sprite Sheet="Main" X="110" Y="183" W="4" H="17"></Sprite>
+    </Component>
+    e.Set(UISkinOrientation.Left,          new Rectangle(256,       0,      4,      96));
+    e.Set(UISkinOrientation.Center,        new Rectangle(0,	        0,		96,		96));
+    e.Set(UISkinOrientation.Right,         new Rectangle(260,	    0,	    4,		96));
+    e.Set(UISkinOrientation.BottomLeft,    new Rectangle(98,        193,	4,		4));
+    e.Set(UISkinOrientation.Bottom,        new Rectangle(2,	        193,	96,		4));
+    e.Set(UISkinOrientation.BottomRight,   new Rectangle(102,       193,	4,		4));
+  </Element>
+</Skin>

@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Protocols>
+  <TibiaVersion id="740">
+    <!-- General -->
+    <Packet type="0x14" parser="ErrorMessage"></Packet>
+    <Packet type="0x15" parser="MOTD"></Packet>
+    <Packet type="0x1E" parser="Ping"></Packet>
+    
+    <!-- UI hints -->
+    <Packet type="0x32" parser="CanReport"></Packet>
+    <Packet type="0x28" parser="Death"></Packet>
+
+    <!-- Player -->
+    <Packet type="0x0A" name="PlayerLogin" parser="PlayerLogin"></Packet>
+    <Packet type="0xA0" parser="UpdateStats"></Packet>
+    <Packet type="0xA1" parser="UpdateSkills"></Packet>
+    <Packet type="0xA2" parser="PlayerIcons"></Packet>
+    <Packet type="0xA3" parser="CancelAttack"></Packet>
+    <Packet type="0xB5" parser="CancelWalk"></Packet>
+
+    <!-- Inventory -->
+    <Packet type="0x78" parser="UpdateInventory"></Packet>
+    <Packet type="0x79" parser="ClearInventory"></Packet>
+    <Packet type="0x6E" parser="OpenContainer"></Packet>
+    <Packet type="0x6F" parser="CloseContainer"></Packet>
+    <Packet type="0x70" parser="ContainerAddItem"></Packet>
+    <Packet type="0x71" parser="ContainerTransformItem"></Packet>
+    <Packet type="0x72" parser="ContainerRemoveItem"></Packet>
+    
+    <!-- Creature -->
+    <Packet type="0x63" parser="CreatureTurn"></Packet>
+    <Packet type="0x6D" parser="CreatureMove"></Packet>
+    <Packet type="0x8C" parser="CreatureHealth"></Packet>
+    <Packet type="0x8D" parser="CreatureLight"></Packet>
+    <Packet type="0x8E" parser="CreatureRefresh"></Packet>
+    <Packet type="0x8F" parser="CreatureSpeed"></Packet>
+    <Packet type="0x90" parser="CreatureSkull"></Packet>
+    <Packet type="0x91" parser="CreatureShield"></Packet>
+
+    <!-- Chat -->
+    <Packet type="0xAA" parser="CreatureSpeak"></Packet>
+    <Packet type="0xAB" parser="ChannelList"></Packet>
+    <Packet type="0xAC" parser="OpenChannel"></Packet>
+    <Packet type="0xAD" parser="OpenPrivateChat"></Packet>
+    <Packet type="0xB4" parser="TextMessage"></Packet>
+    
+    <!-- VIP -->
+    <Packet type="0xD2" parser="VIPState"></Packet>
+    <Packet type="0xD3" parser="VIPLogin"></Packet>
+    <Packet type="0xD4" parser="VIPLogout"></Packet>
+    
+    <!-- Effects -->
+    <Packet type="0x82" parser="WorldLight"></Packet>
+    <Packet type="0x83" parser="Effect"></Packet>
+    <Packet type="0x84" parser="AnimatedText"></Packet>
+    <Packet type="0x85" parser="ShootEffect"></Packet>
+    <Packet type="0x86" parser="SquareEffect"></Packet>
+
+    <!-- Movement -->
+    <Packet type="0x65" parser="MoveNorth"></Packet>
+    <Packet type="0x66" parser="MoveEast"></Packet>
+    <Packet type="0x67" parser="MoveSouth"></Packet>
+    <Packet type="0x68" parser="MoveWest"></Packet>
+    <Packet type="0xBE" parser="FloorUp"></Packet>
+    <Packet type="0xBF" parser="FloorDown"></Packet>
+
+    <!-- Map -->
+    <Packet type="0x64" parser="MapDescription"></Packet>
+    <Packet type="0x69" parser="RefreshTile"></Packet>
+    <Packet type="0x6A" parser="AddThing"></Packet>
+    <Packet type="0x6B" parser="TransformThing"></Packet>
+    <Packet type="0x6C" parser="RemoveThing"></Packet>
+    
+    <!-- Rule violation -->
+    <Packet type="0xAE" parser="RuleViolationChannel"></Packet>
+    <Packet type="0xAF" parser="RuleViolationRemove"></Packet>
+    <Packet type="0xB0" parser="RuleViolationCancel"></Packet>
+    <Packet type="0xB1" parser="RuleViolationLock"></Packet>
+    
+  </TibiaVersion>
+  <TibiaVersion id="741">
+    
+  </TibiaVersion>
+</Protocols>
