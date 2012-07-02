@@ -66,6 +66,7 @@ namespace CTC
                 );
             }
         }
+
         public Rectangle ScreenBounds
         {
             get
@@ -76,7 +77,23 @@ namespace CTC
                 return new Rectangle(ParentBounds.X + Bounds.X, ParentBounds.Y + Bounds.Y, Bounds.Width, Bounds.Height);
             }
         }
+
         public Rectangle Bounds;
+
+        public virtual Rectangle ScreenClientBounds
+        {
+            get
+            {
+                Rectangle sb = this.ScreenBounds;
+                Rectangle cb = this.ClientBounds;
+                return new Rectangle(
+                    sb.X + cb.X,
+                    sb.Y + cb.Y,
+                    cb.Width,
+                    cb.Height
+                );
+            }
+        }
 
         public UIPanel AddChildPanel(UIPanel panel)
         {

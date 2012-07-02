@@ -22,8 +22,8 @@ namespace CTC
         public ClientState(PacketStream InStream)
         {
             this.InStream = InStream;
-            FileStream datFile = new FileStream("C:\\Users\\Nor\\Documents\\TibiaRC\\Tibia.dat", FileMode.Open);
-            FileStream sprFile = new FileStream("C:\\Users\\Nor\\Documents\\TibiaRC\\Tibia.spr", FileMode.Open);
+            FileStream datFile = new FileStream("C:\\Users\\hjn\\Documents\\TibiaRC\\Tibia.dat", FileMode.Open);
+            FileStream sprFile = new FileStream("C:\\Users\\hjn\\Documents\\TibiaRC\\Tibia.spr", FileMode.Open);
             GameData = new TibiaGameData(datFile, sprFile);
             Protocol = new TibiaGameProtocol(GameData);
             Viewport = new ClientViewport(GameData, Protocol);

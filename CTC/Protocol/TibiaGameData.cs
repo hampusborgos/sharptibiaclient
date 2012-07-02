@@ -60,7 +60,7 @@ namespace CTC
                 if (ID >= ItemCount + CreatureCount)
                     sType.AnimationSpeed = 100;
                 if (ID >= ItemCount && ID < ItemCount + CreatureCount)
-                    ;// sType.RenderOffset = -16;
+                    { };// sType.RenderOffset = -16;
 
 		        // read the options until we find a 0xff
 		        byte lastopt;

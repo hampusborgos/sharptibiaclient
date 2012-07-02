@@ -19,6 +19,7 @@ namespace CTC
         Feet = 8,
         Ring = 9,
         Ammo = 10,
+        Last = Ammo,
     };
 
     public enum PlayerStat

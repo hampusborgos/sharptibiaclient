@@ -4,3 +4,5 @@
 *Thumbs.db
 bin/x86/
 obj/x86/
+obj/
+bin/

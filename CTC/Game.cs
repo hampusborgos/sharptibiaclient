@@ -68,7 +68,7 @@ namespace CTC
             ///////////////////////////////////////////////////////////////////
             // For debugging
 
-            FileInfo file = new FileInfo("C:\\Users\\Nor\\Documents\\TibiaRC\\Xyvero.tmv");
+            FileInfo file = new FileInfo("C:\\Users\\hjn\\Documents\\TibiaRC\\Xyvero.tmv");
             Stream virtualStream = null;
 
             FileStream fileStream = file.OpenRead();

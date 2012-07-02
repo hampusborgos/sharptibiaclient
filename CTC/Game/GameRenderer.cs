@@ -23,7 +23,6 @@ namespace CTC
     class GameRenderer
     {
         TibiaGameData GameData;
-        SpriteBatch Batch;
         GraphicsDevice Device;
         UIContext Context;
 
@@ -45,7 +44,7 @@ namespace CTC
             return c;
         }
 
-        private void DrawImage(GameImage Image, Rectangle dest, Color clr)
+        private void DrawImage(SpriteBatch Batch, GameImage Image, Rectangle dest, Color clr)
         {
             if (Image.Texture == null)
             {
@@ -57,13 +56,13 @@ namespace CTC
             Batch.Draw(Image.Texture, dest, clr);
         }
 
-        public void DrawSprite(GameTime Time, ClientTile Tile, GameSprite Sprite, int SubType, int Frame, Vector2 Position, Color clr)
+        public void DrawSprite(SpriteBatch Batch, GameTime Time, ClientTile Tile, GameSprite Sprite, int SubType, int Frame, Vector2 Position, Color clr)
         {
             Vector2 tmp = Position;
-            DrawSprite(Time, Tile, Sprite, SubType, Frame, ref tmp, clr);
+            DrawSprite(Batch, Time, Tile, Sprite, SubType, Frame, ref tmp, clr);
         }
 
-        public void DrawSprite(GameTime Time, ClientTile Tile, GameSprite Sprite, int SubType, int Frame, ref Vector2 Position, Color clr)
+        public void DrawSprite(SpriteBatch Batch, GameTime Time, ClientTile Tile, GameSprite Sprite, int SubType, int Frame, ref Vector2 Position, Color clr)
         {
             if (Sprite == null)
                 return;
@@ -143,7 +142,7 @@ namespace CTC
                         );
 
                         Rectangle rect = new Rectangle((int)Offset.X - 32 * cx, (int)Offset.Y - 32 * cy, 32, 32);
-                        DrawImage(Image, rect, clr);
+                        DrawImage(Batch, Image, rect, clr);
                     }
                 }
             }
@@ -155,11 +154,11 @@ namespace CTC
             }
         }
 
-        public void DrawCreature(GameTime Time, ClientCreature Creature, Vector2 Offset, Color clr)
+        public void DrawCreature(SpriteBatch Batch, GameTime Time, ClientCreature Creature, Vector2 Offset, Color clr)
         {
             if (Creature.Outfit.LookItem != 0)
             {
-                DrawSprite(Time, null, GameData.GetItemSprite(Creature.Outfit.LookItem), 1, -1, Offset, clr);
+                DrawSprite(Batch, Time, null, GameData.GetItemSprite(Creature.Outfit.LookItem), 1, -1, Offset, clr);
             }
             else if (Creature.Outfit.LookType != 0)
             {
@@ -180,14 +179,14 @@ namespace CTC
                             );
 
                             Rectangle rect = new Rectangle((int)Offset.X - 32 * cx, (int)Offset.Y - 32 * cy, 32, 32);
-                            DrawImage(Image, rect, clr);
+                            DrawImage(Batch, Image, rect, clr);
                         }
                     }
                 }
             }
         }
 
-        public void DrawText(String Text, Vector2 Offset, Color Color)
+        public void DrawText(SpriteBatch Batch, String Text, Vector2 Offset, Color Color)
         {
             Batch.DrawString(
                 Context.StandardFont, Text, Offset,
@@ -196,16 +195,16 @@ namespace CTC
            );
         }
 
-        public void DrawBoldedText(String Text, Vector2 Offset, Color Primary)
+        public void DrawBoldedText(SpriteBatch Batch, String Text, Vector2 Offset, Color Primary)
         {
-            DrawText(Text, new Vector2(Offset.X + 1, Offset.Y), Color.Black);
-            DrawText(Text, new Vector2(Offset.X - 1, Offset.Y), Color.Black);
-            DrawText(Text, new Vector2(Offset.X, Offset.Y + 1), Color.Black);
-            DrawText(Text, new Vector2(Offset.X, Offset.Y - 1), Color.Black);
-            DrawText(Text, new Vector2(Offset.X, Offset.Y), Primary);
+            DrawText(Batch, Text, new Vector2(Offset.X + 1, Offset.Y), Color.Black);
+            DrawText(Batch, Text, new Vector2(Offset.X - 1, Offset.Y), Color.Black);
+            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y + 1), Color.Black);
+            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y - 1), Color.Black);
+            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y), Primary);
         }
 
-        public void DrawCreatureBars(ClientCreature Creature, Vector2 Offset)
+        public void DrawCreatureBars(SpriteBatch Batch, ClientCreature Creature, Vector2 Offset)
         {
             if (Creature.Name != "")
             {
@@ -222,27 +221,27 @@ namespace CTC
                 Offset.X += HealthOffset;
                 Offset.Y += HealthOffset;
                 */
-                DrawBoldedText(Creature.Name, Offset, Color.LightGreen);
+                DrawBoldedText(Batch, Creature.Name, Offset, Color.LightGreen);
             }
         }
 
-        public void DrawTile(GameTime Time, Vector2 Position, ClientTile Tile, TileAnimations Animations)
+        public void DrawTile(SpriteBatch Batch, GameTime Time, Vector2 Position, ClientTile Tile, TileAnimations Animations)
         {
             if (Tile == null)
                 return;
 
             // Draw ground
             if (Tile.Ground != null)
-                DrawSprite(Time, Tile, Tile.Ground.Sprite, Tile.Ground.Subtype, -1, ref Position, Color.White);
+                DrawSprite(Batch, Time, Tile, Tile.Ground.Sprite, Tile.Ground.Subtype, -1, ref Position, Color.White);
 
             foreach (ClientThing Thing in Tile.ObjectsByDrawOrder)
             {
                 if (Thing is ClientCreature)
-                    DrawCreature(Time, (ClientCreature)Thing, Position, Color.White);
+                    DrawCreature(Batch, Time, (ClientCreature)Thing, Position, Color.White);
                 else
                 {
                     ClientItem Item = (ClientItem)Thing;
-                    DrawSprite(Time, Tile, Item.Sprite, Item.Subtype, -1, ref Position, Color.White);
+                    DrawSprite(Batch, Time, Tile, Item.Sprite, Item.Subtype, -1, ref Position, Color.White);
                 }
             }
 
@@ -255,19 +254,19 @@ namespace CTC
                         if (Effect is MagicEffect)
                         {
                             MagicEffect Magic = (MagicEffect)Effect;
-                            DrawSprite(Time, Tile, Magic.Sprite, -1, Magic.Frame, Position, Color.White);
+                            DrawSprite(Batch, Time, Tile, Magic.Sprite, -1, Magic.Frame, Position, Color.White);
                         }
                         else if (Effect is DistanceEffect)
                         {
                             DistanceEffect Distance = (DistanceEffect)Effect;
-                            DrawSprite(Time, Tile, Distance.Sprite, Distance.Frame, 0, Position + Distance.Offset, Color.White);
+                            DrawSprite(Batch, Time, Tile, Distance.Sprite, Distance.Frame, 0, Position + Distance.Offset, Color.White);
                         }
                     }
                 }
             }
         }
 
-        public void DrawTileForeground(GameTime Time, Vector2 Offset, ClientTile Tile, TileAnimations Animations)
+        public void DrawTileForeground(SpriteBatch Batch, GameTime Time, Vector2 Offset, ClientTile Tile, TileAnimations Animations)
         {
             if (Tile == null)
                 return;
@@ -275,7 +274,7 @@ namespace CTC
             foreach (ClientThing Thing in Tile.Objects)
             {
                 if (Thing is ClientCreature)
-                    DrawCreatureBars((ClientCreature)Thing, Offset);
+                    DrawCreatureBars(Batch, (ClientCreature)Thing, Offset);
             }
 
             if (Animations != null)
@@ -285,7 +284,7 @@ namespace CTC
                     if (!Effect.Expired && Effect is AnimatedText)
                     {
                         AnimatedText Text = (AnimatedText)Effect;
-                        DrawBoldedText(Text.Text, Offset + Text.Offset, MakeColor(Text.Color));
+                        DrawBoldedText(Batch, Text.Text, Offset + Text.Offset, MakeColor(Text.Color));
                     }
                 }
             }
@@ -293,8 +292,6 @@ namespace CTC
 
         public void DrawSceneForeground(SpriteBatch Batch, Vector2 Scale, GameTime Time, ClientViewport Viewport, Dictionary<MapPosition, TileAnimations> PlayingAnimations = null)
         {
-            this.Batch = Batch;
-
             MapPosition Center = Viewport.ViewPosition;
 
             Vector2 TopLeft = new Vector2(
@@ -325,15 +322,13 @@ namespace CTC
                     TileAnimations Animations = null;
                     if (PlayingAnimations != null && Tile != null)
                         PlayingAnimations.TryGetValue(Tile.Position, out Animations);
-                    DrawTileForeground(Time, Offset, Tile, Animations);
+                    DrawTileForeground(Batch, Time, Offset, Tile, Animations);
                 }
             }
         }
 
         public void DrawScene(SpriteBatch Batch, GameTime Time, ClientViewport Viewport, Dictionary<MapPosition, TileAnimations> PlayingAnimations = null)
         {
-            this.Batch = Batch;
-
             MapPosition Center = Viewport.ViewPosition;
 
             Vector2 TopLeft = new Vector2(
@@ -365,7 +360,7 @@ namespace CTC
                         TileAnimations Animations = null;
                         if (PlayingAnimations != null && Tile != null)
                             PlayingAnimations.TryGetValue(Tile.Position, out Animations);
-                        DrawTile(Time, pos, Tile, Animations);
+                        DrawTile(Batch, Time, pos, Tile, Animations);
                     }
                 }
                 TopLeft -= new Vector2(32, 32);
