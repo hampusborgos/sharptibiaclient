@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
@@ -18,6 +19,7 @@ namespace CTC
         private Nullable<Rectangle> OldScissor;
         protected Boolean CropChildren = true;
         public Boolean Visible = true;
+        public Boolean InteractionEnabled = true;
         public int ZOrder = 0;
 
 
@@ -107,6 +109,29 @@ namespace CTC
             return panel;
         }
 
+        public virtual bool MouseMove(MouseState mouse)
+        {
+            return false;
+        }
+
+        public virtual bool MouseLeftClick(MouseState mouse)
+        {
+            if (!Visible)
+                return false;
+            if (!InteractionEnabled)
+                return false;
+            if (!ScreenBounds.Contains(new Point(mouse.X, mouse.Y)))
+                return false;
+
+            foreach (UIPanel child in Children)
+            {
+                if (child.MouseLeftClick(mouse))
+                    return true;
+            }
+
+            return false;
+        }
+
         public virtual void Update(GameTime time)
         {
             foreach (UIPanel panel in Children)
@@ -114,6 +139,8 @@ namespace CTC
                 panel.Update(time);
             }
         }
+
+        #region Drawing
 
         protected void BeginDraw()
         {
@@ -206,5 +233,7 @@ namespace CTC
                 panel.Draw(CurrentBatch);
             }
         }
+
+        #endregion
     }
 }

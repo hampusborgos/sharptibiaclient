@@ -20,6 +20,7 @@ namespace CTC
         GraphicsDeviceManager graphics;
 
         GameDesktop Desktop;
+        MouseState LastMouseState;
 
         public Game()
         {
@@ -100,7 +101,15 @@ namespace CTC
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            MouseState state = Mouse.GetState();
+            MouseState mouse = Mouse.GetState();
+
+            // Do input handling
+            if (LastMouseState != null)
+            {
+                if (LastMouseState.LeftButton != mouse.LeftButton)
+                    Desktop.MouseLeftClick(mouse);
+            }
+            LastMouseState = mouse;
 
             Desktop.Update(gameTime);
 

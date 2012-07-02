@@ -4,18 +4,37 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
     public class UIButton : UIPanel
     {
         public String Label;
+        public bool Highlighted = false;
 
         public UIButton(UIPanel Parent)
             : base(Parent)
         {
             ElementType = UIElementType.Button;
             Bounds = new Rectangle(0, 0, 32, 32);
+        }
+
+        public override bool MouseLeftClick(MouseState mouse)
+        {
+            if (mouse.LeftButton == ButtonState.Pressed)
+                Highlighted = true;
+            else
+                Highlighted = false;
+            return true;
+        }
+
+        protected override void DrawBorder(SpriteBatch CurrentBatch)
+        {
+            if (Highlighted)
+                Context.Skin.DrawBox(CurrentBatch, UIElementType.ButtonHighlight, ScreenBounds);
+            else
+                Context.Skin.DrawBox(CurrentBatch, UIElementType.Button, ScreenBounds);
         }
 
         protected override void DrawContent(SpriteBatch CurrentBatch)
