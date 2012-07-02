@@ -24,9 +24,6 @@ namespace CTC
 
             // Listener when window changes size
             Window.ClientSizeChanged += new EventHandler<EventArgs>(OnResize);
-
-            // Create all the panels we need
-            CreatePanels();
         }
 
         #region Data Members and Properties
@@ -206,7 +203,7 @@ namespace CTC
             ForegroundBatch = new SpriteBatch(Context.Graphics.GraphicsDevice);
         }
 
-        private void CreatePanels()
+        public void CreatePanels()
         {
             Taskbar = new TopTaskbar(this);
             AddSubview(Taskbar);

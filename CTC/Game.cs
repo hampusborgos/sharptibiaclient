@@ -65,6 +65,7 @@ namespace CTC
             // Create the game frame
             Desktop = new GameDesktop(Window, graphics, Content);
             Desktop.Load();
+            Desktop.CreatePanels();
 
             ///////////////////////////////////////////////////////////////////
             // For debugging

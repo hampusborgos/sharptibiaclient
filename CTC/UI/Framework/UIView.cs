@@ -169,12 +169,12 @@ namespace CTC
             get
             {
                 Rectangle sb = this.ScreenBounds;
-                Margin sp = this.SkinPadding;
+                Rectangle cb = this.ClientBounds;
                 return new Rectangle(
-                    sb.X + sp.Left,
-                    sb.Y + sp.Top,
-                    sb.Width - sp.TotalWidth,
-                    sb.Height - sp.TotalHeight
+                    sb.X + cb.Left,
+                    sb.Y + cb.Top,
+                    cb.Width,
+                    cb.Height
                 );
             }
         }
@@ -187,6 +187,16 @@ namespace CTC
             {
                 return Children;
             }
+        }
+        
+        public List<T> SubviewsOfType<T>() where T : UIView
+        {
+            List<T> views = new List<T>();
+            foreach (UIView Subview in Subviews)
+                if (Subview.GetType() == typeof(T))
+                    views.Add((T)Subview);
+
+            return views;
         }
 
         public UIView AddSubview(UIView newView)
