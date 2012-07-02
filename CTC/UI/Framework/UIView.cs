@@ -46,8 +46,6 @@ namespace CTC
                 superParent = superParent.Parent;
             Context = superParent.Context;
 
-            ZOrder = Parent.ZOrder + 1;
-
             Children = new List<UIView>();
 
             Batch = new SpriteBatch(Context.Graphics.GraphicsDevice);
@@ -98,23 +96,24 @@ namespace CTC
             }
         }
 
-        public UIView AddSubview(UIView panel)
+        public UIView AddSubview(UIView newView)
         {
-            Children.Add(panel);
-            return panel;
-        }
-
-        public UIView InsertSubview(int index, UIView panel)
-        {
-            Children.Insert(index, panel);
-            return panel;
+            int i = Children.FindIndex(delegate(UIView subview) {
+                return subview.ZOrder > newView.ZOrder;
+            });
+            if (i == -1)
+                Children.Add(newView);
+            else
+                Children.Insert(i, newView);
+            return newView;
         }
 
         public void BringSubviewToFront(UIView view)
         {
             int oldIndex = Children.IndexOf(view);
             Children.RemoveAt(oldIndex);
-            Children.Add(view);
+
+            AddSubview(view);
         }
 
         public bool CaptureMouse()
