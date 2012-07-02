@@ -168,7 +168,7 @@ namespace CTC
             UIButton CloseButton = CreateButton("X");
             AddButton(CloseButton);
 
-            UIButton MinimizeButton = CreateButton("_");
+            UIButton MinimizeButton = CreateButton("-");
             AddButton(MinimizeButton);
         }
 
