@@ -12,6 +12,7 @@ namespace CTC
         public GameFrame(UIPanel Parent)
             : base(Parent)
         {
+            TabWidth = 150;
             UITab Tab = AddTab("+");
             Tab.Bounds.Width = 30;
         }
