@@ -22,10 +22,11 @@ namespace CTC
             this.Viewport = Viewport;
             this.ContainerID = ContainerID;
             Renderer = new GameRenderer(this.Context, Viewport.GameData);
-            Padding = new Margin(7, 4, 7, 4);
-            ContentView = new UIStackView(this, UIStackDirection.HorizontalThenVertical);
-            ContentView.Bounds.Width = 156;
-            ContentView.Bounds.Height = 220;
+            Padding = new Margin(4, 7);
+            ContentView = new UIStackView(this, UIStackDirection.HorizontalThenVertical)
+            {
+                Size = new Vector2(156, 220)
+            };
             AddSubview(ContentView);
 
             Bounds.Width = 176;
@@ -83,7 +84,18 @@ namespace CTC
             });
 
             for (int Slot = 0; Slot < Container.MaximumVolume; ++Slot)
-                ContentView.AddSubview(new ItemButton(ContentView, Renderer, null));
+            {
+                ContentView.AddSubview(new ItemButton(ContentView, Renderer, null)
+                {
+                    Margin = new Margin
+                    {
+                        Top = 0,
+                        Right = 0,
+                        Bottom = 3,
+                        Left = 3,
+                    }
+                });
+            }
 
             LayoutSubviews();
         }

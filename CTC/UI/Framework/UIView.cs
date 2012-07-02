@@ -57,7 +57,12 @@ namespace CTC
         /// <summary>
         /// User-customizable padding inside this view.
         /// </summary>
-        public Margin Padding = new Margin(0, 0, 0, 0);
+        public Margin Padding = new Margin();
+
+        /// <summary>
+        /// How much float is left around this view.
+        /// </summary>
+        public Margin Margin = new Margin();
 
         /// <summary>
         /// The position and size of this view inside it's parent view
@@ -67,24 +72,42 @@ namespace CTC
         public Rectangle Bounds;
 
         /// <summary>
+        /// The position part of the bounds.
+        /// </summary>
+        public Vector2 Position
+        {
+            get { return new Vector2(Bounds.X, Bounds.Y); }
+            set { Bounds.X = (int)value.X; Bounds.Y = (int)value.Y; }
+        }
+
+        /// <summary>
+        /// The size part of the bounds.
+        /// </summary>
+        public Vector2 Size
+        {
+            get { return new Vector2(Bounds.Width, Bounds.Height); }
+            set { Bounds.Width = (int)value.X; Bounds.Height = (int)value.Y; }
+        }
+
+        /// <summary>
         /// This is how much padding the skin adds to the internal bounds of this view.
         /// </summary>
         public virtual Margin SkinPadding
         {
             get
             {
-                return new Margin(
-                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Left).X,
-                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Top).Y,
-                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Right).X,
-                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Bottom).Y
-                );
+                return new Margin
+                {
+                    Top = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Top).Y,
+                    Left = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Left).X,
+                    Bottom = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Bottom).Y,
+                    Right = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Right).X
+                };
             }
         }
 
         /// <summary>
-        /// Returns a rectangle that represents that's available for content inside
-        /// this view.
+        /// A rectangle that represents that's available for content inside this view.
         /// </summary>
         public virtual Rectangle ClientBounds
         {
@@ -92,14 +115,34 @@ namespace CTC
             {
                 Margin fromSkin = SkinPadding;
                 return new Rectangle(
-                    fromSkin.Top + SkinPadding.Top,
-                    fromSkin.Left + SkinPadding.Left,
+                    fromSkin.Left + Padding.Left,
+                    fromSkin.Top + Padding.Top,
                     Bounds.Width - fromSkin.TotalWidth - Padding.TotalWidth,
                     Bounds.Height - fromSkin.TotalHeight - Padding.TotalHeight
                 );
             }
         }
 
+        /// <summary>
+        /// The bounds of the view including the float area around it.
+        /// (ie. the margin)
+        /// </summary>
+        public virtual Rectangle FullBounds
+        {
+            get
+            {
+                return new Rectangle(
+                    Bounds.X + Margin.Left,
+                    Bounds.Y + Margin.Top,
+                    Bounds.Width + Margin.TotalWidth,
+                    Bounds.Height + Margin.TotalHeight
+                );
+            }
+        }
+
+        /// <summary>
+        /// The position and size of this view on the actual screen.
+        /// </summary>
         public Rectangle ScreenBounds
         {
             get
@@ -117,7 +160,9 @@ namespace CTC
         }
 
         /// <summary>
-        /// Returns the ClientBounds in the global coordinate space
+        /// The ClientBounds in the global coordinate space.
+        /// This is the area available inside this view for content,
+        /// that is, with padding and skin calculated into it.
         /// </summary>
         public virtual Rectangle ScreenClientBounds
         {

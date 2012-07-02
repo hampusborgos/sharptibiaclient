@@ -48,18 +48,18 @@ namespace CTC
                 // Start on the next row?
                 if (SpaceLeft - Subview.Bounds.Width <= 0)
                 {
-                    SpaceLeft = ClientBounds.Width;
+                    SpaceLeft = FullBounds.Width;
                     RowLeft = SkinPadding.Left + Padding.Left;
                     RowTop += HighestThisRow;
                     ++Row;
                 }
 
-                HighestThisRow = Math.Max(HighestThisRow, Subview.Bounds.Height);
+                HighestThisRow = Math.Max(HighestThisRow, Subview.FullBounds.Height);
                 
                 Subview.Bounds.X = RowLeft;
                 Subview.Bounds.Y = RowTop;
 
-                RowLeft += Subview.Bounds.Width;
+                RowLeft += Subview.FullBounds.Width;
 
                 SpaceLeft -= Subview.Bounds.Width;
             }

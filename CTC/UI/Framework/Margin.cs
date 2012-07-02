@@ -7,18 +7,27 @@ namespace CTC
 {
     public struct Margin
     {
-        public Margin(int Top, int Left, int Bottom, int Right)
+        public Margin(int AllMargins)
         {
-            this.Top = Top;
-            this.Left = Left;
-            this.Bottom = Bottom;
-            this.Right = Right;
+            Top = AllMargins;
+            Right = AllMargins;
+            Bottom = AllMargins;
+            Left = AllMargins;
+        }
+
+        public Margin(int VerticalMargin, int HorizontalMargin)
+        {
+            Top = VerticalMargin;
+            Right = HorizontalMargin;
+            Bottom = VerticalMargin;
+            Left = HorizontalMargin;
         }
 
         public int Top;
-        public int Left;
-        public int Bottom;
         public int Right;
+        public int Bottom;
+        public int Left;
+
         public int TotalWidth
         {
             get { return Left + Right; }

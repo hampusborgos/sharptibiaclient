@@ -25,12 +25,13 @@ namespace CTC
                 width += (int)Context.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Center).X;
                 width += (int)Context.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Right).X;
 
-                return new Margin(
-                    left,
-                    top,
-                    right + width,
-                    bottom
-                );
+                return new Margin
+                {
+                    Left = left,
+                    Top = top,
+                    Bottom = bottom,
+                    Right = right + width
+                };
             }
         }
 
