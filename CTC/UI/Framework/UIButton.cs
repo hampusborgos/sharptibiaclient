@@ -11,13 +11,29 @@ namespace CTC
     public class UIButton : UIView
     {
         public String Label;
-        public bool Highlighted = false;
 
         public UIButton(UIView Parent)
             : base(Parent)
         {
             ElementType = UIElementType.Button;
             Bounds = new Rectangle(0, 0, 32, 32);
+        }
+
+        protected bool _Highlighted = false;
+        public virtual bool Highlighted
+        {
+            get
+            {
+                return _Highlighted;
+            }
+            set
+            {
+                if (value)
+                    ElementType = UIElementType.ButtonHighlight;
+                else
+                    ElementType = UIElementType.Button;
+                _Highlighted = value;
+            }
         }
 
         public override bool MouseLeftClick(MouseState mouse)
@@ -39,14 +55,6 @@ namespace CTC
         {
             Highlighted = false;
             return true;
-        }
-
-        protected override void DrawBorder(SpriteBatch CurrentBatch)
-        {
-            if (Highlighted)
-                Context.Skin.DrawBox(CurrentBatch, UIElementType.ButtonHighlight, ScreenBounds);
-            else
-                Context.Skin.DrawBox(CurrentBatch, UIElementType.Button, ScreenBounds);
         }
 
         protected override void DrawContent(SpriteBatch CurrentBatch)
