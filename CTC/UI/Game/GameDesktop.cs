@@ -216,22 +216,22 @@ namespace CTC
 
             UIFrame Sidebar = new UIFrame(this);
             Sidebar.Name = "Sidebar";
-            Sidebar.Bounds = new Rectangle(Bounds.Width - 200 - 50, 50, 200, 700);
+            Sidebar.Bounds = new Rectangle(Bounds.Width - 200 - 50, 50, 206, 700);
 
             Skills = new SkillPanel(Sidebar);
-            Skills.Bounds.X = 0;
+            Skills.Bounds.X = 3;
             Skills.Bounds.Y = 10;
             Skills.ZOrder = 1;
             Sidebar.AddSubview(Skills);
 
             VIPs = new VIPPanel(Sidebar);
-            VIPs.Bounds.X = 0;
+            VIPs.Bounds.X = 3;
             VIPs.Bounds.Y = 210;
             VIPs.ZOrder = 1;
             Sidebar.AddSubview(VIPs);
 
             Inventory = new InventoryPanel(Sidebar);
-            Inventory.Bounds.X = 0;
+            Inventory.Bounds.X = 3;
             Inventory.Bounds.Y = 410;
             Inventory.ZOrder = 1;
             Sidebar.AddSubview(Inventory);

@@ -63,11 +63,9 @@ namespace CTC
                         return true;
 
             // Check if the frame was grabbed
-            Vector2 frameSize = Context.Skin.Measure(this.ElementType, UISkinOrientation.Top);
-
             if (mouse.LeftButton == ButtonState.Pressed)
             {
-                if (ClientMouseCoordinate(mouse).Y < frameSize.Y)
+                if (ClientMouseCoordinate(mouse).Y < 0)
                 {
                     // Start dragging!
                     if (CaptureMouse())
@@ -102,14 +100,15 @@ namespace CTC
                 Bounds.X = (int)(DraggedFromPosition.Value.X - dx);
                 Bounds.Y = (int)(DraggedFromPosition.Value.Y - dy);
 
-                if (Bounds.X < 0)
-                    Bounds.X = 0;
-                if (Bounds.Y < 0)
-                    Bounds.Y = 0;
-                if (Bounds.Right > Parent.Bounds.Width)
-                    Bounds.X = Parent.Bounds.Width - Bounds.Width;
-                if (Bounds.Bottom > Parent.Bounds.Height)
-                    Bounds.Y = Parent.Bounds.Height - Bounds.Height;
+                Rectangle ParentBounds = Parent.ClientBounds;
+                if (Bounds.X < ParentBounds.Left)
+                    Bounds.X = ParentBounds.Left;
+                if (Bounds.Y < ParentBounds.Top)
+                    Bounds.Y = ParentBounds.Top;
+                if (Bounds.Right > ParentBounds.Right)
+                    Bounds.X = ParentBounds.Right - Bounds.Width;
+                if (Bounds.Bottom > ParentBounds.Bottom)
+                    Bounds.Y = ParentBounds.Bottom - Bounds.Height;
                 return true;
             }
             return false;
