@@ -9,7 +9,8 @@ namespace CTC
     {
         None = -1,
 
-        First = 1,
+        Head = 1,
+        First = Head,
         Necklace = 2,
         Backpack = 3,
         Armor = 4,

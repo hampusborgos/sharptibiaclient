@@ -188,12 +188,12 @@ namespace CTC
 
             Skills = new SkillPanel(this);
             Skills.Bounds.X = Bounds.Width - Skills.Bounds.Width - 50;
-            Skills.Bounds.Y = 200;
+            Skills.Bounds.Y = 300;
             AddChildPanel(Skills);
 
             VIPs = new VIPPanel(this);
             VIPs.Bounds.X = Bounds.Width - VIPs.Bounds.Width - 50;
-            VIPs.Bounds.Y = 400;
+            VIPs.Bounds.Y = 500;
             AddChildPanel(VIPs);
 
             Inventory = new InventoryPanel(this);

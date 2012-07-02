@@ -29,24 +29,26 @@ namespace CTC
         {
             switch (slot)
             {
+                case InventorySlot.Head:
+                    return new Rectangle(ScreenClientBounds.Left + 48, ScreenClientBounds.Top + 8, 32, 32);
                 case InventorySlot.Necklace:
-                    return new Rectangle(ScreenClientBounds.Left + 8, ScreenClientBounds.Top + 8, 32, 32);
+                    return new Rectangle(ScreenClientBounds.Left + 8, ScreenClientBounds.Top + 20, 32, 32);
                 case InventorySlot.Backpack:
-                    return new Rectangle(ScreenClientBounds.Left + 80, ScreenClientBounds.Top + 20, 32, 32);
+                    return new Rectangle(ScreenClientBounds.Left + 88, ScreenClientBounds.Top + 20, 32, 32);
                 case InventorySlot.Armor:
-                    return new Rectangle(ScreenClientBounds.Left + 40, ScreenClientBounds.Top + 40, 32, 32);
+                    return new Rectangle(ScreenClientBounds.Left + 48, ScreenClientBounds.Top + 40, 32, 32);
                 case InventorySlot.Right:
-                    return new Rectangle(ScreenClientBounds.Left + 80, ScreenClientBounds.Top + 60, 32, 32);
+                    return new Rectangle(ScreenClientBounds.Left + 88, ScreenClientBounds.Top + 60, 32, 32);
                 case InventorySlot.Left:
                     return new Rectangle(ScreenClientBounds.Left + 8,  ScreenClientBounds.Top + 60, 32, 32);
                 case InventorySlot.Legs:
-                    return new Rectangle(ScreenClientBounds.Left + 40, ScreenClientBounds.Top + 80, 32, 32);
+                    return new Rectangle(ScreenClientBounds.Left + 48, ScreenClientBounds.Top + 80, 32, 32);
                 case InventorySlot.Feet:
-                    return new Rectangle(ScreenClientBounds.Left + 40, ScreenClientBounds.Top + 120, 32, 32);
+                    return new Rectangle(ScreenClientBounds.Left + 48, ScreenClientBounds.Top + 120, 32, 32);
                 case InventorySlot.Ring:
                     return new Rectangle(ScreenClientBounds.Left + 8,  ScreenClientBounds.Top + 100, 32, 32);
                 case InventorySlot.Ammo:
-                    return new Rectangle(ScreenClientBounds.Left + 80, ScreenClientBounds.Top + 100, 32, 32);
+                    return new Rectangle(ScreenClientBounds.Left + 88, ScreenClientBounds.Top + 100, 32, 32);
             }
             return new Rectangle();
         }
