@@ -77,12 +77,8 @@ namespace CTC
                 zdiv = mPos.Z % Sprite.ZDiv;
             }
 
-            if (Sprite.IsSplash || Sprite.IsFluidContainer)
-            {
-                //SubType = SubType;
-            }
-                /*
-            else if (Sprite.IsHangable)
+            /*
+            if (Sprite.IsHangable)
             {
                 if (Tile->hasProperty(ISVERTICAL))
                 {
@@ -97,8 +93,7 @@ namespace CTC
                     xdiv = -0;
                 }
             }
-                 */
-            else if (Sprite.IsStackable)
+            else */ if (Sprite.IsStackable)
             {
                 if (SubType <= 1)
                     SubType = 0;
