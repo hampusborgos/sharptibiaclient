@@ -113,7 +113,7 @@ namespace CTC
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear((Mouse.GetState().LeftButton == ButtonState.Pressed) ? Color.Blue : (Mouse.GetState().RightButton == ButtonState.Pressed) ? Color.Red : Color.Black);
+            GraphicsDevice.Clear(Color.Black);
 
             Desktop.Draw(null);
 
