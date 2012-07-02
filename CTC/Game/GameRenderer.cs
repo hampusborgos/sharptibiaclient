@@ -160,7 +160,7 @@ namespace CTC
             {
                 String count = Item.Subtype.ToString();
                 Vector2 textSize = Context.StandardFont.MeasureString(count);
-                DrawBoldedText(Batch, "10", new Vector2(rect.X + 32 - textSize.X - 2, rect.Y + 32 - textSize.Y), Color.LightGray);
+                DrawBoldedText(Batch, count, new Vector2(rect.X + 32 - textSize.X - 1, rect.Y + 32 - textSize.Y + 1), false, Color.LightGray);
             }
         }
 
@@ -210,8 +210,13 @@ namespace CTC
            );
         }
 
-        public void DrawBoldedText(SpriteBatch Batch, String Text, Vector2 Offset, Color Primary)
+        public void DrawBoldedText(SpriteBatch Batch, String Text, Vector2 Offset, Boolean Centered, Color Primary)
         {
+            if (Centered)
+            {
+                Vector2 TextSize = Context.StandardFont.MeasureString(Text);
+                Offset.X -= (int)(TextSize.X / 2);
+            }
             DrawText(Batch, Text, new Vector2(Offset.X + 1, Offset.Y), Color.Black);
             DrawText(Batch, Text, new Vector2(Offset.X - 1, Offset.Y), Color.Black);
             DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y + 1), Color.Black);
@@ -236,7 +241,7 @@ namespace CTC
                 Offset.X += HealthOffset;
                 Offset.Y += HealthOffset;
                 */
-                DrawBoldedText(Batch, Creature.Name, Offset, Color.LightGreen);
+                DrawBoldedText(Batch, Creature.Name, Offset, false, Color.LightGreen);
             }
         }
 
@@ -299,7 +304,10 @@ namespace CTC
                     if (!Effect.Expired && Effect is AnimatedText)
                     {
                         AnimatedText Text = (AnimatedText)Effect;
-                        DrawBoldedText(Batch, Text.Text, Offset + Text.Offset, MakeColor(Text.Color));
+                        Vector2 DrawOffset = Offset + Text.Offset;
+                        DrawOffset.X += 16;
+                        DrawOffset.Y += 26;
+                        DrawBoldedText(Batch, Text.Text, DrawOffset, true, MakeColor(Text.Color));
                     }
                 }
             }
