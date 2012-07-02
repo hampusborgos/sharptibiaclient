@@ -314,10 +314,11 @@ namespace CTC
                 -(Center.Y - 6) * 32
             );
 
+            // Offset based on the Z position
             if (Center.Z <= 7)
             {
-                TopLeft.X -= (Center.Z - 7) * 32;
-                TopLeft.Y -= (Center.Z - 7) * 32;
+                TopLeft.X -= (7 - Center.Z) * 32;
+                TopLeft.Y -= (7 - Center.Z) * 32;
             }
             else
             {
