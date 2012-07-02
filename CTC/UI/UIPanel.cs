@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -109,6 +110,37 @@ namespace CTC
             return panel;
         }
 
+        public bool CaptureMouse()
+        {
+            if (Context.MouseFocusedPanel != null)
+            {
+                // Ask the old panel to relinquish control
+                if (!Context.MouseFocusedPanel.MouseLost())
+                    // If it didn't want to, we couldn't capture the mouse
+                    return false;
+            }
+            Context.MouseFocusedPanel = this;
+            MouseCaptured();
+            return true;
+        }
+
+        public void ReleaseMouse()
+        {
+            // If you call ReleaseMouse, the panel *will* lose mouse focus
+            // If it fails to do so, something bad is going on.
+            Debug.Assert(MouseLost(), "Did not release mouse when attempting to do so by itself.");
+            Context.MouseFocusedPanel = null;
+        }
+
+        public virtual void MouseCaptured()
+        {
+        }
+
+        public virtual bool MouseLost()
+        {
+            return true;
+        }
+
         public virtual bool MouseMove(MouseState mouse)
         {
             return false;
@@ -116,27 +148,32 @@ namespace CTC
 
         public virtual bool MouseLeftClick(MouseState mouse)
         {
+            foreach (UIPanel Child in Children)
+            {
+                if (Child.AcceptsMouseEvent(mouse))
+                    if (Child.MouseLeftClick(mouse))
+                        return true;
+            }
+
+            return false;
+        }
+
+        public bool AcceptsMouseEvent(MouseState mouse)
+        {
             if (!Visible)
                 return false;
             if (!InteractionEnabled)
                 return false;
             if (!ScreenBounds.Contains(new Point(mouse.X, mouse.Y)))
                 return false;
-
-            foreach (UIPanel child in Children)
-            {
-                if (child.MouseLeftClick(mouse))
-                    return true;
-            }
-
-            return false;
+            return true;
         }
 
         public virtual void Update(GameTime time)
         {
-            foreach (UIPanel panel in Children)
+            foreach (UIPanel Child in Children)
             {
-                panel.Update(time);
+                Child.Update(time);
             }
         }
 

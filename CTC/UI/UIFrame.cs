@@ -21,16 +21,11 @@ namespace CTC
         protected List<UIButton> Buttons = new List<UIButton>();
         public String Name;
 
+        #region Methods
+
         public void AddButton(UIButton Button)
         {
             Buttons.Add(Button);
-        }
-
-        public override void Update(GameTime time)
-        {
-            base.Update(time);
-
-            Recalculate();
         }
 
         protected void Recalculate()
@@ -44,6 +39,29 @@ namespace CTC
                 Button.Bounds.Y = 3;
             }
         }
+
+        #endregion
+
+        public override bool MouseLeftClick(Microsoft.Xna.Framework.Input.MouseState mouse)
+        {
+            if (base.MouseLeftClick(mouse))
+                return true;
+
+            foreach (UIButton Button in Buttons)
+                if (Button.AcceptsMouseEvent(mouse))
+                    if (Button.MouseLeftClick(mouse))
+                        return true;
+            return false;
+        }
+
+        public override void Update(GameTime time)
+        {
+            base.Update(time);
+
+            Recalculate();
+        }
+
+        #region Drawing
 
         protected override void DrawBorder(SpriteBatch CurrentBatch)
         {
@@ -70,6 +88,8 @@ namespace CTC
 
             base.DrawChildren(CurrentBatch);
         }
+
+        #endregion
 
         #region Creation and Loading
 

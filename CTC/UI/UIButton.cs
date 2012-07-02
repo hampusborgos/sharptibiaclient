@@ -23,11 +23,19 @@ namespace CTC
         public override bool MouseLeftClick(MouseState mouse)
         {
             if (mouse.LeftButton == ButtonState.Pressed)
-                Highlighted = true;
-            else
-                Highlighted = false;
+            {
+                if (CaptureMouse())
+                    Highlighted = true;
+            }
+            else if (mouse.LeftButton == ButtonState.Released && Highlighted)
+            {
+                ReleaseMouse();
+                // ACTION!
+            }
             return true;
         }
+
+        public override bool MouseLost()        {            Highlighted = false;            return true;        }
 
         protected override void DrawBorder(SpriteBatch CurrentBatch)
         {

@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
@@ -64,6 +65,18 @@ namespace CTC
 
         #endregion
 
+        // Methods
+        public void AddClient(ClientState State)
+        {
+            Clients.Add(State);
+            if (Clients.Count == 1)
+                ActiveClient = State;
+            Frame.AddClient(State);
+            InsertChildPanel(0, Frame);
+        }
+
+        #region Event Handlers
+
         // Event handlers
         void OnResize(object o, EventArgs args)
         {
@@ -74,16 +87,26 @@ namespace CTC
             }
         }
 
-        // Properties
-        public void AddClient(ClientState State)
+        /// <summary>
+        /// We override this to handle captured devices
+        /// </summary>
+        /// <param name="mouse"></param>
+        /// <returns></returns>
+        public virtual bool MouseLeftClick(MouseState mouse)
         {
-            Clients.Add(State);
-            if (Clients.Count == 1)
-                ActiveClient = State;
-            Frame.AddClient(State);
-            InsertChildPanel(0, Frame);
+            if (Context.MouseFocusedPanel != null)
+                return Context.MouseFocusedPanel.MouseLeftClick(mouse);
+
+            foreach (UIPanel child in Children)
+            {
+                if (child.MouseLeftClick(mouse))
+                    return true;
+            }
+
+            return false;
         }
 
+        #endregion
 
         public override void Update(GameTime Time)
         {
