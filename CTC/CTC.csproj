@@ -138,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client\ClientChannel.cs" />
+    <Compile Include="Client\ClientContainer.cs" />
     <Compile Include="Client\ClientCreature.cs" />
     <Compile Include="Client\ClientItem.cs" />
     <Compile Include="Client\ClientMap.cs" />
