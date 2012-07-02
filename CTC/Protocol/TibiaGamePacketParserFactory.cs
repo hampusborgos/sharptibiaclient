@@ -382,18 +382,19 @@ namespace CTC
                 {
                     Packet props = new Packet(parserName);
                     List<ClientTile> Tiles = new List<ClientTile>();
+                    int skipTiles = 0;
 
                     CurrentPosition.Z--;
                     if (CurrentPosition.Z == 7)
                     {
                         for (int i = 5; i >= 0; i--)
                         {
-                            Tiles.AddRange(ReadFloorDescription(nmsg, CurrentPosition.X - 8, CurrentPosition.Y - 6, i, 18, 14, 8 - i));
+                            Tiles.AddRange(ReadFloorDescription(nmsg, ref skipTiles, CurrentPosition.X - 8, CurrentPosition.Y - 6, i, 18, 14, 8 - i));
                         }
                     }
                     else if (CurrentPosition.Z > 7)
                     {
-                        Tiles.AddRange(ReadFloorDescription(nmsg, CurrentPosition.X - 8, CurrentPosition.Y - 6, CurrentPosition.Z - 2, 18, 14, 3));
+                        Tiles.AddRange(ReadFloorDescription(nmsg, ref skipTiles, CurrentPosition.X - 8, CurrentPosition.Y - 6, CurrentPosition.Z - 2, 18, 14, 3));
                     }
                     CurrentPosition.X++;
                     CurrentPosition.Y++;
@@ -407,6 +408,7 @@ namespace CTC
                 {
                     Packet props = new Packet(parserName);
                     List<ClientTile> Tiles = new List<ClientTile>();
+                    int skipTiles = 0;
 
                     CurrentPosition.Z++;
                     if (CurrentPosition.Z == 8)
@@ -414,12 +416,12 @@ namespace CTC
                         int j = -1;
                         for (int i = CurrentPosition.Z; i < CurrentPosition.Z + 3; ++i, --j)
                         {
-                            Tiles.AddRange(ReadFloorDescription(nmsg, CurrentPosition.X - 8, CurrentPosition.Y - 6, i, 18, 14, j));
+                            Tiles.AddRange(ReadFloorDescription(nmsg, ref skipTiles, CurrentPosition.X - 8, CurrentPosition.Y - 6, i, 18, 14, j));
                         }
                     }
                     else if (CurrentPosition.Z > 8 && CurrentPosition.Z < 14)
                     {
-                        Tiles.AddRange(ReadFloorDescription(nmsg, CurrentPosition.X - 8, CurrentPosition.Y - 6, CurrentPosition.Z + 2, 18, 14, -3));
+                        Tiles.AddRange(ReadFloorDescription(nmsg, ref skipTiles, CurrentPosition.X - 8, CurrentPosition.Y - 6, CurrentPosition.Z + 2, 18, 14, -3));
                     }
                     CurrentPosition.X--;
                     CurrentPosition.Y--;
@@ -821,18 +823,12 @@ namespace CTC
             int skipTiles = 0;
             List<ClientTile> tiles = new List<ClientTile>();
             for (int curZ = startZ; curZ != endZ + stepZ; curZ += stepZ)
-                tiles.AddRange(ReadFloorDescription(nmsg, skipTiles, out skipTiles, startX, startY, curZ, width, height, z - curZ));
+                tiles.AddRange(ReadFloorDescription(nmsg, ref skipTiles, startX, startY, curZ, width, height, z - curZ));
 
             return tiles;
         }
 
-        private List<ClientTile> ReadFloorDescription(NetworkMessage nmsg, int startX, int startY, int Z, int width, int height, int offset)
-        {
-            int s = 0;
-            return ReadFloorDescription(nmsg, s, out s, startX, startY, Z, width, height, offset);
-        }
-
-        private List<ClientTile> ReadFloorDescription(NetworkMessage nmsg, int skipTiles, out int skipTilesOut, int startX, int startY, int Z, int width, int height, int offset)
+        private List<ClientTile> ReadFloorDescription(NetworkMessage nmsg, ref int skipTiles, int startX, int startY, int Z, int width, int height, int offset)
         {
             List<ClientTile> tiles = new List<ClientTile>();
             for (int x = 0; x < width; ++x)
@@ -853,7 +849,6 @@ namespace CTC
                 }
             }
 
-            skipTilesOut = skipTiles;
             return tiles;
         }
 

@@ -425,7 +425,12 @@ namespace CTC
 
         private void OnCloseContainer(Packet props)
         {
+            // Server might send CloseContainer several times
             int ContainerID = (int)props["ContainerID"];
+            if (!Containers.ContainsKey(ContainerID))
+                return;
+
+            // Remove it from the viewport
             ClientContainer Container = Containers[ContainerID];
             Containers.Remove(ContainerID);
 
