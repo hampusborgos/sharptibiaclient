@@ -69,6 +69,7 @@ namespace CTC
         public delegate void ContainerEvent(ClientViewport Viewport, ClientContainer Container);
 
         public event ContainerEvent OpenContainer;
+        public event ContainerEvent UpdateContainer;
         public event ContainerEvent CloseContainer;
 
         #endregion
@@ -405,12 +406,21 @@ namespace CTC
             Container.HasParent = (bool)props["IsChild"];
             Container.Contents = (List<ClientItem>)props["Contents"];
 
-            // Store it
+            bool update = Containers.ContainsKey(ContainerID);
+
             Containers[ContainerID] = Container;
 
             // Dispatch an event
-            if (OpenContainer != null)
-                OpenContainer(this, Container);
+            if (update)
+            {
+                if (UpdateContainer != null)
+                    UpdateContainer(this, Container);
+            }
+            else
+            {
+                if (OpenContainer != null)
+                    OpenContainer(this, Container);
+            }
         }
 
         private void OnCloseContainer(Packet props)

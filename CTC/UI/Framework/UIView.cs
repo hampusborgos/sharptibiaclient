@@ -112,6 +112,16 @@ namespace CTC
             return newView;
         }
 
+        public void RemoveSubview(UIView subview)
+        {
+            Children.Remove(subview);
+        }
+
+        public void RemoveFromSuperview()
+        {
+            Parent.RemoveSubview(this);
+        }
+
         public void BringSubviewToFront(UIView view)
         {
             int oldIndex = Children.IndexOf(view);
@@ -179,19 +189,29 @@ namespace CTC
 
         public Vector2 ScreenCoordinate(Vector2 coordinate)
         {
-            return new Vector2(
-                ScreenClientBounds.Left + Padding.Left + coordinate.X,
-                ScreenClientBounds.Top + Padding.Top + coordinate.Y
-            );
+            return new Vector2(coordinate.X, coordinate.Y);
         }
 
         public Rectangle ScreenCoordinate(Rectangle rect)
         {
+            return new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+        }
+
+        public Rectangle ScreenCoordinate(int X, int Y, int W, int H)
+        {
             return new Rectangle(
-                ScreenClientBounds.Left + Padding.Left + rect.Left,
-                ScreenClientBounds.Top + Padding.Top + rect.Top,
-                rect.Width,
-                rect.Height
+                ScreenClientBounds.Left + Padding.Left + X,
+                ScreenClientBounds.Top + Padding.Top + Y,
+                W,
+                H
+            );
+        }
+
+        public Vector2 ScreenCoordinate(int X, int Y)
+        {
+            return new Vector2(
+                ScreenClientBounds.Left + Padding.Left + X,
+                ScreenClientBounds.Top + Padding.Top + Y
             );
         }
 

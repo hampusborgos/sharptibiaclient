@@ -72,9 +72,15 @@ namespace CTC
             : base(Data, 1)
         {
             this.ContainerID = ContainerID;
-            MaximumVolume = 0;
             HasParent = false;
             Name = "Unknown container";
+        }
+
+        public ClientItem GetItem(int index)
+        {
+            if (index >= Contents.Count)
+                return null;
+            return Contents[index];
         }
     }
 }

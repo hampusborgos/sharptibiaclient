@@ -170,6 +170,7 @@
     <Compile Include="Game\Log.cs" />
     <Compile Include="UI\Game\GameFrame.cs" />
     <Compile Include="UI\Game\InventoryPanel.cs" />
+    <Compile Include="UI\Game\ItemButton.cs" />
     <Compile Include="UI\Game\SkillPanel.cs" />
     <Compile Include="UI\Game\TopTaskbar.cs" />
     <Compile Include="UI\Framework\UIButton.cs" />
