@@ -11,7 +11,7 @@ namespace CTC
     {
         public UIScrollbar Scrollbar;
 
-        public override Rectangle ClientBounds
+        public override Margin SkinPadding
         {
             get
             {
@@ -25,11 +25,11 @@ namespace CTC
                 width += (int)Context.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Center).X;
                 width += (int)Context.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Right).X;
 
-                return new Rectangle(
+                return new Margin(
                     left,
                     top,
-                    Bounds.Width - left - right - width,
-                    Bounds.Height - top - bottom
+                    right + width,
+                    bottom
                 );
             }
         }
@@ -37,13 +37,7 @@ namespace CTC
         /// <summary>
         /// The internal bounds of the scrollable panel
         /// </summary>
-        public Rectangle VirtualBounds
-        {
-            get
-            {
-                return ClientBounds;
-            }
-        }
+        private Vector2 VirtualBounds;
         
         public UIVirtualFrame(UIView Parent)
             : base(Parent)

@@ -31,25 +31,25 @@ namespace CTC
             switch (slot)
             {
                 case InventorySlot.Head:
-                    return new Rectangle(ClientBounds.Left + 48, ClientBounds.Top + 8, 32, 32);
+                    return new Rectangle(SkinPadding.Left + 48, SkinPadding.Top + 8, 32, 32);
                 case InventorySlot.Necklace:
-                    return new Rectangle(ClientBounds.Left + 8, ClientBounds.Top + 20, 32, 32);
+                    return new Rectangle(SkinPadding.Left + 8, SkinPadding.Top + 20, 32, 32);
                 case InventorySlot.Backpack:
-                    return new Rectangle(ClientBounds.Left + 88, ClientBounds.Top + 20, 32, 32);
+                    return new Rectangle(SkinPadding.Left + 88, SkinPadding.Top + 20, 32, 32);
                 case InventorySlot.Armor:
-                    return new Rectangle(ClientBounds.Left + 48, ClientBounds.Top + 40, 32, 32);
+                    return new Rectangle(SkinPadding.Left + 48, SkinPadding.Top + 40, 32, 32);
                 case InventorySlot.Right:
-                    return new Rectangle(ClientBounds.Left + 88, ClientBounds.Top + 60, 32, 32);
+                    return new Rectangle(SkinPadding.Left + 88, SkinPadding.Top + 60, 32, 32);
                 case InventorySlot.Left:
-                    return new Rectangle(ClientBounds.Left + 8,  ClientBounds.Top + 60, 32, 32);
+                    return new Rectangle(SkinPadding.Left + 8,  SkinPadding.Top + 60, 32, 32);
                 case InventorySlot.Legs:
-                    return new Rectangle(ClientBounds.Left + 48, ClientBounds.Top + 80, 32, 32);
+                    return new Rectangle(SkinPadding.Left + 48, SkinPadding.Top + 80, 32, 32);
                 case InventorySlot.Feet:
-                    return new Rectangle(ClientBounds.Left + 48, ClientBounds.Top + 120, 32, 32);
+                    return new Rectangle(SkinPadding.Left + 48, SkinPadding.Top + 120, 32, 32);
                 case InventorySlot.Ring:
-                    return new Rectangle(ClientBounds.Left + 8,  ClientBounds.Top + 100, 32, 32);
+                    return new Rectangle(SkinPadding.Left + 8,  SkinPadding.Top + 100, 32, 32);
                 case InventorySlot.Ammo:
-                    return new Rectangle(ClientBounds.Left + 88, ClientBounds.Top + 100, 32, 32);
+                    return new Rectangle(SkinPadding.Left + 88, SkinPadding.Top + 100, 32, 32);
             }
             return new Rectangle();
         }

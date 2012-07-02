@@ -9,13 +9,14 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
+
     public class UIView
     {
         protected UIContext Context;
         protected UIView Parent;
         protected List<UIView> Children;
 
-        public UIElementType ElementType = UIElementType.Window;
+        public UIElementType ElementType;
         protected SpriteBatch Batch;
         private Nullable<Rectangle> OldScissor;
         protected Boolean CropChildren = true;
@@ -30,6 +31,7 @@ namespace CTC
         /// <param name="Context"></param>
         public UIView(UIContext Context)
         {
+            ElementType = UIElementType.Window;
             this.Context = Context;
             Children = new List<UIView>();
         }
@@ -38,36 +40,62 @@ namespace CTC
         /// Base constructor for all UIPanels
         /// </summary>
         /// <param name="parent"></param>
-        public UIView(UIView parent)
+        public UIView(UIView parent, UIElementType ElementType = UIElementType.Window)
         {
             Parent = parent;
             UIView superParent = parent;
             while (superParent.Parent != null)
                 superParent = superParent.Parent;
             Context = superParent.Context;
+            this.ElementType = ElementType;
 
             Children = new List<UIView>();
 
             Batch = new SpriteBatch(Context.Graphics.GraphicsDevice);
         }
 
-        public Rectangle Padding = new Rectangle(0, 0, 0, 0);
+        /// <summary>
+        /// User-customizable padding inside this view.
+        /// </summary>
+        public Margin Padding = new Margin(0, 0, 0, 0);
 
-        public virtual Rectangle ClientBounds
+        /// <summary>
+        /// The position and size of this view inside it's parent view
+        /// This is without any padding added by the skin / Padding property.
+        /// It does not include margins.
+        /// </summary>
+        public Rectangle Bounds;
+
+        /// <summary>
+        /// This is how much padding the skin adds to the internal bounds of this view.
+        /// </summary>
+        public virtual Margin SkinPadding
         {
             get
             {
-                Rectangle p = new Rectangle(
+                return new Margin(
                     (int)Context.Skin.Measure(ElementType, UISkinOrientation.Left).X,
                     (int)Context.Skin.Measure(ElementType, UISkinOrientation.Top).Y,
                     (int)Context.Skin.Measure(ElementType, UISkinOrientation.Right).X,
                     (int)Context.Skin.Measure(ElementType, UISkinOrientation.Bottom).Y
                 );
+            }
+        }
+
+        /// <summary>
+        /// Returns a rectangle that represents that's available for content inside
+        /// this view.
+        /// </summary>
+        public virtual Rectangle ClientBounds
+        {
+            get
+            {
+                Margin fromSkin = SkinPadding;
                 return new Rectangle(
-                    p.Left,
-                    p.Top,
-                    Bounds.Width - p.Left - p.Right,
-                    Bounds.Height - p.Top - p.Bottom
+                    fromSkin.Top + SkinPadding.Top,
+                    fromSkin.Left + SkinPadding.Left,
+                    Bounds.Width - fromSkin.TotalWidth - Padding.TotalWidth,
+                    Bounds.Height - fromSkin.TotalHeight - Padding.TotalHeight
                 );
             }
         }
@@ -79,24 +107,40 @@ namespace CTC
                 Rectangle ParentBounds = new Rectangle(0, 0, 0, 0);
                 if (Parent != null)
                     ParentBounds = Parent.ScreenBounds;
-                return new Rectangle(ParentBounds.X + Bounds.X, ParentBounds.Y + Bounds.Y, Bounds.Width, Bounds.Height);
+                return new Rectangle(
+                    ParentBounds.X + Bounds.X,
+                    ParentBounds.Y + Bounds.Y,
+                    Bounds.Width,
+                    Bounds.Height
+                );
             }
         }
 
-        public Rectangle Bounds;
-
+        /// <summary>
+        /// Returns the ClientBounds in the global coordinate space
+        /// </summary>
         public virtual Rectangle ScreenClientBounds
         {
             get
             {
                 Rectangle sb = this.ScreenBounds;
-                Rectangle cb = this.ClientBounds;
+                Margin sp = this.SkinPadding;
                 return new Rectangle(
-                    sb.X + cb.X,
-                    sb.Y + cb.Y,
-                    cb.Width,
-                    cb.Height
+                    sb.X + sp.Left,
+                    sb.Y + sp.Top,
+                    sb.Width - sp.TotalWidth,
+                    sb.Height - sp.TotalHeight
                 );
+            }
+        }
+
+        #region Subview Management
+
+        public virtual List<UIView> Subviews
+        {
+            get
+            {
+                return Children;
             }
         }
 
@@ -117,6 +161,11 @@ namespace CTC
             Children.Remove(subview);
         }
 
+        public void RemoveSubviewsMatching(Predicate<UIView> match)
+        {
+            Children.RemoveAll(match);
+        }
+
         public void RemoveFromSuperview()
         {
             Parent.RemoveSubview(this);
@@ -129,6 +178,10 @@ namespace CTC
 
             AddSubview(view);
         }
+
+        #endregion
+
+        #region Events
 
         public bool CaptureMouse()
         {
@@ -179,6 +232,8 @@ namespace CTC
             return false;
         }
 
+        #endregion
+
         public Vector2 ClientCoordinate(Vector2 coordinate)
         {
             return new Vector2(
@@ -189,7 +244,7 @@ namespace CTC
 
         public Vector2 ScreenCoordinate(Vector2 coordinate)
         {
-            return new Vector2(coordinate.X, coordinate.Y);
+            return ScreenCoordinate((int)coordinate.X, (int)coordinate.Y);
         }
 
         public Rectangle ScreenCoordinate(Rectangle rect)
@@ -200,8 +255,8 @@ namespace CTC
         public Rectangle ScreenCoordinate(int X, int Y, int W, int H)
         {
             return new Rectangle(
-                ScreenClientBounds.Left + Padding.Left + X,
-                ScreenClientBounds.Top + Padding.Top + Y,
+                ScreenClientBounds.Left + X,
+                ScreenClientBounds.Top + Y,
                 W,
                 H
             );
@@ -210,8 +265,8 @@ namespace CTC
         public Vector2 ScreenCoordinate(int X, int Y)
         {
             return new Vector2(
-                ScreenClientBounds.Left + Padding.Left + X,
-                ScreenClientBounds.Top + Padding.Top + Y
+                ScreenClientBounds.Left + X,
+                ScreenClientBounds.Top + Y
             );
         }
 
@@ -229,6 +284,12 @@ namespace CTC
             if (!ScreenBounds.Contains(new Point(mouse.X, mouse.Y)))
                 return false;
             return true;
+        }
+
+        public virtual void LayoutSubviews()
+        {
+            foreach (UIView Subview in Subviews)
+                Subview.LayoutSubviews();
         }
 
         public virtual void Update(GameTime time)

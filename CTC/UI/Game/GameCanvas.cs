@@ -113,14 +113,11 @@ namespace CTC
             
             BeginDraw();
 
-            Rectangle C = ClientBounds;
-            C.X += ScreenBounds.X;
-            C.Y += ScreenBounds.Y;
-            Batch.Draw(Backbuffer, C, Color.White);
+            Batch.Draw(Backbuffer, ScreenClientBounds, Color.White);
 
             Vector2 Scale = new Vector2(
-                C.Width / 480f,
-                C.Height / 352f
+                ScreenClientBounds.Width / 480f,
+                ScreenClientBounds.Height / 352f
             );
             Renderer.DrawSceneForeground(Batch, Scale, Context.GameTime, Viewport, PlayingAnimations);
 

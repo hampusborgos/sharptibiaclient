@@ -35,7 +35,11 @@ namespace CTC
             return true;
         }
 
-        public override bool MouseLost()        {            Highlighted = false;            return true;        }
+        public override bool MouseLost()
+        {
+            Highlighted = false;
+            return true;
+        }
 
         protected override void DrawBorder(SpriteBatch CurrentBatch)
         {
@@ -51,12 +55,12 @@ namespace CTC
             {
                 Vector2 Size = Context.StandardFont.MeasureString(Label);
                 Vector2 Offset = new Vector2(
-                    (int)(ScreenBounds.Right  - (ClientBounds.Width  + Size.X) / 2),
-                    (int)(ScreenBounds.Bottom - (ClientBounds.Height + Size.Y) / 2)
+                    (int)((ClientBounds.Width - Size.X) / 2),
+                    (int)((ClientBounds.Height - Size.Y) / 2)
                 );
 
                 CurrentBatch.DrawString(
-                    Context.StandardFont, Label, Offset,
+                    Context.StandardFont, Label, ScreenCoordinate(Offset),
                     Color.LightGray,
                     0.0f, new Vector2(0.0f, 0.0f),
                     1.0f, SpriteEffects.None, 0.5f

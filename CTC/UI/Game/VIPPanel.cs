@@ -27,17 +27,19 @@ namespace CTC
 
         protected override void DrawContent(SpriteBatch CurrentBatch)
         {
-            Vector2 pos = new Vector2(ScreenBounds.X + ClientBounds.X + 5, ScreenBounds.Y + ClientBounds.Y + 5);
+            Vector2 pos = new Vector2(ClientBounds.X, ClientBounds.Y + 5);
             foreach (ClientCreature vip in Viewport.VIPList.Values)
             {
                 if (vip.Online == false)
                     continue;
 
                 CurrentBatch.DrawString(
-                    Context.StandardFont, vip.Name, pos,
+                    Context.StandardFont, vip.Name, ScreenCoordinate(pos),
                     (vip.Online ? Color.LightGreen : Color.Red),
                     0.0f, new Vector2(0.0f, 0.0f),
-                    1.0f, SpriteEffects.None, 0.5f);
+                    1.0f, SpriteEffects.None, 0.5f
+                );
+
                 pos.Y += 16;
             }
         }

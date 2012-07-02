@@ -134,7 +134,8 @@ namespace CTC
                 Context.StandardFont, Name, pos,
                 Color.LightGray,
                 0.0f, new Vector2(0.0f, 0.0f),
-                1.0f, SpriteEffects.None, 0.5f);
+                1.0f, SpriteEffects.None, 0.5f
+            );
         }
 
         protected override void DrawChildren(SpriteBatch CurrentBatch)

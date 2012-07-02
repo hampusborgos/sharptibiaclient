@@ -12,6 +12,7 @@ namespace CTC
     {
         ClientViewport Viewport;
         GameRenderer Renderer;
+        UIStackView ContentView;
         UIButton UpButton;
         public readonly int ContainerID;
 
@@ -21,7 +22,11 @@ namespace CTC
             this.Viewport = Viewport;
             this.ContainerID = ContainerID;
             Renderer = new GameRenderer(this.Context, Viewport.GameData);
-            Padding = new Rectangle(7, 4, 7, 4);
+            Padding = new Margin(7, 4, 7, 4);
+            ContentView = new UIStackView(this, UIStackDirection.HorizontalThenVertical);
+            ContentView.Bounds.Width = 156;
+            ContentView.Bounds.Height = 220;
+            AddSubview(ContentView);
 
             Bounds.Width = 176;
             Bounds.Height = 220;
@@ -34,6 +39,22 @@ namespace CTC
 
             // Perform the first update with the received container
             OnUpdateContainer(Viewport, Viewport.Containers[ContainerID]);
+        }
+
+        public override List<UIView> Subviews
+        {
+            get
+            {
+                return ContentView.Subviews;
+            }
+        }
+
+        public override void LayoutSubviews()
+        {
+            ContentView.Bounds.X = ClientBounds.Left;
+            ContentView.Bounds.Y = ClientBounds.Top;
+
+            ContentView.LayoutSubviews();
         }
 
         public void OnNewState(ClientState NewState)
@@ -57,34 +78,20 @@ namespace CTC
             Name = Container.Name;
 
             // Replace the child views
-            Children.RemoveAll(delegate(UIView view) {
+            ContentView.Subviews.RemoveAll(delegate(UIView view) {
                 return view.GetType() == typeof(ItemButton);
             });
 
             for (int Slot = 0; Slot < Container.MaximumVolume; ++Slot)
-            {
-                ItemButton Button = new ItemButton(this, Renderer, null);
-                Button.Bounds = GetSlotPosition(Slot);
-                AddSubview(Button);
-            }
+                ContentView.AddSubview(new ItemButton(ContentView, Renderer, null));
+
+            LayoutSubviews();
         }
 
         protected void OnCloseContainer(ClientViewport Viewport, ClientContainer Container)
         {
             Viewport.UpdateContainer -= OnUpdateContainer;
             Viewport.CloseContainer -= OnCloseContainer;
-        }
-
-        protected Rectangle GetSlotPosition(int Slot)
-        {
-            // How many slots can fit per row?
-            int SlotsPerRow = (ClientBounds.Width - Padding.Width) / 35;
-            // Then what row are we on?
-            int Col = Slot % SlotsPerRow;
-            int Row = Slot / SlotsPerRow;
-            return new Rectangle(
-                Padding.Left + Col * 37, ClientBounds.Top + Padding.Top + Row * 37,
-                34, 34);
         }
 
         protected override void DrawContent(SpriteBatch Batch)
@@ -94,7 +101,7 @@ namespace CTC
                 ClientContainer Container = Viewport.Containers[ContainerID];
 
                 int Slot = 0;
-                foreach (UIView Subview in Children)
+                foreach (UIView Subview in Subviews)
                 {
                     if (Subview.GetType() == typeof(ItemButton))
                     {
@@ -104,6 +111,8 @@ namespace CTC
                     }
                 }
             }
+
+            base.DrawContent(Batch);
         }
     }
 }

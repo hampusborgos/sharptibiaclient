@@ -54,18 +54,15 @@ namespace CTC
 
         private void DrawSkill(SpriteBatch Batch, int y, string name, int value)
         {
-            Rectangle ScreenBounds = this.ScreenBounds;
-            Rectangle ClientBounds = this.ClientBounds;
-
             int x = 5;
             y += 5;
 
-            Vector2 left = new Vector2(ScreenBounds.X + ClientBounds.Left + x, ScreenBounds.Y + ClientBounds.Top + y);
+            Vector2 left = new Vector2(ScreenClientBounds.X + x, ScreenClientBounds.Top + y);
             Batch.DrawString(Context.StandardFont, name, left, Color.LightGray, 0.0f, new Vector2(0.0f, 0.0f), 1.0f, SpriteEffects.None, 0.5f);
             
             string N = FormatNumber(value);
             Vector2 size = Context.StandardFont.MeasureString(N);
-            Vector2 right = new Vector2(ScreenBounds.X + ClientBounds.Right - size.X - x, ScreenBounds.Y + ClientBounds.Top + y);
+            Vector2 right = new Vector2(ScreenClientBounds.Right - size.X - x, ScreenClientBounds.Top + y);
             Batch.DrawString(Context.StandardFont, FormatNumber(value), right, Color.LightGray, 0.0f, new Vector2(0.0f, 0.0f), 1.0f, SpriteEffects.None, 0.5f);
         }
 

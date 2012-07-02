@@ -27,10 +27,7 @@ namespace CTC
             Renderer.DrawInventorySlot(Batch, ScreenBounds);
 
             if (Item != null)
-            {
-                Rectangle itemRect = ScreenCoordinate(0, 0, 32 ,32);
-                Renderer.DrawInventoryItem(Batch, Item, itemRect);
-            }
+                Renderer.DrawInventoryItem(Batch, Item, ScreenClientBounds);
         }
     }
 }

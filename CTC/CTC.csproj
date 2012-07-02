@@ -160,6 +160,8 @@
     <Compile Include="Game\GameEffect.cs" />
     <Compile Include="Game\GameRenderer.cs" />
     <Compile Include="Game\MagicEffect.cs" />
+    <Compile Include="UI\Framework\Margin.cs" />
+    <Compile Include="UI\Framework\UIStackView.cs" />
     <Compile Include="UI\Game\ChatPanel.cs" />
     <Compile Include="UI\Game\ContainerPanel.cs" />
     <Compile Include="UI\Game\GameDesktop.cs" />
