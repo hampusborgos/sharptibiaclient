@@ -20,6 +20,15 @@ namespace CTC
         NetworkMessage Read();
 
         /// <summary>
+        /// The name of the stream (filename or hostname)
+        /// </summary>
+        /// <returns>Either a filename (the last part) or a host specifier (ip:host)</returns>
+        String Name
+        {
+            get;
+        }
+
+        /// <summary>
         /// Writes a packet to the stream
         /// </summary>
         /// <param name="nmsg"></param>

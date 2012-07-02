@@ -33,6 +33,13 @@ namespace CTC
                 Protocol.parsePacket(InStream.Read());
         }
 
+        public String HostName
+        {
+            get {
+                return InStream.Name;
+            }
+        }
+
         private void ReadPackets()
         {
             while (InStream.Poll())

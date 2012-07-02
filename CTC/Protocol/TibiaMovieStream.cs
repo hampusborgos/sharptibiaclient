@@ -20,6 +20,11 @@ namespace CTC
         /// <summary>
         /// Time next packet will arrive.
         /// </summary>
+        public readonly String FileName;
+
+        /// <summary>
+        /// Time next packet will arrive.
+        /// </summary>
         private long NextTime = 0;
 
         /// <summary>
@@ -38,9 +43,10 @@ namespace CTC
         /// Construct a TibiaMovieStream from a normal stream
         /// </summary>
         /// <param name="file">The stream to read from, this can be any type of stream. TibiaMovieStream assumes ownership of it.</param>
-        public TibiaMovieStream(Stream file)
+        public TibiaMovieStream(Stream file, String fileName)
         {
             File = file;
+            FileName = fileName;
 
             /*
             inputFile = parent.inputFileName.OpenRead();
@@ -66,6 +72,14 @@ namespace CTC
             Duration = new TimeSpan(TimeSpan.TicksPerSecond * BitConverter.ToInt32(bytesDuration, 0));
 
             // File pointer is now where we want it, at the start of the stream
+        }
+
+        public String Name
+        {
+            get
+            {
+                return FileName;
+            }
         }
 
         public Boolean Poll()

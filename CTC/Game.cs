@@ -78,7 +78,7 @@ namespace CTC
                 virtualStream = fileStream;
 
             // Add the initial state
-            TibiaMovieStream MovieStream = new TibiaMovieStream(virtualStream);
+            TibiaMovieStream MovieStream = new TibiaMovieStream(virtualStream, file.Name);
             ClientState State = new ClientState(MovieStream);
 
             Desktop.AddClient(State);

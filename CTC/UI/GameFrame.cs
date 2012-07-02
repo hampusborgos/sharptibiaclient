@@ -23,7 +23,7 @@ namespace CTC
             Canvas.Bounds.Y = 18;
             AddChildPanel(Canvas);
 
-            InsertTab(Tabs.Count - 1, "WarKol.tmv");
+            InsertTab(Tabs.Count - 1, State.Viewport.Player.Name + "(" + State.HostName + ")");
         }
     }
 }
