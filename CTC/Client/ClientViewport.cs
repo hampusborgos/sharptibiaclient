@@ -390,14 +390,56 @@ namespace CTC
 
         private void OnClearInventory(Packet props)
         {
+            int slot = (int)props["Slot"];
+            Inventory[slot] = null;
         }
 
         private void OnOpenContainer(Packet props)
         {
+            int ContainerID = (int)props["ContainerID"];
+            ClientContainer container = (ClientContainer)props["Thing"];
+            container.Name = (String)props["Name"];
+            container.MaximumVolume = (int)props["Volume"];
+            container.HasParent = (bool)props["IsChild"];
+            container.Contents = (List<ClientItem>)props["Contents"];
+
+            // Store it
+            Containers[ContainerID] = container;
         }
 
         private void OnCloseContainer(Packet props)
         {
+            int ContainerID = (int)props["ContainerID"];
+            Containers.Remove(ContainerID);
+        }
+
+        private void OnContainerAddItem(Packet props)
+        {
+            int ContainerID = (int)props["ContainerID"];
+            ClientContainer container = Containers[ContainerID];
+            ClientItem item = (ClientItem)props["Item"];
+
+            // Items are always added on index 0
+            container.Contents.Insert(0, item);
+        }
+
+        private void OnContainerTransformItem(Packet props)
+        {
+            int ContainerID = (int)props["ContainerID"];
+            ClientContainer container = Containers[ContainerID];
+            int slot = (int)props["Slot"];
+            ClientItem item = (ClientItem)props["Item"];
+
+            container.Contents[slot] = item;
+        }
+
+        private void OnContainerRemoveItem(Packet props)
+        {
+            int ContainerID = (int)props["ContainerID"];
+            ClientContainer container = Containers[ContainerID];
+            int slot = (int)props["Slot"];
+
+            container.Contents.RemoveAt(slot);
         }
     }
 }

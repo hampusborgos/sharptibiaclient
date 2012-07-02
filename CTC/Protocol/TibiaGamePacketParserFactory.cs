@@ -217,16 +217,23 @@ namespace CTC
                 return delegate(NetworkMessage nmsg)
                 {
                     Packet props = new Packet(parserName);
-                    props["ContainerID"] = nmsg.ReadByte();
-                    props["ClientID"] = nmsg.ReadU16();
+                    props["ContainerID"] = (int)nmsg.ReadByte();
+                    int ClientID = nmsg.ReadU16();
+                    ItemType it = GameData.GetItemType(ClientID);
+                    if (it == null)
+                    {
+                        Log.Warning("OpenContainer contains unrecognized item type (" + ClientID.ToString() + ").", this);
+                        it = ItemType.NullType;
+                    }
+                    props["Thing"] = new ClientContainer(it);
                     props["Name"] = nmsg.ReadString();
-                    props["Volume"] = nmsg.ReadByte();
+                    props["Volume"] = (int)nmsg.ReadByte();
                     props["IsChild"] = nmsg.ReadByte() != 0;
                     int ItemCount = nmsg.ReadByte();
-                    props["ItemCount"] = ItemCount;
-                    List<ClientThing> contents = new List<ClientThing>();
+                    props["ItemCount"] = (int)ItemCount;
+                    List<ClientItem> contents = new List<ClientItem>();
                     for (int i = 0; i < ItemCount; ++i)
-                        contents.Add(ReadThing(nmsg));
+                        contents.Add((ClientItem)ReadThing(nmsg));
                     props["Contents"] = contents;
                     return props;
                 };
@@ -234,14 +241,14 @@ namespace CTC
                 return delegate(NetworkMessage nmsg)
                 {
                     Packet props = new Packet(parserName);
-                    props["ContainerID"] = nmsg.ReadByte();
+                    props["ContainerID"] = (int)nmsg.ReadByte();
                     return props;
                 };
             else if (parserName == "ContainerAddItem")
                 return delegate(NetworkMessage nmsg)
                 {
                     Packet props = new Packet(parserName);
-                    props["ContainerID"] = nmsg.ReadByte();
+                    props["ContainerID"] = (int)nmsg.ReadByte();
                     props["Item"] = ReadItem(nmsg);
                     return props;
                 };
@@ -249,8 +256,8 @@ namespace CTC
                 return delegate(NetworkMessage nmsg)
                 {
                     Packet props = new Packet(parserName);
-                    props["ContainerID"] = nmsg.ReadByte();
-                    props["Slot"] = nmsg.ReadByte();
+                    props["ContainerID"] = (int)nmsg.ReadByte();
+                    props["Slot"] = (int)nmsg.ReadByte();
                     props["Item"] = ReadItem(nmsg);
                     return props;
                 };
@@ -258,7 +265,7 @@ namespace CTC
                 return delegate(NetworkMessage nmsg)
                 {
                     Packet props = new Packet(parserName);
-                    props["ContainerID"] = nmsg.ReadByte();
+                    props["ContainerID"] = (int)nmsg.ReadByte();
                     props["Slot"] = nmsg.ReadByte();
                     return props;
                 };
