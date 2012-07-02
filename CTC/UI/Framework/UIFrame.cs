@@ -102,14 +102,14 @@ namespace CTC
                 Bounds.X = (int)(DraggedFromPosition.Value.X - dx);
                 Bounds.Y = (int)(DraggedFromPosition.Value.Y - dy);
 
-                if (Bounds.X < Parent.Bounds.X)
-                    Bounds.X = Parent.Bounds.X;
-                if (Bounds.Y < Parent.Bounds.Y)
-                    Bounds.Y = Parent.Bounds.Y;
-                if (Bounds.Right > Parent.Bounds.Right)
-                    Bounds.X = Parent.Bounds.Right - Bounds.Width;
-                if (Bounds.Bottom > Parent.Bounds.Bottom)
-                    Bounds.Y = Parent.Bounds.Bottom - Bounds.Height;
+                if (Bounds.X < 0)
+                    Bounds.X = 0;
+                if (Bounds.Y < 0)
+                    Bounds.Y = 0;
+                if (Bounds.Right > Parent.Bounds.Width)
+                    Bounds.X = Parent.Bounds.Width - Bounds.Width;
+                if (Bounds.Bottom > Parent.Bounds.Height)
+                    Bounds.Y = Parent.Bounds.Height - Bounds.Height;
                 return true;
             }
             return false;

@@ -188,23 +188,29 @@ namespace CTC
             Frame.ZOrder = -1;
             AddSubview(Frame);
 
-            Skills = new SkillPanel(this);
-            Skills.Bounds.X = Bounds.Width - Skills.Bounds.Width - 50;
-            Skills.Bounds.Y = 300;
+            UIFrame Sidebar = new UIFrame(this);
+            Sidebar.Name = "Sidebar";
+            Sidebar.Bounds = new Rectangle(Bounds.Width - 200 - 50, 50, 200, 700);
+
+            Skills = new SkillPanel(Sidebar);
+            Skills.Bounds.X = 0;
+            Skills.Bounds.Y = 10;
             Skills.ZOrder = 1;
-            AddSubview(Skills);
+            Sidebar.AddSubview(Skills);
 
-            VIPs = new VIPPanel(this);
-            VIPs.Bounds.X = Bounds.Width - VIPs.Bounds.Width - 50;
-            VIPs.Bounds.Y = 500;
+            VIPs = new VIPPanel(Sidebar);
+            VIPs.Bounds.X = 0;
+            VIPs.Bounds.Y = 210;
             VIPs.ZOrder = 1;
-            AddSubview(VIPs);
+            Sidebar.AddSubview(VIPs);
 
-            Inventory = new InventoryPanel(this);
-            Inventory.Bounds.X = Bounds.Width - Inventory.Bounds.Width - 50;
-            Inventory.Bounds.Y = 100;
+            Inventory = new InventoryPanel(Sidebar);
+            Inventory.Bounds.X = 0;
+            Inventory.Bounds.Y = 410;
             Inventory.ZOrder = 1;
-            AddSubview(Inventory);
+            Sidebar.AddSubview(Inventory);
+
+            AddSubview(Sidebar);
 
             Chat = new ChatPanel(this);
             Chat.Bounds.X = 10;
