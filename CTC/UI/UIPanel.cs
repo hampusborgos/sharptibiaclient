@@ -158,6 +158,16 @@ namespace CTC
             return false;
         }
 
+        public Vector2 ClientCoordinate(Vector2 coordiante)
+        {
+            return new Vector2(coordiante.X - ScreenBounds.X, coordiante.Y - ScreenBounds.Y);
+        }
+
+        public Vector2 ClientMouseCoordinate(MouseState mouse)
+        {
+            return ClientCoordinate(new Vector2(mouse.X, mouse.Y));
+        }
+
         public bool AcceptsMouseEvent(MouseState mouse)
         {
             if (!Visible)

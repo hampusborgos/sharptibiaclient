@@ -92,17 +92,25 @@ namespace CTC
         /// </summary>
         /// <param name="mouse"></param>
         /// <returns></returns>
-        public virtual bool MouseLeftClick(MouseState mouse)
+        public override bool MouseLeftClick(MouseState mouse)
         {
             if (Context.MouseFocusedPanel != null)
                 return Context.MouseFocusedPanel.MouseLeftClick(mouse);
 
             foreach (UIPanel child in Children)
             {
-                if (child.MouseLeftClick(mouse))
-                    return true;
+                if (child.AcceptsMouseEvent(mouse))
+                    if (child.MouseLeftClick(mouse))
+                        return true;
             }
 
+            return false;
+        }
+
+        public override bool MouseMove(MouseState mouse)
+        {
+            if (Context.MouseFocusedPanel != null)
+                return Context.MouseFocusedPanel.MouseMove(mouse);
             return false;
         }
 
@@ -118,18 +126,6 @@ namespace CTC
 
             foreach (ClientState State in Clients)
                 State.Update(Time);
-
-            Skills.Bounds.X = Bounds.Width - Skills.Bounds.Width - 50;
-            Skills.Bounds.Y = 200;
-
-            VIPs.Bounds.X = Bounds.Width - VIPs.Bounds.Width - 50;
-            VIPs.Bounds.Y = 400;
-
-            Inventory.Bounds.X = Bounds.Width - Inventory.Bounds.Width - 50;
-            Inventory.Bounds.Y = 100;
-
-            Chat.Bounds.X = 10;
-            Chat.Bounds.Y = 640;
 
             base.Update(Time);
         }
@@ -191,15 +187,23 @@ namespace CTC
             AddChildPanel(Frame);
 
             Skills = new SkillPanel(this);
+            Skills.Bounds.X = Bounds.Width - Skills.Bounds.Width - 50;
+            Skills.Bounds.Y = 200;
             AddChildPanel(Skills);
 
             VIPs = new VIPPanel(this);
+            VIPs.Bounds.X = Bounds.Width - VIPs.Bounds.Width - 50;
+            VIPs.Bounds.Y = 400;
             AddChildPanel(VIPs);
 
             Inventory = new InventoryPanel(this);
+            Inventory.Bounds.X = Bounds.Width - Inventory.Bounds.Width - 50;
+            Inventory.Bounds.Y = 100;
             AddChildPanel(Inventory);
 
             Chat = new ChatPanel(this);
+            Chat.Bounds.X = 10;
+            Chat.Bounds.Y = 640;
             Chat.Bounds.Height = 150;
             Chat.Bounds.Width = 800;
             AddChildPanel(Chat);

@@ -104,13 +104,22 @@ namespace CTC
             MouseState mouse = Mouse.GetState();
 
             // Do input handling
+
+            // First check left mouse button
             if (LastMouseState != null)
             {
                 if (LastMouseState.LeftButton != mouse.LeftButton)
                     Desktop.MouseLeftClick(mouse);
             }
+
+            // Send the mouse moved event
+            if (LastMouseState.X != mouse.X || LastMouseState.Y != mouse.Y)
+                Desktop.MouseMove(mouse);
+
+            // Save the state for next frame so we can see what changed
             LastMouseState = mouse;
 
+            // Update the game state
             Desktop.Update(gameTime);
 
             base.Update(gameTime);

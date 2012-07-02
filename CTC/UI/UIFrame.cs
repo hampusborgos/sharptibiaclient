@@ -4,11 +4,20 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
     public class UIFrame : UIPanel
     {
+        private Vector2? BeingDraggedFrom;
+        private Vector2? DraggenFromPosition;
+
+        public bool BeingDragged
+        {
+            get { return BeingDraggedFrom != null; }
+        }
+
         public UIFrame(UIPanel Parent)
             : base(Parent)
         {
@@ -26,6 +35,7 @@ namespace CTC
         public void AddButton(UIButton Button)
         {
             Buttons.Add(Button);
+            Recalculate();
         }
 
         protected void Recalculate()
@@ -42,7 +52,7 @@ namespace CTC
 
         #endregion
 
-        public override bool MouseLeftClick(Microsoft.Xna.Framework.Input.MouseState mouse)
+        public override bool MouseLeftClick(MouseState mouse)
         {
             if (base.MouseLeftClick(mouse))
                 return true;
@@ -51,6 +61,42 @@ namespace CTC
                 if (Button.AcceptsMouseEvent(mouse))
                     if (Button.MouseLeftClick(mouse))
                         return true;
+
+            // Check if the frame was grabbed
+            Vector2 frameSize = Context.Skin.Measure(this.ElementType, UISkinOrientation.Top);
+
+            if (mouse.LeftButton == ButtonState.Pressed)
+            {
+                if (ClientMouseCoordinate(mouse).Y < frameSize.Y)
+                {
+                    // Start dragging!
+                    if (CaptureMouse())
+                    {
+                        DraggenFromPosition = new Vector2(Bounds.X, Bounds.Y);
+                        BeingDraggedFrom = new Vector2(mouse.X, mouse.Y);
+                    }
+                }
+            }
+            else
+            {
+                BeingDraggedFrom = null;
+                DraggenFromPosition = null;
+                ReleaseMouse();
+            }
+
+            return false;
+        }
+
+        public override bool MouseMove(MouseState mouse)
+        {
+            if (BeingDraggedFrom != null)
+            {
+                float dx = BeingDraggedFrom.Value.X - mouse.X;
+                float dy = BeingDraggedFrom.Value.Y - mouse.Y;
+                Bounds.X = (int)(DraggenFromPosition.Value.X - dx);
+                Bounds.Y = (int)(DraggenFromPosition.Value.Y - dy);
+                return true;
+            }
             return false;
         }
 
@@ -68,7 +114,7 @@ namespace CTC
             base.DrawBorder(CurrentBatch);
 
             Vector2 pos = new Vector2(ScreenBounds.X + 5, ScreenBounds.Y + 2);
-
+            
             CurrentBatch.DrawString(
                 Context.StandardFont, Name, pos,
                 Color.LightGray,
