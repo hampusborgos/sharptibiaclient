@@ -22,7 +22,7 @@ namespace CTC
             GameCanvas Canvas = new GameCanvas(this, State);
             Canvas.Bounds.X = 0;
             Canvas.Bounds.Y = 18;
-            AddChildPanel(Canvas);
+            AddSubview(Canvas);
 
             InsertTab(Tabs.Count - 1, State.Viewport.Player.Name + "(" + State.HostName + ")");
         }

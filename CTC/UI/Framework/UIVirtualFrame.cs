@@ -50,7 +50,7 @@ namespace CTC
         {
             Scrollbar = new UIScrollbar(this);
             Scrollbar.Bounds = new Rectangle(Bounds.X, Bounds.Y, 12, 100);
-            AddChildPanel(Scrollbar);
+            AddSubview(Scrollbar);
         }
 
         public override void Update(GameTime time)

@@ -21,7 +21,7 @@ namespace CTC
             ChatLog = new UIVirtualFrame(this);
             ChatLog.ElementType = UIElementType.Window;
             ChatLog.Bounds = new Rectangle(0, 18, 800, 140);
-            AddChildPanel(ChatLog);
+            AddSubview(ChatLog);
         }
 
         #region Data Members

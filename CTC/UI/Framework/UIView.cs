@@ -98,16 +98,23 @@ namespace CTC
             }
         }
 
-        public UIView AddChildPanel(UIView panel)
+        public UIView AddSubview(UIView panel)
         {
             Children.Add(panel);
             return panel;
         }
 
-        public UIView InsertChildPanel(int index, UIView panel)
+        public UIView InsertSubview(int index, UIView panel)
         {
             Children.Insert(index, panel);
             return panel;
+        }
+
+        public void BringSubviewToFront(UIView view)
+        {
+            int oldIndex = Children.IndexOf(view);
+            Children.RemoveAt(oldIndex);
+            Children.Add(view);
         }
 
         public bool CaptureMouse()
@@ -148,13 +155,14 @@ namespace CTC
 
         public virtual bool MouseLeftClick(MouseState mouse)
         {
-            foreach (UIView Child in Children)
+            // We use a copy so that event handling can modify the list
+            List<UIView> SubviewListCopy = new List<UIView>(Children);
+            foreach (UIView subview in SubviewListCopy)
             {
-                if (Child.AcceptsMouseEvent(mouse))
-                    if (Child.MouseLeftClick(mouse))
+                if (subview.AcceptsMouseEvent(mouse))
+                    if (subview.MouseLeftClick(mouse))
                         return true;
             }
-
             return false;
         }
 

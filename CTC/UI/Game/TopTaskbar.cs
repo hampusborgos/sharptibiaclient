@@ -16,7 +16,7 @@ namespace CTC
 
             UIButton StartButton = new UIButton(this);
             StartButton.Bounds = new Rectangle(0, 0, 20, 20);
-            AddChildPanel(StartButton);
+            AddSubview(StartButton);
         }
 
         public override void Draw(SpriteBatch CurrentBatch)

@@ -62,15 +62,15 @@ namespace CTC
             ElementType = UIElementType.ScrollbarBackground;
             TopButton = new UIButton(this);
             TopButton.ElementType = UIElementType.ScrollbarTop;
-            AddChildPanel(TopButton);
+            AddSubview(TopButton);
 
             BottomButton = new UIButton(this);
             BottomButton.ElementType = UIElementType.ScrollbarBottom;
-            AddChildPanel(BottomButton);
+            AddSubview(BottomButton);
 
             GemButton = new UIButton(this);
             GemButton.ElementType = UIElementType.ScrollbarGem;
-            AddChildPanel(GemButton);
+            AddSubview(GemButton);
 
             Length = 1000;
             Position = 0;

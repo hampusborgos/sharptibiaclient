@@ -74,7 +74,13 @@ namespace CTC
                     {
                         DraggenFromPosition = new Vector2(Bounds.X, Bounds.Y);
                         BeingDraggedFrom = new Vector2(mouse.X, mouse.Y);
+                        Parent.BringSubviewToFront(this);
                     }
+                }
+                else
+                {
+                    // Put us ontop
+                    Parent.BringSubviewToFront(this);
                 }
             }
             else

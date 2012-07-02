@@ -72,7 +72,7 @@ namespace CTC
             if (Clients.Count == 1)
                 ActiveClient = State;
             Frame.AddClient(State);
-            InsertChildPanel(0, Frame);
+            InsertSubview(0, Frame);
         }
 
         #region Event Handlers
@@ -97,10 +97,12 @@ namespace CTC
             if (Context.MouseFocusedPanel != null)
                 return Context.MouseFocusedPanel.MouseLeftClick(mouse);
 
-            foreach (UIView child in Children)
+            // We use a copy so that event handling can modify the list
+            List<UIView> SubviewListCopy = new List<UIView>(Children);
+            foreach (UIView subview in SubviewListCopy)
             {
-                if (child.AcceptsMouseEvent(mouse))
-                    if (child.MouseLeftClick(mouse))
+                if (subview.AcceptsMouseEvent(mouse))
+                    if (subview.MouseLeftClick(mouse))
                         return true;
             }
 
@@ -179,34 +181,34 @@ namespace CTC
         private void CreatePanels()
         {
             Taskbar = new TopTaskbar(this);
-            AddChildPanel(Taskbar);
+            AddSubview(Taskbar);
 
             Frame = new GameFrame(this);
             Frame.Bounds.X = 10;
             Frame.Bounds.Y = 20;
-            AddChildPanel(Frame);
+            AddSubview(Frame);
 
             Skills = new SkillPanel(this);
             Skills.Bounds.X = Bounds.Width - Skills.Bounds.Width - 50;
             Skills.Bounds.Y = 300;
-            AddChildPanel(Skills);
+            AddSubview(Skills);
 
             VIPs = new VIPPanel(this);
             VIPs.Bounds.X = Bounds.Width - VIPs.Bounds.Width - 50;
             VIPs.Bounds.Y = 500;
-            AddChildPanel(VIPs);
+            AddSubview(VIPs);
 
             Inventory = new InventoryPanel(this);
             Inventory.Bounds.X = Bounds.Width - Inventory.Bounds.Width - 50;
             Inventory.Bounds.Y = 100;
-            AddChildPanel(Inventory);
+            AddSubview(Inventory);
 
             Chat = new ChatPanel(this);
             Chat.Bounds.X = 10;
             Chat.Bounds.Y = 640;
             Chat.Bounds.Height = 150;
             Chat.Bounds.Width = 800;
-            AddChildPanel(Chat);
+            AddSubview(Chat);
 
             // Register listeners
             ActiveStateChanged += Skills.OnNewState;
