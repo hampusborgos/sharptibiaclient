@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
@@ -30,25 +31,25 @@ namespace CTC
             switch (slot)
             {
                 case InventorySlot.Head:
-                    return new Rectangle(ScreenClientBounds.Left + 48, ScreenClientBounds.Top + 8, 32, 32);
+                    return new Rectangle(ClientBounds.Left + 48, ClientBounds.Top + 8, 32, 32);
                 case InventorySlot.Necklace:
-                    return new Rectangle(ScreenClientBounds.Left + 8, ScreenClientBounds.Top + 20, 32, 32);
+                    return new Rectangle(ClientBounds.Left + 8, ClientBounds.Top + 20, 32, 32);
                 case InventorySlot.Backpack:
-                    return new Rectangle(ScreenClientBounds.Left + 88, ScreenClientBounds.Top + 20, 32, 32);
+                    return new Rectangle(ClientBounds.Left + 88, ClientBounds.Top + 20, 32, 32);
                 case InventorySlot.Armor:
-                    return new Rectangle(ScreenClientBounds.Left + 48, ScreenClientBounds.Top + 40, 32, 32);
+                    return new Rectangle(ClientBounds.Left + 48, ClientBounds.Top + 40, 32, 32);
                 case InventorySlot.Right:
-                    return new Rectangle(ScreenClientBounds.Left + 88, ScreenClientBounds.Top + 60, 32, 32);
+                    return new Rectangle(ClientBounds.Left + 88, ClientBounds.Top + 60, 32, 32);
                 case InventorySlot.Left:
-                    return new Rectangle(ScreenClientBounds.Left + 8,  ScreenClientBounds.Top + 60, 32, 32);
+                    return new Rectangle(ClientBounds.Left + 8,  ClientBounds.Top + 60, 32, 32);
                 case InventorySlot.Legs:
-                    return new Rectangle(ScreenClientBounds.Left + 48, ScreenClientBounds.Top + 80, 32, 32);
+                    return new Rectangle(ClientBounds.Left + 48, ClientBounds.Top + 80, 32, 32);
                 case InventorySlot.Feet:
-                    return new Rectangle(ScreenClientBounds.Left + 48, ScreenClientBounds.Top + 120, 32, 32);
+                    return new Rectangle(ClientBounds.Left + 48, ClientBounds.Top + 120, 32, 32);
                 case InventorySlot.Ring:
-                    return new Rectangle(ScreenClientBounds.Left + 8,  ScreenClientBounds.Top + 100, 32, 32);
+                    return new Rectangle(ClientBounds.Left + 8,  ClientBounds.Top + 100, 32, 32);
                 case InventorySlot.Ammo:
-                    return new Rectangle(ScreenClientBounds.Left + 88, ScreenClientBounds.Top + 100, 32, 32);
+                    return new Rectangle(ClientBounds.Left + 88, ClientBounds.Top + 100, 32, 32);
             }
             return new Rectangle();
         }
@@ -60,6 +61,10 @@ namespace CTC
                 for (InventorySlot slot = InventorySlot.First; slot <= InventorySlot.Last; slot++)
                 {
                     Rectangle slotPosition = GetSlotPosition(slot);
+                    slotPosition = new Rectangle(
+                            ScreenBounds.X + slotPosition.X, ScreenBounds.Y + slotPosition.Y,
+                            slotPosition.Width, slotPosition.Height);
+
                     Renderer.DrawInventorySlot(Batch, slotPosition);
                     ClientItem item = Viewport.Inventory[(int)slot];
                     if (item != null)

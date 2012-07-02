@@ -217,7 +217,8 @@ namespace CTC
                 return delegate(NetworkMessage nmsg)
                 {
                     Packet props = new Packet(parserName);
-                    props["ContainerID"] = (int)nmsg.ReadByte();
+                    int ContainerID = (int)nmsg.ReadByte();
+                    props["ContainerID"] = ContainerID;
                     int ClientID = nmsg.ReadU16();
                     ItemType it = GameData.GetItemType(ClientID);
                     if (it == null)
@@ -225,7 +226,7 @@ namespace CTC
                         Log.Warning("OpenContainer contains unrecognized item type (" + ClientID.ToString() + ").", this);
                         it = ItemType.NullType;
                     }
-                    props["Thing"] = new ClientContainer(it);
+                    props["Thing"] = new ClientContainer(it, ContainerID);
                     props["Name"] = nmsg.ReadString();
                     props["Volume"] = (int)nmsg.ReadByte();
                     props["IsChild"] = nmsg.ReadByte() != 0;

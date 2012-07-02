@@ -51,19 +51,29 @@ namespace CTC
             Batch = new SpriteBatch(Context.Graphics.GraphicsDevice);
         }
 
+        public virtual Rectangle Padding
+        {
+            get
+            {
+                return new Rectangle(
+                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Left).X,
+                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Top).Y,
+                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Right).X,
+                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Bottom).Y
+                );
+            }
+        }
+
         public virtual Rectangle ClientBounds
         {
             get
             {
-                int left = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Left).X;
-                int top = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Top).Y;
-                int right = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Right).X;
-                int bottom = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Bottom).Y;
+                Rectangle p = Padding;
                 return new Rectangle(
-                    left,
-                    top,
-                    Bounds.Width - left - right,
-                    Bounds.Height - top - bottom
+                    p.Left,
+                    p.Top,
+                    Bounds.Width - p.Left - p.Right,
+                    Bounds.Height - p.Top - p.Bottom
                 );
             }
         }

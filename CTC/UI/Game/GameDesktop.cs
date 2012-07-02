@@ -71,12 +71,19 @@ namespace CTC
             Clients.Add(State);
             if (Clients.Count == 1)
                 ActiveClient = State;
+
+            // Read in some state (in case the game was fast-forwarded)
+            foreach (ClientContainer Container in State.Viewport.Containers.Values)
+                OnOpenContainer(State.Viewport, Container);
+
+            // Hook up handlers for some events
+            State.Viewport.OpenContainer += OnOpenContainer;
+            State.Viewport.CloseContainer += OnCloseContainer;
             Frame.AddClient(State);
         }
 
         #region Event Handlers
 
-        // Event handlers
         void OnResize(object o, EventArgs args)
         {
             if (Context.Window.ClientBounds.Height > 0 && Context.Window.ClientBounds.Width > 0)
@@ -110,9 +117,30 @@ namespace CTC
 
         public override bool MouseMove(MouseState mouse)
         {
+            // To get mouse move events you must capture the mouse first
             if (Context.MouseFocusedPanel != null)
                 return Context.MouseFocusedPanel.MouseMove(mouse);
             return false;
+        }
+
+        protected void OnOpenContainer(ClientViewport Viewport, ClientContainer Container)
+        {
+            ContainerPanel Panel = new ContainerPanel(this, Viewport, Container.ContainerID);
+            Panel.Bounds.X = 1000;
+            Panel.Bounds.Width = 200;
+            Panel.Bounds.Height = 200;
+            Panel.ZOrder = 1;
+            this.AddSubview(Panel);
+        }
+
+        protected void OnCloseContainer(ClientViewport Viewport, ClientContainer Container)
+        {
+            Children.RemoveAll(delegate(UIView Panel)
+            {
+                if (Panel.GetType() == typeof(ContainerPanel))
+                    return ((ContainerPanel)Panel).ContainerID == Container.ContainerID;
+                return false;
+            });
         }
 
         #endregion
@@ -122,11 +150,14 @@ namespace CTC
             Context.GameTime = Time;
 
             LFPS.Enqueue(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+            // Remove ticks older than one second
             while (LFPS.Count > 0 && LFPS.First() < DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - 1000)
                 LFPS.Dequeue();
 
             foreach (ClientState State in Clients)
+            {
                 State.Update(Time);
+            }
 
             base.Update(Time);
         }
@@ -224,6 +255,7 @@ namespace CTC
             ActiveStateChanged += Skills.OnNewState;
             ActiveStateChanged += VIPs.OnNewState;
             ActiveStateChanged += Inventory.OnNewState;
+            ActiveStateChanged += Chat.OnNewState;
             ActiveStateChanged += Chat.OnNewState;
         }
 

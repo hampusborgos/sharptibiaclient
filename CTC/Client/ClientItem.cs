@@ -63,9 +63,15 @@ namespace CTC
         /// </summary>
         public String Name;
 
-        public ClientContainer(ItemType Data)
+        /// <summary>
+        /// The Container ID used by the server to uniquely identify this container
+        /// </summary>
+        public readonly int ContainerID;
+
+        public ClientContainer(ItemType Data, int ContainerID)
             : base(Data, 1)
         {
+            this.ContainerID = ContainerID;
             MaximumVolume = 0;
             HasParent = false;
             Name = "Unknown container";

@@ -66,8 +66,10 @@ namespace CTC
 
         #region Events
 
-        public event EventHandler CreatureAppear;
-        public event EventHandler CreatureDisappear;
+        public delegate void ContainerEvent(ClientViewport Viewport, ClientContainer Container);
+
+        public event ContainerEvent OpenContainer;
+        public event ContainerEvent CloseContainer;
 
         #endregion
 
@@ -397,20 +399,29 @@ namespace CTC
         private void OnOpenContainer(Packet props)
         {
             int ContainerID = (int)props["ContainerID"];
-            ClientContainer container = (ClientContainer)props["Thing"];
-            container.Name = (String)props["Name"];
-            container.MaximumVolume = (int)props["Volume"];
-            container.HasParent = (bool)props["IsChild"];
-            container.Contents = (List<ClientItem>)props["Contents"];
+            ClientContainer Container = (ClientContainer)props["Thing"];
+            Container.Name = (String)props["Name"];
+            Container.MaximumVolume = (int)props["Volume"];
+            Container.HasParent = (bool)props["IsChild"];
+            Container.Contents = (List<ClientItem>)props["Contents"];
 
             // Store it
-            Containers[ContainerID] = container;
+            Containers[ContainerID] = Container;
+
+            // Dispatch an event
+            if (OpenContainer != null)
+                OpenContainer(this, Container);
         }
 
         private void OnCloseContainer(Packet props)
         {
             int ContainerID = (int)props["ContainerID"];
+            ClientContainer Container = Containers[ContainerID];
             Containers.Remove(ContainerID);
+
+            // Dispatch an event
+            if (CloseContainer != null)
+                CloseContainer(this, Container);
         }
 
         private void OnContainerAddItem(Packet props)
