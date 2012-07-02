@@ -12,7 +12,7 @@ namespace CTC
         ClientViewport Viewport;
         GameRenderer Renderer;
 
-        public InventoryPanel(UIPanel Parent)
+        public InventoryPanel(UIView Parent)
             : base(Parent)
         {
             Name = "Inventory";

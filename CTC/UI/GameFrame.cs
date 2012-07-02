@@ -9,7 +9,7 @@ namespace CTC
     {
         List<GameCanvas> Canvas = new List<GameCanvas>();
 
-        public GameFrame(UIPanel Parent)
+        public GameFrame(UIView Parent)
             : base(Parent)
         {
             TabWidth = 150;

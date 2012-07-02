@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CTC
 {
-    public class UIScrollbar : UIPanel
+    public class UIScrollbar : UIView
     {
         private int PrivateLength;
         /// <summary>
@@ -56,7 +56,7 @@ namespace CTC
         /// Constructor of the scrollbar
         /// </summary>
         /// <param name="Parent"></param>
-        public UIScrollbar(UIPanel Parent)
+        public UIScrollbar(UIView Parent)
             : base(Parent)
         {
             ElementType = UIElementType.ScrollbarBackground;

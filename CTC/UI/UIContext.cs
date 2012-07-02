@@ -16,7 +16,7 @@ namespace CTC
         public RasterizerState Rasterizer;
         public GameTime GameTime;
 
-        public UIPanel MouseFocusedPanel;
+        public UIView MouseFocusedPanel;
 
         public UISkin Skin;
         public SpriteFont StandardFont;

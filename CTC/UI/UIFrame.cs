@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
-    public class UIFrame : UIPanel
+    public class UIFrame : UIView
     {
         private Vector2? BeingDraggedFrom;
         private Vector2? DraggenFromPosition;
@@ -18,7 +18,7 @@ namespace CTC
             get { return BeingDraggedFrom != null; }
         }
 
-        public UIFrame(UIPanel Parent)
+        public UIFrame(UIView Parent)
             : base(Parent)
         {
             ElementType = UIElementType.Frame;

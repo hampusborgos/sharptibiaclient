@@ -11,7 +11,7 @@ namespace CTC
 {
     public delegate void StateChangedEventHandler(ClientState NewState);
 
-    class GameDesktop : UIPanel
+    class GameDesktop : UIView
     {
         public GameDesktop(GameWindow Window, GraphicsDeviceManager Graphics, ContentManager Content)
             : base(new UIContext(Window, Graphics, Content))
@@ -97,7 +97,7 @@ namespace CTC
             if (Context.MouseFocusedPanel != null)
                 return Context.MouseFocusedPanel.MouseLeftClick(mouse);
 
-            foreach (UIPanel child in Children)
+            foreach (UIView child in Children)
             {
                 if (child.AcceptsMouseEvent(mouse))
                     if (child.MouseLeftClick(mouse))

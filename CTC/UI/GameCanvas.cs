@@ -7,9 +7,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CTC
 {
-    public class GameCanvas : UIPanel, ICleanupable
+    public class GameCanvas : UIView, ICleanupable
     {
-        public GameCanvas(UIPanel Parent, ClientState State)
+        public GameCanvas(UIView Parent, ClientState State)
             : base(Parent)
         {
             Protocol = State.Protocol;

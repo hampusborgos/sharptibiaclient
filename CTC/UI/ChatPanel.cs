@@ -11,7 +11,7 @@ namespace CTC
     {
         UIVirtualFrame ChatLog;
 
-        public ChatPanel(UIPanel Parent)
+        public ChatPanel(UIView Parent)
             : base(Parent)
         {
             AddTab("Default");

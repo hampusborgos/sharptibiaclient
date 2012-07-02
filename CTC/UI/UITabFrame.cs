@@ -9,7 +9,7 @@ namespace CTC
 {
     public class UITab : UIButton
     {
-        public UITab(UIPanel Parent, int Width)
+        public UITab(UIView Parent, int Width)
             : base(Parent)
         {
             ElementType = UIElementType.Tab;
@@ -17,9 +17,9 @@ namespace CTC
         }
     }
 
-    public class UITabFrame : UIPanel
+    public class UITabFrame : UIView
     {
-        public UITabFrame(UIPanel Parent)
+        public UITabFrame(UIView Parent)
             : base(Parent)
         {
             ElementType = UIElementType.None;

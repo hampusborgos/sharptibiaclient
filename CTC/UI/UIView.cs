@@ -9,11 +9,11 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
-    public class UIPanel
+    public class UIView
     {
         protected UIContext Context;
-        protected UIPanel Parent;
-        protected List<UIPanel> Children;
+        protected UIView Parent;
+        protected List<UIView> Children;
 
         public UIElementType ElementType = UIElementType.Window;
         protected SpriteBatch Batch;
@@ -28,27 +28,27 @@ namespace CTC
         /// Constructor for UIPanel without parent (Only applicable for the top frame)
         /// </summary>
         /// <param name="Context"></param>
-        public UIPanel(UIContext Context)
+        public UIView(UIContext Context)
         {
             this.Context = Context;
-            Children = new List<UIPanel>();
+            Children = new List<UIView>();
         }
 
         /// <summary>
         /// Base constructor for all UIPanels
         /// </summary>
         /// <param name="parent"></param>
-        public UIPanel(UIPanel parent)
+        public UIView(UIView parent)
         {
             Parent = parent;
-            UIPanel superParent = parent;
+            UIView superParent = parent;
             while (superParent.Parent != null)
                 superParent = superParent.Parent;
             Context = superParent.Context;
 
             ZOrder = Parent.ZOrder + 1;
 
-            Children = new List<UIPanel>();
+            Children = new List<UIView>();
 
             Batch = new SpriteBatch(Context.Graphics.GraphicsDevice);
         }
@@ -98,13 +98,13 @@ namespace CTC
             }
         }
 
-        public UIPanel AddChildPanel(UIPanel panel)
+        public UIView AddChildPanel(UIView panel)
         {
             Children.Add(panel);
             return panel;
         }
 
-        public UIPanel InsertChildPanel(int index, UIPanel panel)
+        public UIView InsertChildPanel(int index, UIView panel)
         {
             Children.Insert(index, panel);
             return panel;
@@ -148,7 +148,7 @@ namespace CTC
 
         public virtual bool MouseLeftClick(MouseState mouse)
         {
-            foreach (UIPanel Child in Children)
+            foreach (UIView Child in Children)
             {
                 if (Child.AcceptsMouseEvent(mouse))
                     if (Child.MouseLeftClick(mouse))
@@ -181,7 +181,7 @@ namespace CTC
 
         public virtual void Update(GameTime time)
         {
-            foreach (UIPanel Child in Children)
+            foreach (UIView Child in Children)
             {
                 Child.Update(time);
             }
@@ -275,7 +275,7 @@ namespace CTC
         /// <param name="CurrentBatch"></param>
         protected virtual void DrawChildren(SpriteBatch CurrentBatch)
         {
-            foreach (UIPanel panel in Children)
+            foreach (UIView panel in Children)
             {
                 panel.Draw(CurrentBatch);
             }

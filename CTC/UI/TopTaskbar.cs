@@ -7,9 +7,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CTC
 {
-    public class TopTaskbar : UIPanel
+    public class TopTaskbar : UIView
     {
-        public TopTaskbar(UIPanel Parent)
+        public TopTaskbar(UIView Parent)
             : base(Parent)
         {
             Bounds = new Rectangle(0, 0, 20, 20);

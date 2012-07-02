@@ -45,7 +45,7 @@ namespace CTC
             }
         }
         
-        public UIVirtualFrame(UIPanel Parent)
+        public UIVirtualFrame(UIView Parent)
             : base(Parent)
         {
             Scrollbar = new UIScrollbar(this);

@@ -8,12 +8,12 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
-    public class UIButton : UIPanel
+    public class UIButton : UIView
     {
         public String Label;
         public bool Highlighted = false;
 
-        public UIButton(UIPanel Parent)
+        public UIButton(UIView Parent)
             : base(Parent)
         {
             ElementType = UIElementType.Button;
