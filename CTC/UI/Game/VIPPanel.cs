@@ -16,6 +16,13 @@ namespace CTC
         {
             Name = "VIP List";
 
+
+            this.Padding = new Margin
+            {
+                Top = 5,
+                Left = 5
+            };
+
             Bounds.Width = 200;
             Bounds.Height = 200;
         }
@@ -27,7 +34,7 @@ namespace CTC
 
         protected override void DrawContent(SpriteBatch CurrentBatch)
         {
-            Vector2 pos = new Vector2(ClientBounds.X, ClientBounds.Y + 5);
+            Vector2 pos = new Vector2(0, 0);
             foreach (ClientCreature vip in Viewport.VIPList.Values)
             {
                 if (vip.Online == false)
