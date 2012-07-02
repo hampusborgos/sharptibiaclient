@@ -51,24 +51,18 @@ namespace CTC
             Batch = new SpriteBatch(Context.Graphics.GraphicsDevice);
         }
 
-        public virtual Rectangle Padding
-        {
-            get
-            {
-                return new Rectangle(
-                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Left).X,
-                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Top).Y,
-                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Right).X,
-                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Bottom).Y
-                );
-            }
-        }
+        public Rectangle Padding = new Rectangle(0, 0, 0, 0);
 
         public virtual Rectangle ClientBounds
         {
             get
             {
-                Rectangle p = Padding;
+                Rectangle p = new Rectangle(
+                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Left).X,
+                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Top).Y,
+                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Right).X,
+                    (int)Context.Skin.Measure(ElementType, UISkinOrientation.Bottom).Y
+                );
                 return new Rectangle(
                     p.Left,
                     p.Top,
@@ -175,9 +169,30 @@ namespace CTC
             return false;
         }
 
-        public Vector2 ClientCoordinate(Vector2 coordiante)
+        public Vector2 ClientCoordinate(Vector2 coordinate)
         {
-            return new Vector2(coordiante.X - ScreenBounds.X, coordiante.Y - ScreenBounds.Y);
+            return new Vector2(
+                coordinate.X - ScreenClientBounds.X - Padding.Left,
+                coordinate.Y - ScreenClientBounds.Y - Padding.Top
+            );
+        }
+
+        public Vector2 ScreenCoordinate(Vector2 coordinate)
+        {
+            return new Vector2(
+                ScreenClientBounds.Left + Padding.Left + coordinate.X,
+                ScreenClientBounds.Top + Padding.Top + coordinate.Y
+            );
+        }
+
+        public Rectangle ScreenCoordinate(Rectangle rect)
+        {
+            return new Rectangle(
+                ScreenClientBounds.Left + Padding.Left + rect.Left,
+                ScreenClientBounds.Top + Padding.Top + rect.Top,
+                rect.Width,
+                rect.Height
+            );
         }
 
         public Vector2 ClientMouseCoordinate(MouseState mouse)

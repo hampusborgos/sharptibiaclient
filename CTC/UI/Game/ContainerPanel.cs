@@ -20,6 +20,10 @@ namespace CTC
             this.Viewport = Viewport;
             this.ContainerID = ContainerID;
             Renderer = new GameRenderer(this.Context, Viewport.GameData);
+            Padding = new Rectangle(7, 4, 7, 4);
+
+            if (Viewport.Containers[ContainerID].HasParent)
+                AddButton(CreateButton("U"));
         }
 
         public void OnNewState(ClientState NewState)
@@ -29,16 +33,14 @@ namespace CTC
 
         protected Rectangle GetSlotPosition(int Slot)
         {
-            int X = Padding.X;
-            int Y = Padding.Y;
             // How many slots can fit per row?
-            int SlotsPerRow = ClientBounds.Width / 32;
+            int SlotsPerRow = (ClientBounds.Width - Padding.Width) / 35;
             // Then what row are we on?
             int Col = Slot % SlotsPerRow;
             int Row = Slot / SlotsPerRow;
             return new Rectangle(
-                X + Col * 32, Y + Row * 32,
-                32, 32);
+                Col * 37, Row * 37,
+                34, 34);
         }
 
         protected override void DrawContent(SpriteBatch Batch)
@@ -49,11 +51,7 @@ namespace CTC
 
                 for (int Slot = 0; Slot < Container.MaximumVolume; ++Slot)
                 {
-                    Rectangle slotPosition = GetSlotPosition(Slot);
-                    slotPosition = new Rectangle(
-                            ScreenBounds.X + slotPosition.X, ScreenBounds.Y + slotPosition.Y,
-                            slotPosition.Width, slotPosition.Height);
-
+                    Rectangle slotPosition = ScreenCoordinate(GetSlotPosition(Slot));
                     Renderer.DrawInventorySlot(Batch, slotPosition);
 
                     // Draw item if there is one

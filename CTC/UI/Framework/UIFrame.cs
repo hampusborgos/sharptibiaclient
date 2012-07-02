@@ -33,7 +33,7 @@ namespace CTC
         #region Methods
 
         public void AddButton(UIButton Button)
-        {
+        {;
             Buttons.Add(Button);
             Recalculate();
         }
@@ -154,20 +154,21 @@ namespace CTC
 
         #region Creation and Loading
 
-        protected UIButton CreateButton()
+        protected UIButton CreateButton(String Label)
         {
             UIButton Button = new UIButton(this);
             Button.Bounds.Width = 12;
             Button.Bounds.Height = 12;
+            Button.Label = Label;
             return Button;
         }
 
         protected void AddDefultButtons()
         {
-            UIButton CloseButton = CreateButton();
+            UIButton CloseButton = CreateButton("X");
             AddButton(CloseButton);
 
-            UIButton MinimizeButton = CreateButton();
+            UIButton MinimizeButton = CreateButton("_");
             AddButton(MinimizeButton);
         }
 
