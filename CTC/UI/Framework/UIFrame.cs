@@ -11,7 +11,7 @@ namespace CTC
     public class UIFrame : UIView
     {
         private Vector2? BeingDraggedFrom;
-        private Vector2? DraggenFromPosition;
+        private Vector2? DraggedFromPosition;
 
         public bool BeingDragged
         {
@@ -72,7 +72,7 @@ namespace CTC
                     // Start dragging!
                     if (CaptureMouse())
                     {
-                        DraggenFromPosition = new Vector2(Bounds.X, Bounds.Y);
+                        DraggedFromPosition = new Vector2(Bounds.X, Bounds.Y);
                         BeingDraggedFrom = new Vector2(mouse.X, mouse.Y);
                         Parent.BringSubviewToFront(this);
                     }
@@ -86,7 +86,7 @@ namespace CTC
             else
             {
                 BeingDraggedFrom = null;
-                DraggenFromPosition = null;
+                DraggedFromPosition = null;
                 ReleaseMouse();
             }
 
@@ -99,8 +99,17 @@ namespace CTC
             {
                 float dx = BeingDraggedFrom.Value.X - mouse.X;
                 float dy = BeingDraggedFrom.Value.Y - mouse.Y;
-                Bounds.X = (int)(DraggenFromPosition.Value.X - dx);
-                Bounds.Y = (int)(DraggenFromPosition.Value.Y - dy);
+                Bounds.X = (int)(DraggedFromPosition.Value.X - dx);
+                Bounds.Y = (int)(DraggedFromPosition.Value.Y - dy);
+
+                if (Bounds.X < Parent.Bounds.X)
+                    Bounds.X = Parent.Bounds.X;
+                if (Bounds.Y < Parent.Bounds.Y)
+                    Bounds.Y = Parent.Bounds.Y;
+                if (Bounds.Right > Parent.Bounds.Right)
+                    Bounds.X = Parent.Bounds.Right - Bounds.Width;
+                if (Bounds.Bottom > Parent.Bounds.Bottom)
+                    Bounds.Y = Parent.Bounds.Bottom - Bounds.Height;
                 return true;
             }
             return false;
