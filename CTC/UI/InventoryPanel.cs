@@ -31,6 +31,13 @@ namespace CTC
                 return;
 
             Renderer.DrawSprite(Batch, Context.GameTime, null, Item.Sprite, Item.Subtype, 0, new Vector2(rect.X, rect.Y), Color.White);
+
+            if (Item.Type.IsStackable)
+            {
+                String count = Item.Subtype.ToString();
+                Vector2 textSize = Context.StandardFont.MeasureString(count);
+                Renderer.DrawBoldedText(Batch, "10", new Vector2(rect.X + 32 - textSize.X - 2, rect.Y + 32 - textSize.Y), Color.LightGray);
+            }
         }
 
         protected void DrawInventorySlot(SpriteBatch Batch, Rectangle rect)
