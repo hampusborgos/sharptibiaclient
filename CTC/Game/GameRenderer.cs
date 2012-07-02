@@ -149,6 +149,26 @@ namespace CTC
             }
         }
 
+        public void DrawInventoryItem(SpriteBatch Batch, ClientItem Item, Rectangle rect)
+        {
+            if (Item.Sprite == null)
+                return;
+
+            DrawSprite(Batch, Context.GameTime, null, Item.Sprite, Item.Subtype, 0, new Vector2(rect.X, rect.Y), Color.White);
+
+            if (Item.Type.IsStackable)
+            {
+                String count = Item.Subtype.ToString();
+                Vector2 textSize = Context.StandardFont.MeasureString(count);
+                DrawBoldedText(Batch, "10", new Vector2(rect.X + 32 - textSize.X - 2, rect.Y + 32 - textSize.Y), Color.LightGray);
+            }
+        }
+
+        public void DrawInventorySlot(SpriteBatch Batch, Rectangle rect)
+        {
+            Context.Skin.DrawBox(Batch, UIElementType.InventorySlot, rect);
+        }
+
         public void DrawCreature(SpriteBatch Batch, GameTime Time, ClientCreature Creature, Vector2 Offset, Color clr)
         {
             if (Creature.Outfit.LookItem != 0)

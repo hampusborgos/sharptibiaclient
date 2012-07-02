@@ -25,26 +25,6 @@ namespace CTC
             Renderer = new GameRenderer(this.Context, Viewport.GameData);
         }
 
-        protected void DrawInventoryItem(SpriteBatch Batch, ClientItem Item, Rectangle rect)
-        {
-            if (Item.Sprite == null)
-                return;
-
-            Renderer.DrawSprite(Batch, Context.GameTime, null, Item.Sprite, Item.Subtype, 0, new Vector2(rect.X, rect.Y), Color.White);
-
-            if (Item.Type.IsStackable)
-            {
-                String count = Item.Subtype.ToString();
-                Vector2 textSize = Context.StandardFont.MeasureString(count);
-                Renderer.DrawBoldedText(Batch, "10", new Vector2(rect.X + 32 - textSize.X - 2, rect.Y + 32 - textSize.Y), Color.LightGray);
-            }
-        }
-
-        protected void DrawInventorySlot(SpriteBatch Batch, Rectangle rect)
-        {
-            Context.Skin.DrawBox(Batch, UIElementType.InventorySlot, rect);
-        }
-
         protected Rectangle GetSlotPosition(InventorySlot slot)
         {
             switch (slot)
@@ -78,10 +58,10 @@ namespace CTC
                 for (InventorySlot slot = InventorySlot.First; slot <= InventorySlot.Last; slot++)
                 {
                     Rectangle slotPosition = GetSlotPosition(slot);
-                    DrawInventorySlot(Batch, slotPosition);
+                    Renderer.DrawInventorySlot(Batch, slotPosition);
                     ClientItem item = Viewport.Inventory[(int)slot];
                     if (item != null)
-                        DrawInventoryItem(Batch, item, slotPosition);
+                        Renderer.DrawInventoryItem(Batch, item, slotPosition);
                 }
             }
         }
