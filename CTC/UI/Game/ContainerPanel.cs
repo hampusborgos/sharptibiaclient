@@ -18,7 +18,13 @@ namespace CTC
         {
             this.Viewport = Viewport;
             this.ContainerID = ContainerID;
-            Padding = new Margin(4, 7);
+            Padding = new Margin
+            {
+                Top = 4,
+                Left = 7,
+                Bottom = 4,
+                Right = 0
+            };
             ContentView = new UIStackView(UIStackDirection.Horizontal, true);
 
             UIButton UpButton = CreateButton("U");
