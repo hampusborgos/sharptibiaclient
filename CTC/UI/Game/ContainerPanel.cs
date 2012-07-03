@@ -14,14 +14,12 @@ namespace CTC
         GameRenderer Renderer;
         public readonly int ContainerID;
 
-        public ContainerPanel(UIView Parent, ClientViewport Viewport, int ContainerID)
-            : base(Parent)
+        public ContainerPanel(ClientViewport Viewport, int ContainerID)
         {
             this.Viewport = Viewport;
             this.ContainerID = ContainerID;
-            Renderer = new GameRenderer(this.Context, Viewport.GameData);
             Padding = new Margin(4, 7);
-            ContentView = new UIStackView(this, UIStackDirection.HorizontalThenVertical);
+            ContentView = new UIStackView(UIStackDirection.HorizontalThenVertical);
 
             UIButton UpButton = CreateButton("U");
             UpButton.Tag = "_ContainerUpButton";
@@ -59,7 +57,7 @@ namespace CTC
 
             for (int Slot = 0; Slot < Container.MaximumVolume; ++Slot)
             {
-                ContentView.AddSubview(new ItemButton(ContentView, Renderer, null)
+                ContentView.AddSubview(new ItemButton(Renderer, null)
                 {
                     Margin = new Margin
                     {
@@ -80,6 +78,21 @@ namespace CTC
             Viewport.CloseContainer -= OnCloseContainer;
         }
 
+        #region Drawing
+
+        protected override void BeginDraw()
+        {
+            if (Renderer == null)
+            {
+                Renderer = new GameRenderer(Context, Viewport.GameData);
+
+                foreach (ItemButton Button in ContentView.SubviewsOfType<ItemButton>())
+                    Button.Renderer = Renderer;
+            }
+
+            base.BeginDraw();
+        }
+
         protected override void DrawContent(SpriteBatch Batch)
         {
             if (Viewport != null)
@@ -87,18 +100,16 @@ namespace CTC
                 ClientContainer Container = Viewport.Containers[ContainerID];
 
                 int Slot = 0;
-                foreach (UIView Subview in ContentView.Subviews)
+                foreach (ItemButton Button in ContentView.SubviewsOfType<ItemButton>())
                 {
-                    if (Subview.GetType() == typeof(ItemButton))
-                    {
-                        ItemButton Button = (ItemButton)Subview;
-                        Button.Item = Container.GetItem(Slot);
-                       ++Slot;
-                    }
+                    Button.Item = Container.GetItem(Slot);
+                    ++Slot;
                 }
             }
 
             base.DrawContent(Batch);
         }
+
+        #endregion
     }
 }

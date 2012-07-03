@@ -9,8 +9,7 @@ namespace CTC
 {
     public class UITab : UIButton
     {
-        public UITab(UIView Parent, int Width)
-            : base(Parent)
+        public UITab(int Width)
         {
             ElementType = UIElementType.Tab;
             Bounds = new Rectangle(0, 0, Width, 18);
@@ -19,8 +18,7 @@ namespace CTC
 
     public class UITabFrame : UIView
     {
-        public UITabFrame(UIView Parent)
-            : base(Parent)
+        public UITabFrame()
         {
             ElementType = UIElementType.None;
             TabWidth = 100;
@@ -58,20 +56,19 @@ namespace CTC
             }
         }
 
-        protected override void DrawChildren(SpriteBatch CurrentBatch)
+        public override void RemoveSubview(UIView Subview)
         {
-            foreach (UITab Tab in Tabs)
-            {
-                Tab.Draw(CurrentBatch);
-            }
-            base.DrawChildren(CurrentBatch);
+            if (Subview is UITab)
+                Tabs.Remove((UITab)Subview);
+            base.RemoveSubview(Subview);
         }
 
         public UITab AddTab(String Label)
         {
-            UITab Tab = new UITab(this, TabWidth);
+            UITab Tab = new UITab(TabWidth);
             Tab.Label = Label;
             Tabs.Add(Tab);
+            AddSubview(Tab);
             return Tab;
         }
 

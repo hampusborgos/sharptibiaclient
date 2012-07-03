@@ -11,8 +11,7 @@ namespace CTC
     {
         ClientViewport Viewport;
 
-        public VIPPanel(UIView Parent)
-            : base(Parent)
+        public VIPPanel()
         {
             Name = "VIP List";
 

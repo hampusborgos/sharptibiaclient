@@ -12,9 +12,27 @@ namespace CTC
 
     public class UIView
     {
-        protected UIContext Context;
-        protected UIView Parent;
-        protected List<UIView> Children;
+        private UIContext _Context;
+        protected UIContext Context
+        {
+            get { return _Context; }
+            set
+            {
+                _Context = value;
+                foreach (UIView Subview in Children)
+                    Subview.Context = value;
+            }
+        }
+        protected List<UIView> Children = new List<UIView>();
+
+        /// <summary>
+        /// The superview of this view (ie. the view above it in the view hierarchy).
+        /// </summary>
+        public UIView Parent
+        {
+            get { return _Parent; }
+        }
+        private UIView _Parent;
 
         public UIElementType ElementType;
         protected SpriteBatch Batch;
@@ -25,36 +43,6 @@ namespace CTC
         public int ZOrder = 0;
         public String Tag;
         public Boolean NeedsLayout = true;
-
-
-        /// <summary>
-        /// Constructor for UIPanel without parent (Only applicable for the top frame)
-        /// </summary>
-        /// <param name="Context"></param>
-        public UIView(UIContext Context)
-        {
-            ElementType = UIElementType.Window;
-            this.Context = Context;
-            Children = new List<UIView>();
-        }
-
-        /// <summary>
-        /// Base constructor for all UIPanels
-        /// </summary>
-        /// <param name="parent"></param>
-        public UIView(UIView parent, UIElementType ElementType = UIElementType.Window)
-        {
-            Parent = parent;
-            UIView superParent = parent;
-            while (superParent.Parent != null)
-                superParent = superParent.Parent;
-            Context = superParent.Context;
-            this.ElementType = ElementType;
-
-            Children = new List<UIView>();
-
-            Batch = new SpriteBatch(Context.Graphics.GraphicsDevice);
-        }
 
         /// <summary>
         /// User-customizable padding inside this view.
@@ -98,6 +86,9 @@ namespace CTC
         {
             get
             {
+                if (Context == null)
+                    return new Margin(0);
+
                 return new Margin
                 {
                     Top = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Top).Y,
@@ -181,6 +172,32 @@ namespace CTC
             }
         }
 
+
+        #region Creation
+
+        /// <summary>
+        /// Constructor for UIPanel without parent (Only applicable for the top frame)
+        /// </summary>
+        /// <param name="Context"></param>
+        public UIView(UIContext Context)
+        {
+            ElementType = UIElementType.Window;
+            this.Context = Context;
+        }
+
+        /// <summary>
+        /// Base constructor for all UIPanels
+        /// </summary>
+        /// <param name="Frame">The size and position of the element </param>
+        /// <param name="ElementType">What style type this element should use.</param>
+        public UIView(Rectangle? Frame = null, UIElementType ElementType = UIElementType.Window)
+        {
+            Bounds = Frame ?? new Rectangle(0, 0, 0, 0);
+            this.ElementType = ElementType;
+        }
+
+        #endregion
+
         #region Subview Management
 
         public virtual List<UIView> Subviews
@@ -209,15 +226,32 @@ namespace CTC
             return null;
         }
 
-        public virtual UIView AddSubview(UIView newView)
+        private void AddSubviewInternal(UIView newView)
         {
-            int i = Children.FindIndex(delegate(UIView subview) {
+            int i = Children.FindIndex(delegate(UIView subview)
+            {
                 return subview.ZOrder > newView.ZOrder;
             });
             if (i == -1)
                 Children.Add(newView);
             else
                 Children.Insert(i, newView);
+
+            // Inform it it's a parent of us
+            newView._Parent = this;
+            newView.Context = Context;
+
+            // We will need re-layout now...
+            NeedsLayout = true;
+        }
+
+        public virtual UIView AddSubview(UIView newView)
+        {
+            if (newView.Parent != null)
+                throw new UIException("Remove the view from it's own superview first.");
+
+            AddSubviewInternal(newView);
+
             return newView;
         }
 
@@ -243,7 +277,7 @@ namespace CTC
             int oldIndex = Children.IndexOf(view);
             Children.RemoveAt(oldIndex);
 
-            AddSubview(view);
+            AddSubviewInternal(view);
         }
 
         public virtual void LayoutSubviews()
@@ -371,10 +405,16 @@ namespace CTC
 
         #region Drawing
 
-        protected void BeginDraw()
+        protected virtual void BeginDraw()
         {
+            // Create the batch if this is the first time we're being drawn
+            if (Batch == null)
+                Batch = new SpriteBatch(Context.Graphics.GraphicsDevice);
+
+            // Begin the batch
             Batch.Begin(SpriteSortMode.Deferred, null, null, null, Context.Rasterizer);
 
+            // Set up the scissors for this view
             Rectangle Screen = Context.Window.ClientBounds;
             Screen.X = 0;
             Screen.Y = 0;
@@ -400,10 +440,11 @@ namespace CTC
                 OldScissor = null;
         }
 
-        protected void EndDraw()
+        protected virtual void EndDraw()
         {
             Batch.End();
 
+            // Reset the scissors
             if (OldScissor != null)
                 Batch.GraphicsDevice.ScissorRectangle = OldScissor.Value;
         }

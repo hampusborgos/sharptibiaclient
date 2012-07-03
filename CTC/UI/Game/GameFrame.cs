@@ -9,8 +9,7 @@ namespace CTC
     {
         List<GameCanvas> Canvas = new List<GameCanvas>();
 
-        public GameFrame(UIView Parent)
-            : base(Parent)
+        public GameFrame()
         {
             TabWidth = 150;
             UITab Tab = AddTab("+");
@@ -19,7 +18,7 @@ namespace CTC
 
         public void AddClient(ClientState State)
         {
-            GameCanvas Canvas = new GameCanvas(this, State);
+            GameCanvas Canvas = new GameCanvas(State);
             Canvas.Bounds.X = 0;
             Canvas.Bounds.Y = 18;
             AddSubview(Canvas);

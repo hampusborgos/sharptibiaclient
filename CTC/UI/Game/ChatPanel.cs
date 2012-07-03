@@ -11,14 +11,13 @@ namespace CTC
     {
         UIVirtualFrame ChatLog;
 
-        public ChatPanel(UIView Parent)
-            : base(Parent)
+        public ChatPanel()
         {
             AddTab("Default");
             AddTab("Game-Chat");
             AddTab("Hemmd");
 
-            ChatLog = new UIVirtualFrame(this);
+            ChatLog = new UIVirtualFrame();
             ChatLog.ElementType = UIElementType.Window;
             ChatLog.Bounds = new Rectangle(0, 18, 800, 140);
             AddSubview(ChatLog);

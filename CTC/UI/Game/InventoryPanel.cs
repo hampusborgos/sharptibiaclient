@@ -13,14 +13,13 @@ namespace CTC
         ClientViewport Viewport;
         GameRenderer Renderer;
 
-        public InventoryPanel(UIView Parent)
-            : base(Parent)
+        public InventoryPanel()
         {
             Name = "Inventory";
             Bounds = new Rectangle(0, 0, 200, 200);
 
             for (InventorySlot slot = InventorySlot.First; slot <= InventorySlot.Last; slot++)
-                AddSubview(new InventoryItemButton(this, Viewport, slot)
+                AddSubview(new InventoryItemButton(Viewport, slot)
                 {
                     Bounds = GetSlotPosition(slot)
                 });

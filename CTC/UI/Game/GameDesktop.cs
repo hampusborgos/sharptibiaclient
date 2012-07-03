@@ -122,7 +122,7 @@ namespace CTC
 
         protected void OnOpenContainer(ClientViewport Viewport, ClientContainer Container)
         {
-            ContainerPanel Panel = new ContainerPanel(this, Viewport, Container.ContainerID);
+            ContainerPanel Panel = new ContainerPanel(Viewport, Container.ContainerID);
             Panel.Bounds.X = 1000;
             Panel.ZOrder = 1;
             this.AddSubview(Panel);
@@ -205,32 +205,32 @@ namespace CTC
 
         public void CreatePanels()
         {
-            Taskbar = new TopTaskbar(this);
+            Taskbar = new TopTaskbar();
             AddSubview(Taskbar);
 
-            Frame = new GameFrame(this);
+            Frame = new GameFrame();
             Frame.Bounds.X = 10;
             Frame.Bounds.Y = 20;
             Frame.ZOrder = -1;
             AddSubview(Frame);
 
-            UIFrame Sidebar = new UIFrame(this);
+            UIFrame Sidebar = new UIFrame();
             Sidebar.Name = "Sidebar";
             Sidebar.Bounds = new Rectangle(Bounds.Width - 200 - 50, 50, 206, 700);
 
-            Skills = new SkillPanel(Sidebar);
+            Skills = new SkillPanel();
             Skills.Bounds.X = 3;
             Skills.Bounds.Y = 10;
             Skills.ZOrder = 1;
             Sidebar.AddSubview(Skills);
 
-            VIPs = new VIPPanel(Sidebar);
+            VIPs = new VIPPanel();
             VIPs.Bounds.X = 3;
             VIPs.Bounds.Y = 210;
             VIPs.ZOrder = 1;
             Sidebar.AddSubview(VIPs);
 
-            Inventory = new InventoryPanel(Sidebar);
+            Inventory = new InventoryPanel();
             Inventory.Bounds.X = 3;
             Inventory.Bounds.Y = 410;
             Inventory.ZOrder = 1;
@@ -238,7 +238,7 @@ namespace CTC
 
             AddSubview(Sidebar);
 
-            Chat = new ChatPanel(this);
+            Chat = new ChatPanel();
             Chat.Bounds.X = 10;
             Chat.Bounds.Y = 640;
             Chat.Bounds.Height = 150;

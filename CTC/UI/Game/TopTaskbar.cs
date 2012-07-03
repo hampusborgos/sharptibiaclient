@@ -9,12 +9,11 @@ namespace CTC
 {
     public class TopTaskbar : UIView
     {
-        public TopTaskbar(UIView Parent)
-            : base(Parent)
+        public TopTaskbar()
         {
             Bounds = new Rectangle(0, 0, 20, 20);
 
-            UIButton StartButton = new UIButton(this);
+            UIButton StartButton = new UIButton();
             StartButton.Bounds = new Rectangle(0, 0, 20, 20);
             AddSubview(StartButton);
         }

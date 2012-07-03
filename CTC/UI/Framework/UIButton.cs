@@ -10,6 +10,9 @@ namespace CTC
 {
     public class UIButton : UIView
     {
+        /// <summary>
+        /// The button type that will be used when the button ain't do anything.
+        /// </summary>
         public UIElementType NormalType
         {
             get { return _NormalType; }
@@ -22,6 +25,9 @@ namespace CTC
         }
         private UIElementType _NormalType;
 
+        /// <summary>
+        /// The Element type that will be used when the button is highlighted.
+        /// </summary>
         public UIElementType HighlightType
         {
             get { return _HighlightType; }
@@ -35,22 +41,9 @@ namespace CTC
         private UIElementType _HighlightType;
 
         /// <summary>
-        /// The name of the button, will be displayed centered on it.
+        /// The button is Highlighted when the user has started pressing it
+        /// but not released the mouse button yet.
         /// </summary>
-        // TODO: Replace this with an UILabel
-        public String Label;
-
-        public UIButton(UIView Parent)
-            : base(Parent)
-        {
-            ElementType = UIElementType.Button;
-            NormalType = UIElementType.Button;
-            HighlightType = UIElementType.ButtonHighlight;
-
-            Bounds = new Rectangle(0, 0, 32, 32);
-        }
-
-        protected bool _Highlighted = false;
         public virtual bool Highlighted
         {
             get
@@ -65,6 +58,22 @@ namespace CTC
                     ElementType = NormalType;
                 _Highlighted = value;
             }
+        }
+        private bool _Highlighted = false;
+
+        /// <summary>
+        /// The name of the button, will be displayed centered on it.
+        /// </summary>
+        // TODO: Replace this with an UILabel
+        public String Label;
+
+        public UIButton()
+        {
+            ElementType = UIElementType.Button;
+            NormalType = UIElementType.Button;
+            HighlightType = UIElementType.ButtonHighlight;
+
+            Bounds = new Rectangle(0, 0, 32, 32);
         }
 
         public override bool MouseLeftClick(MouseState mouse)

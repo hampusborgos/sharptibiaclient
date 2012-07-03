@@ -21,11 +21,9 @@ namespace CTC
 	        }
         }
         
-        public UIVirtualFrame(UIView Parent)
-            : base(Parent)
+        public UIVirtualFrame()
         {
-            Scrollbar = new UIScrollbar(this);
-            AddSubview(Scrollbar);
+            Scrollbar = (UIScrollbar)AddSubview(new UIScrollbar());
         }
 
         public override void LayoutSubviews()

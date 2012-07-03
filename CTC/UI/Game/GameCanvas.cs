@@ -9,20 +9,10 @@ namespace CTC
 {
     public class GameCanvas : UIView, ICleanupable
     {
-        public GameCanvas(UIView Parent, ClientState State)
-            : base(Parent)
+        public GameCanvas(ClientState State)
         {
             Protocol = State.Protocol;
             Viewport = State.Viewport;
-            Renderer = new GameRenderer(Context, Viewport.GameData);
-
-            Backbuffer = new RenderTarget2D(
-                Context.Graphics.GraphicsDevice,
-                480, 352, false,
-                SurfaceFormat.Color, DepthFormat.None, 0,
-                RenderTargetUsage.PreserveContents
-            );
-            Bounds = new Rectangle(0, 0, 883, 883 / 4 * 3);
 
             RegisterEvents();
 
@@ -38,7 +28,28 @@ namespace CTC
 
         private Dictionary<MapPosition, TileAnimations> PlayingAnimations = new Dictionary<MapPosition, TileAnimations>();
 
+
+
         #region Logic Code
+
+        public override void LayoutSubviews()
+        {
+            if (Backbuffer == null)
+            {
+                Renderer = new GameRenderer(Context, Viewport.GameData);
+
+                Backbuffer = new RenderTarget2D(
+                    Context.Graphics.GraphicsDevice,
+                    480, 352, false,
+                    SurfaceFormat.Color, DepthFormat.None, 0,
+                    RenderTargetUsage.PreserveContents
+                );
+            }
+
+            Bounds = new Rectangle(0, 0, 883, 883 / 4 * 3);
+
+            base.LayoutSubviews();
+        }
 
         public override void Update(GameTime Time)
         {
@@ -101,18 +112,21 @@ namespace CTC
 
         public override void Draw(SpriteBatch CurrentBatch)
         {
-            // Draw scene
+            // Create the batch if this is the first time we're being drawn
+            if (Batch == null)
+                Batch = new SpriteBatch(Context.Graphics.GraphicsDevice);
 
-            // Draw a generic border
-
+            // Draw the game to a backbuffer
             Context.Graphics.GraphicsDevice.SetRenderTarget(Backbuffer);
             Batch.Begin();
             Renderer.DrawScene(Batch, Context.GameTime, Viewport, PlayingAnimations);
             Batch.End();
             Context.Graphics.GraphicsDevice.SetRenderTarget(null);
             
+            // Then start the normal drawing cycle
             BeginDraw();
 
+            // Draw the backbuffer to the screen
             Batch.Draw(Backbuffer, ScreenClientBounds, Color.White);
 
             Vector2 Scale = new Vector2(

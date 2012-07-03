@@ -35,12 +35,11 @@ namespace CTC
             get { return BeingDraggedFrom != null; }
         }
 
-        public UIFrame(UIView Parent)
-            : base(Parent)
+        public UIFrame()
         {
             ElementType = UIElementType.Frame;
             Name = "UIFrame";
-            ContentView = new UIView(this);
+            ContentView = new UIView();
 
             AddDefaultButtons();
         }
@@ -161,7 +160,7 @@ namespace CTC
 
         protected UIButton CreateButton(String Label)
         {
-            UIButton Button = new UIButton(this);
+            UIButton Button = new UIButton();
             Button.Bounds.Width = 12;
             Button.Bounds.Height = 12;
             Button.Label = Label;

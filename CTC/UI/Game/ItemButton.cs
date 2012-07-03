@@ -9,11 +9,10 @@ namespace CTC
 {
     class ItemButton : UIButton
     {
-        protected GameRenderer Renderer;
+        public GameRenderer Renderer;
         public ClientItem Item;
 
-        public ItemButton(UIView Parent, GameRenderer Renderer, ClientItem Item)
-            : base(Parent)
+        public ItemButton(GameRenderer Renderer, ClientItem Item)
         {
             this.Item = Item;
             this.Renderer = Renderer;
@@ -57,8 +56,8 @@ namespace CTC
         protected ClientViewport Viewport;
         protected InventorySlot Slot = InventorySlot.None;
 
-        public InventoryItemButton(UIView Parent, ClientViewport Viewport, InventorySlot Slot)
-            : base(Parent, null, null)
+        public InventoryItemButton(ClientViewport Viewport, InventorySlot Slot)
+            : base(null, null)
         {
             this.Viewport = Viewport;
             this.Slot = Slot;
@@ -67,7 +66,14 @@ namespace CTC
         public void OnNewState(ClientState NewState)
         {
             Viewport = NewState.Viewport;
-            this.Renderer = new GameRenderer(Context, Viewport.GameData);
+        }
+
+        protected override void BeginDraw()
+        {
+            if (Renderer == null)
+                this.Renderer = new GameRenderer(Context, Viewport.GameData);
+
+            base.BeginDraw();
         }
 
         protected override void DrawContent(SpriteBatch Batch)

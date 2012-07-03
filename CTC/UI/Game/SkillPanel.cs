@@ -11,8 +11,7 @@ namespace CTC
     {
         protected ClientViewport Viewport;
 
-        public SkillPanel(UIView Parent)
-            : base(Parent)
+        public SkillPanel()
         {
             Name = "Skills";
 

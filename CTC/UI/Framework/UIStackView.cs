@@ -15,8 +15,8 @@ namespace CTC
 
     class UIStackView : UIView
     {
-        public UIStackView(UIView Parent, UIStackDirection Direction)
-            : base(Parent, UIElementType.None)
+        public UIStackView(UIStackDirection Direction = UIStackDirection.Vertical)
+            : base(null, UIElementType.None)
         {
             _StackDirection = Direction;
         }
