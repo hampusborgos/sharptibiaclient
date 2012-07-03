@@ -39,7 +39,7 @@ namespace CTC
         {
             ElementType = UIElementType.Frame;
             Name = "UIFrame";
-            ContentView = new UIView();
+            ContentView = new UIView(null, UIElementType.None);
 
             AddDefaultButtons();
         }
