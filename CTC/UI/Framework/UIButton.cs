@@ -22,7 +22,7 @@ namespace CTC
         }
         private UIElementType _NormalType;
 
-        public UIElementType HightlightType
+        public UIElementType HighlightType
         {
             get { return _HighlightType; }
             set
@@ -45,7 +45,7 @@ namespace CTC
         {
             ElementType = UIElementType.Button;
             NormalType = UIElementType.Button;
-            HightlightType = UIElementType.ButtonHighlight;
+            HighlightType = UIElementType.ButtonHighlight;
 
             Bounds = new Rectangle(0, 0, 32, 32);
         }
@@ -60,7 +60,7 @@ namespace CTC
             set
             {
                 if (value)
-                    ElementType = HightlightType;
+                    ElementType = HighlightType;
                 else
                     ElementType = NormalType;
                 _Highlighted = value;

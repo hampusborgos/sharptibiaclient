@@ -29,7 +29,7 @@ namespace CTC
             Bounds.Height = 34;
 
             NormalType = UIElementType.InventorySlot;
-            HightlightType = UIElementType.InventorySlot;
+            HighlightType = UIElementType.InventorySlot;
         }
 
         public override bool MouseLeftClick(Microsoft.Xna.Framework.Input.MouseState mouse)

@@ -65,17 +65,17 @@ namespace CTC
             // Create the 3 buttons
             TopButton = new UIButton(this);
             TopButton.NormalType = UIElementType.ScrollbarTop;
-            TopButton.HightlightType = UIElementType.ScrollbarTopHighlight;
+            TopButton.HighlightType = UIElementType.ScrollbarTopHighlight;
             AddSubview(TopButton);
 
             BottomButton = new UIButton(this);
             BottomButton.NormalType = UIElementType.ScrollbarBottom;
-            BottomButton.HightlightType = UIElementType.ScrollbarBottomHighlight;
+            BottomButton.HighlightType = UIElementType.ScrollbarBottomHighlight;
             AddSubview(BottomButton);
 
             GemButton = new UIButton(this);
             GemButton.NormalType = UIElementType.ScrollbarGem;
-            GemButton.HightlightType = UIElementType.ScrollbarGem;
+            GemButton.HighlightType = UIElementType.ScrollbarGem;
             AddSubview(GemButton);
 
             // Set some defaults for the scrollbar
