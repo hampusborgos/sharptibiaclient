@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
@@ -20,9 +21,9 @@ namespace CTC
             }
             set
             {
-                if (_ScrollbarPosition < value)
-                    _ScrollbarPosition = value;
                 _ScrollbarLength = value;
+                if (ScrollbarPosition < value)
+                    ScrollbarPosition = value;
                 Visible = value != 0;
             }
         }
@@ -45,6 +46,8 @@ namespace CTC
                     throw new ArgumentException("Scrollbar Position cannot be less than 0.");
                 else
                     _ScrollbarPosition = value;
+
+                PositionGem();
             }
         }
         private int _ScrollbarPosition;
@@ -53,10 +56,11 @@ namespace CTC
         protected UIButton BottomButton;
         protected UIButton GemButton;
 
+        public delegate void ScrollbarMoved(UIScrollbar Scrollbar);
+
         /// <summary>
         /// Constructor of the scrollbar
         /// </summary>
-        /// <param name="Parent"></param>
         public UIScrollbar()
         {
             // Set the background for this element
@@ -76,6 +80,13 @@ namespace CTC
             GemButton = new UIButton();
             GemButton.NormalType = UIElementType.ScrollbarGem;
             GemButton.HighlightType = UIElementType.ScrollbarGem;
+            GemButton.ButtonDragged += delegate(UIButton Button, MouseState mouse)
+            {
+                int S = mouse.Y - ScreenBounds.Y - TopButton.Bounds.Height;
+                int ScrollAreaLength = Bounds.Height - TopButton.Bounds.Height - BottomButton.Bounds.Height;
+                S = (int)(ScrollbarLength * ((double)S / ScrollAreaLength));
+                ScrollbarPosition = Math.Min(ScrollbarLength, Math.Max(0, S));
+            };
             AddSubview(GemButton);
 
             // Set some defaults for the scrollbar
@@ -92,22 +103,24 @@ namespace CTC
             Bounds.Width = width;
         }
 
+        private void PositionGem()
+        {
+            int ScrollAreaLength = Bounds.Height - TopButton.Bounds.Height - BottomButton.Bounds.Height - GemButton.Bounds.Height;
+            int S = (int)(ScrollAreaLength * ((double)ScrollbarPosition / (ScrollbarLength == 0 ? 1 : ScrollbarLength)));
+            GemButton.Bounds.Y = TopButton.Bounds.Height + S;
+        }
+
         public override void LayoutSubviews()
         {
             CalculateWidth();
 
-            base.LayoutSubviews();
-        }
-
-        protected override void DrawContent(SpriteBatch CurrentBatch)
-        {
-            // Draw top button
+            // Position the Top button
             Rectangle top = new Rectangle();
             top.Width = (int)Context.Skin.Measure(UIElementType.ScrollbarTop, UISkinOrientation.Center).X;
             top.Height = (int)Context.Skin.Measure(UIElementType.ScrollbarTop, UISkinOrientation.Center).Y;
             TopButton.Bounds = top;
 
-            // Draw bottom button
+            // Position the bottom
             Rectangle bottom = new Rectangle();
             bottom.Width = (int)Context.Skin.Measure(UIElementType.ScrollbarBottom, UISkinOrientation.Center).X;
             bottom.Height = (int)Context.Skin.Measure(UIElementType.ScrollbarBottom, UISkinOrientation.Center).Y;
@@ -115,17 +128,15 @@ namespace CTC
             bottom.Y -= bottom.Height;
             BottomButton.Bounds = bottom;
 
-            // Draw the gem
+            // Position the gem
             Rectangle gem = new Rectangle();
             gem.Width = (int)Context.Skin.Measure(UIElementType.ScrollbarGem, UISkinOrientation.Center).X;
             gem.Height = (int)Context.Skin.Measure(UIElementType.ScrollbarGem, UISkinOrientation.Center).Y;
-            gem.Y += top.Height;
-
-            int h = Bounds.Height - bottom.Height - top.Height - gem.Height;
-            float pos = (float)ScrollbarPosition / (ScrollbarLength > 0 ? ScrollbarLength : 1);
-            gem.Y += (int)(h * pos);
-
             GemButton.Bounds = gem;
+
+            PositionGem();
+
+            base.LayoutSubviews();
         }
     }
 }

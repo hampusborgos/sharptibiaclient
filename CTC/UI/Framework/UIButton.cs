@@ -67,6 +67,14 @@ namespace CTC
         // TODO: Replace this with an UILabel
         public String Label;
 
+        public delegate void ButtonPressedEvent(UIButton Button, MouseState mouse);
+
+        public event ButtonPressedEvent ButtonPressed;
+        public event ButtonPressedEvent ButtonDragged;
+        public event ButtonPressedEvent ButtonReleased;
+        public event ButtonPressedEvent ButtonReleasedInside;
+        public event ButtonPressedEvent ButtonReleasedOutside;
+
         public UIButton()
         {
             ElementType = UIElementType.Button;
@@ -81,14 +89,38 @@ namespace CTC
             if (mouse.LeftButton == ButtonState.Pressed)
             {
                 if (CaptureMouse())
+                {
+                    if (ButtonPressed != null)
+                        ButtonPressed(this, mouse);
                     Highlighted = true;
+                }
             }
             else if (mouse.LeftButton == ButtonState.Released && Highlighted)
             {
                 ReleaseMouse();
-                // ACTION!
+                
+                // Fire some events
+                if (ButtonReleased != null)
+                    ButtonReleased(this, mouse);
+                if (ScreenBounds.Contains(new Point(mouse.X, mouse.Y)))
+                {
+                    if (ButtonReleasedInside != null)
+                        ButtonReleasedInside(this, mouse);
+                }
+                else
+                {
+                    if (ButtonReleasedOutside != null)
+                        ButtonReleasedOutside(this, mouse);
+                }
             }
             return true;
+        }
+
+        public override bool MouseMove(MouseState mouse)
+        {
+            if (ButtonDragged != null)
+                ButtonDragged(this, mouse);
+            return base.MouseMove(mouse);
         }
 
         public override bool MouseLost()

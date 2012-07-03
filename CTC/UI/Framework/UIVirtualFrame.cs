@@ -68,6 +68,14 @@ namespace CTC
                 Height = Bounds.Height - sp.TotalHeight
             };
 
+            // Set the scrollbar to something sane
+            // Important we call this before base.Layout, since
+            // the scrollbar will make use of the position to position the gem.
+            if (ContentView.FullBounds.Height > ClientBounds.Height)
+                Scrollbar.ScrollbarLength = ContentView.FullBounds.Height;
+            else
+                Scrollbar.ScrollbarLength = 0;
+
             // This will layout the buttons etc. on the frame
             base.LayoutSubviews();
 
@@ -80,14 +88,6 @@ namespace CTC
                     ClientBounds.Width,
                     ContentView.FullBounds.Height
                 );
-
-                // Set the scrollbar to something sane
-                Scrollbar.ScrollbarLength = ContentView.FullBounds.Height;
-            }
-            else
-            {
-                // Everything fits inside, great!
-                Scrollbar.ScrollbarLength = 0;
             }
         }
 
