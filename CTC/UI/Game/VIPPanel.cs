@@ -16,7 +16,7 @@ namespace CTC
             Name = "VIP List";
             Padding = new Margin(5);
             ContentView = new UIStackView(UIStackDirection.Vertical);
-
+            
             Bounds.Width = 200;
             Bounds.Height = 200;
         }
@@ -44,10 +44,28 @@ namespace CTC
         {
             ContentView.RemoveAllSubviews();
 
+            List<String> OfflineNames = new List<String>();
+            List<String> OnlineNames = new List<String>();
+
             foreach (ClientCreature VIP in Viewport.VIPList.Values)
             {
-                UILabel Label = new UILabel(VIP.Name);
-                Label.TextColor = VIP.Online ? Color.LightGreen : Color.Red;
+                if (VIP.Online)
+                    OnlineNames.Add(VIP.Name);
+                else
+                    OfflineNames.Add(VIP.Name);
+            }
+
+            foreach (String VIP in OnlineNames)
+            {
+                UILabel Label = new UILabel(VIP);
+                Label.TextColor = Color.LightGreen;
+                ContentView.AddSubview(Label);
+            }
+
+            foreach (String VIP in OfflineNames)
+            {
+                UILabel Label = new UILabel(VIP);
+                Label.TextColor = Color.Red;
                 ContentView.AddSubview(Label);
             }
         }

@@ -26,7 +26,7 @@ namespace CTC
         public Color TextColor;
 
         public UILabel(String Text)
-            : base (new Rectangle(0, 0, 100, 20) , UIElementType.None)
+            : base (new Rectangle(0, 0, 100, 18) , UIElementType.None)
         {
             _Text = Text;
             TextColor = Color.LightGray;

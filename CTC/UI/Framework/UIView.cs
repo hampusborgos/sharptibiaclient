@@ -452,6 +452,12 @@ namespace CTC
             if (clip.Bottom > Screen.Height)
                 clip.Height = Screen.Height - clip.Y;
 
+            // TODO: Skip render phase?
+            if (clip.Height < 0)
+                clip.Height = 0;
+            if (clip.Width < 0)
+                clip.Width = 0;
+            
             return clip;
         }
 
@@ -507,7 +513,7 @@ namespace CTC
 
             if (ClipsSubviews)
                 Context.ScissorStack.Pop();
-
+            
             BeginDraw();
             DrawBorder(Batch);
             EndDraw();

@@ -27,7 +27,7 @@ namespace CTC
             }
             set
             {
-                ContentView.Bounds.Y = -value.Y;
+                ContentView.Bounds.Y = ClientBounds.Top - value.Y;
                 _VirtualBounds = value;
             }
         }
@@ -57,6 +57,7 @@ namespace CTC
 
         public override void LayoutSubviews()
         {
+            // Position the scrollbar to the right
             Margin sp = SkinPadding;
             Rectangle sc = sp.SubtractFrom(Bounds);
             Scrollbar.Bounds = new Rectangle
