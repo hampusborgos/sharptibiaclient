@@ -21,6 +21,8 @@ namespace CTC
                 _Context = value;
                 foreach (UIView Subview in Children)
                     Subview.Context = value;
+
+                NeedsLayout = true;
             }
         }
         protected List<UIView> Children = new List<UIView>();

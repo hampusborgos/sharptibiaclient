@@ -18,6 +18,7 @@ namespace CTC
 
         public UIView MouseFocusedPanel;
 
+        public Boolean SkinChanged = true;
         public UISkin Skin;
         public SpriteFont StandardFont;
 
@@ -44,6 +45,7 @@ namespace CTC
 
         public void Update(GameTime Time)
         {
+            SkinChanged = false;
             GameTime = Time;
         }
     }

@@ -139,7 +139,8 @@ namespace CTC
 
         public override void Update(GameTime Time)
         {
-            Context.GameTime = Time;
+            Boolean newSkin = Context.SkinChanged;
+            Context.Update(Time);
 
             LFPS.Enqueue(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
             // Remove ticks older than one second
@@ -147,11 +148,15 @@ namespace CTC
                 LFPS.Dequeue();
 
             foreach (ClientState State in Clients)
-            {
                 State.Update(Time);
-            }
 
             base.Update(Time);
+
+            // Layout needs to be done in two steps after skin change
+            // First step to remeasure all interface elements, second to
+            // position them.
+            if (newSkin)
+                NeedsLayout = true;
         }
 
         #region Drawing Code
