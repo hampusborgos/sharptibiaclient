@@ -498,8 +498,11 @@ namespace CTC
         /// <param name="CurrentBatch"></param>
         public virtual void Draw(SpriteBatch CurrentBatch, Rectangle BoundingBox)
         {
+            if (!Visible)
+                return;
             if (!BoundingBox.Intersects(Bounds))
                 return;
+
             BeginDraw();
 
             DrawBackground(Batch);

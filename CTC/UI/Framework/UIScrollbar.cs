@@ -9,7 +9,6 @@ namespace CTC
 {
     public class UIScrollbar : UIView
     {
-        private int _ScrollbarLength;
         /// <summary>
         /// Length of the scrollbar
         /// </summary>
@@ -24,10 +23,11 @@ namespace CTC
                 if (_ScrollbarPosition < value)
                     _ScrollbarPosition = value;
                 _ScrollbarLength = value;
+                Visible = value != 0;
             }
         }
+        private int _ScrollbarLength;
 
-        private int _ScrollbarPosition;
         /// <summary>
         /// Position of the scrollbar
         /// </summary>
@@ -47,6 +47,7 @@ namespace CTC
                     _ScrollbarPosition = value;
             }
         }
+        private int _ScrollbarPosition;
 
         protected UIButton TopButton;
         protected UIButton BottomButton;
