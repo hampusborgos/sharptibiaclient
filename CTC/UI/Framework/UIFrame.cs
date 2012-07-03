@@ -165,6 +165,7 @@ namespace CTC
             Button.Bounds.Height = 12;
             Button.Label = Label;
             Button.Margin.Top = -10;
+            Button.ZOrder = 1;
             return Button;
         }
 

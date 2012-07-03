@@ -138,9 +138,6 @@ namespace CTC
 
             DrawBorder(Batch);
             EndDraw();
-
-            // Draw taskbar buttons
-            DrawChildren(CurrentBatch, new Rectangle(0, 0, Bounds.Width, Bounds.Height));
         }
 
         #endregion

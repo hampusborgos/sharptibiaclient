@@ -509,17 +509,22 @@ namespace CTC
             DrawContent(Batch);
             EndDraw();
 
+            // Draw the views that are behind the borders of this view
             if (ClipsSubviews)
                 Context.ScissorStack.Push(ScreenBounds);
 
-            DrawChildren(Batch, BoundingBox);
-
-            if (ClipsSubviews)
-                Context.ScissorStack.Pop();
+            DrawBackgroundChildren(Batch, BoundingBox);
             
+            // Draw the borders etc. around this view
             BeginDraw();
             DrawBorder(Batch);
             EndDraw();
+
+            // Draw the foreground elements of this view
+            DrawForegroundChildren(Batch, BoundingBox);
+
+            if (ClipsSubviews)
+                Context.ScissorStack.Pop();
         }
 
         /// <summary>
@@ -549,14 +554,30 @@ namespace CTC
         }
 
         /// <summary>
-        /// Draws the children of the panel
+        /// Draws the children of the panel with a ZOrder less than or equal to 0.
+        /// These views will be draw before the borders around the element etc. and
+        /// as such be behind them in the final output.
         /// </summary>
         /// <param name="CurrentBatch"></param>
         /// <param name="BoundingBox">If the subview does not intersect this area, it won't be drawn.</param>
-        protected virtual void DrawChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
+        protected void DrawBackgroundChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
         {
             foreach (UIView Subview in Children)
-                Subview.Draw(CurrentBatch, BoundingBox);
+                if (Subview.ZOrder <= 0)
+                    Subview.Draw(CurrentBatch, BoundingBox);
+        }
+
+        /// <summary>
+        /// Draws the children of the panel with a ZOrder greater than 0.
+        /// These views will be drawn above the border elements of this view.
+        /// </summary>
+        /// <param name="CurrentBatch"></param>
+        /// <param name="BoundingBox">If the subview does not intersect this area, it won't be drawn.</param>
+        protected void DrawForegroundChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
+        {
+            foreach (UIView Subview in Children)
+                if (Subview.ZOrder > 0)
+                    Subview.Draw(CurrentBatch, BoundingBox);
         }
 
         #endregion

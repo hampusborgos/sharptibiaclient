@@ -38,7 +38,8 @@ namespace CTC
         public UIVirtualFrame()
         {
             Scrollbar = (UIScrollbar)AddSubview(new UIScrollbar());
-            Scrollbar.ScrollbarMoved += delegate (UIScrollbar _)
+            Scrollbar.ZOrder = 1;
+            Scrollbar.ScrollbarMoved += delegate(UIScrollbar _)
             {
                 Rectangle tmp = VirtualBounds;
                 tmp.Y = Scrollbar.ScrollbarPosition;
@@ -49,7 +50,7 @@ namespace CTC
         }
 
         #region Property overrides
-        
+
         public override Rectangle ClientBounds
         {
             get
@@ -96,17 +97,6 @@ namespace CTC
                     ContentView.FullBounds.Height
                 );
             }
-        }
-
-        protected override void DrawChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
-        {
-            // Draw the content view first with a more restrictive bounding box
-            ContentView.Draw(CurrentBatch, BoundingBox); //new Rectangle(VirtualBounds.X, VirtualBounds.Y, Bounds.Width, Bounds.Height));
-
-            // Then the rest of the elements as normal
-            foreach (UIView Subview in Children)
-                if (Subview != ContentView)
-                    Subview.Draw(CurrentBatch, BoundingBox);
         }
     }
 }

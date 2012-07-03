@@ -22,7 +22,7 @@ namespace CTC
             set
             {
                 _ScrollbarLength = value;
-                if (ScrollbarPosition < value)
+                if (ScrollbarPosition > value)
                     ScrollbarPosition = value;
                 Visible = value != 0;
             }

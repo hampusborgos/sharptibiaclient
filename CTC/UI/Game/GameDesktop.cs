@@ -187,7 +187,8 @@ namespace CTC
                 1.0f, SpriteEffects.None, 0.5f);
 
             // Draw UI
-            DrawChildren(ForegroundBatch, Bounds);
+            DrawBackgroundChildren(ForegroundBatch, Bounds);
+            DrawForegroundChildren(ForegroundBatch, Bounds);
             // End draw UI
 
             ForegroundBatch.End();
