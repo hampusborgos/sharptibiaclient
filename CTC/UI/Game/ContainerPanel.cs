@@ -65,7 +65,7 @@ namespace CTC
 
         protected void OnUpdateContainer(ClientViewport Viewport, ClientContainer Container)
         {
-            if (Container.HasParent)
+            if (Container.HasParent && UpButton == null)
             {
                 UpButton = CreateButton("U");
                 AddButton(UpButton);
@@ -73,6 +73,7 @@ namespace CTC
             else if (UpButton != null)
             {
                 UpButton.RemoveFromSuperview();
+                UpButton = null;
             }
 
             // Update the title
