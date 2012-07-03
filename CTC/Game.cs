@@ -134,7 +134,7 @@ namespace CTC
         {
             GraphicsDevice.Clear(Color.Black);
 
-            Desktop.Draw(null);
+            Desktop.Draw(null, Window.ClientBounds);
 
             base.Draw(gameTime);
         }

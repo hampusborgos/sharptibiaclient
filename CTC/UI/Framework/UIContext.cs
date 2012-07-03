@@ -21,6 +21,8 @@ namespace CTC
         public UISkin Skin;
         public SpriteFont StandardFont;
 
+        public Stack<Rectangle> ScissorStack = new Stack<Rectangle>();
+
         public UIContext(GameWindow Window, GraphicsDeviceManager Graphics, ContentManager Content)
         {
             this.Window = Window;

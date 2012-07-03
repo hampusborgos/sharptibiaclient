@@ -156,7 +156,7 @@ namespace CTC
 
         #region Drawing Code
 
-        public override void Draw(SpriteBatch NullBatch)
+        public override void Draw(SpriteBatch NullBatch, Rectangle BoundingBox)
         {
             ForegroundBatch.Begin();
 
@@ -182,7 +182,7 @@ namespace CTC
                 1.0f, SpriteEffects.None, 0.5f);
 
             // Draw UI
-            DrawChildren(ForegroundBatch);
+            DrawChildren(ForegroundBatch, Bounds);
             // End draw UI
 
             ForegroundBatch.End();
@@ -208,6 +208,8 @@ namespace CTC
             Frame = new GameFrame();
             Frame.Bounds.X = 10;
             Frame.Bounds.Y = 20;
+            Frame.Bounds.Width = 800;
+            Frame.Bounds.Height = 600;
             Frame.ZOrder = -1;
             AddSubview(Frame);
 

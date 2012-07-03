@@ -17,10 +17,5 @@ namespace CTC
             StartButton.Bounds = new Rectangle(0, 0, 20, 20);
             AddSubview(StartButton);
         }
-
-        public override void Draw(SpriteBatch CurrentBatch)
-        {
-            DrawChildren(CurrentBatch);
-        }
     }
 }

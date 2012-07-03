@@ -43,6 +43,7 @@ namespace CTC
         public int ZOrder = 0;
         public String Tag;
         public Boolean NeedsLayout = true;
+        public Boolean ClipsSubviews = false;
 
         /// <summary>
         /// User-customizable padding inside this view.
@@ -412,6 +413,46 @@ namespace CTC
 
         #region Drawing
 
+        protected Rectangle GetClipRectangle()
+        {
+            Rectangle Screen = Context.Window.ClientBounds;
+            Rectangle clip = ScreenBounds;
+            if (Context.ScissorStack.Count > 0)
+            {
+                Rectangle pclip = Context.ScissorStack.Peek();
+                clip = new Rectangle()
+                {
+                    X = Math.Max(0, Math.Max(pclip.Left, clip.Left)),
+                    Y = Math.Max(0, Math.Max(pclip.Top, clip.Top)),
+                    Width = Math.Min(Screen.Right, Math.Min(pclip.Right, clip.Right)),
+                    Height = Math.Min(Screen.Bottom, Math.Min(pclip.Bottom, clip.Bottom)),
+                };
+            }
+            else
+            {
+                clip = new Rectangle()
+                {
+                    X = Math.Max(0, clip.Left),
+                    Y = Math.Max(0, clip.Top),
+                    Width = Math.Min(Screen.Right, clip.Right),
+                    Height = Math.Min(Screen.Bottom, clip.Bottom),
+                };
+            }
+
+            // Scissor is not specified with right, bottom
+            // so remove X, Y from them
+            clip.Width -= clip.X;
+            clip.Height -= clip.Y;
+
+            // Make sure we don't go offscreen
+            if (clip.Right > Screen.Width)
+                clip.Width = Screen.Width - clip.X;
+            if (clip.Bottom > Screen.Height)
+                clip.Height = Screen.Height - clip.Y;
+
+            return clip;
+        }
+
         protected virtual void BeginDraw()
         {
             // Create the batch if this is the first time we're being drawn
@@ -428,20 +469,7 @@ namespace CTC
             if (Screen.Intersects(ScreenBounds))
             {
                 OldScissor = Batch.GraphicsDevice.ScissorRectangle;
-                Rectangle clip = new Rectangle()
-                {
-                    X = Math.Max(Screen.Left, ScreenBounds.Left),
-                    Y = Math.Max(Screen.Top, ScreenBounds.Top),
-                    Width = Math.Min(Screen.Right, ScreenBounds.Right),
-                    Height = Math.Min(Screen.Bottom, ScreenBounds.Bottom),
-                };
-                clip.Width -= clip.X;
-                clip.Height -= clip.Y;
-                if (clip.Right > Screen.Width)
-                    clip.Width = Screen.Width - clip.X;
-                if (clip.Bottom > Screen.Height)
-                    clip.Height = Screen.Height - clip.Y;
-                Batch.GraphicsDevice.ScissorRectangle = clip;
+                Batch.GraphicsDevice.ScissorRectangle = GetClipRectangle();
             }
             else
                 OldScissor = null;
@@ -460,17 +488,27 @@ namespace CTC
         /// Draws entire content of the panel, including children
         /// </summary>
         /// <param name="CurrentBatch"></param>
-        public virtual void Draw(SpriteBatch CurrentBatch)
+        public virtual void Draw(SpriteBatch CurrentBatch, Rectangle BoundingBox)
         {
+            if (!BoundingBox.Intersects(Bounds))
+                return;
             BeginDraw();
 
             DrawBackground(Batch);
             DrawContent(Batch);
-            DrawBorder(Batch);
-
             EndDraw();
 
-            DrawChildren(Batch);
+            if (ClipsSubviews)
+                Context.ScissorStack.Push(ScreenBounds);
+
+            DrawChildren(Batch, BoundingBox);
+
+            if (ClipsSubviews)
+                Context.ScissorStack.Pop();
+
+            BeginDraw();
+            DrawBorder(Batch);
+            EndDraw();
         }
 
         /// <summary>
@@ -503,12 +541,11 @@ namespace CTC
         /// Draws the children of the panel
         /// </summary>
         /// <param name="CurrentBatch"></param>
-        protected virtual void DrawChildren(SpriteBatch CurrentBatch)
+        /// <param name="BoundingBox">If the subview does not intersect this area, it won't be drawn.</param>
+        protected virtual void DrawChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
         {
-            foreach (UIView panel in Children)
-            {
-                panel.Draw(CurrentBatch);
-            }
+            foreach (UIView Subview in Children)
+                Subview.Draw(CurrentBatch, BoundingBox);
         }
 
         #endregion

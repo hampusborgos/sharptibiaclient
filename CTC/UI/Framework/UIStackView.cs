@@ -82,6 +82,9 @@ namespace CTC
 
                 SpaceLeft -= Subview.FullBounds.Width;
             }
+
+            if (!Overflow)
+                Bounds.Width = RowLeft;
         }
 
         private void LayoutVertical()
@@ -112,6 +115,9 @@ namespace CTC
 
                 SpaceLeft -= Subview.FullBounds.Height;
             }
+
+            if (!Overflow)
+                Bounds.Height = ColumnTop;
         }
     }
 }

@@ -110,7 +110,7 @@ namespace CTC
 
         #region Drawing Code
 
-        public override void Draw(SpriteBatch CurrentBatch)
+        public override void Draw(SpriteBatch CurrentBatch, Rectangle BoundingBox)
         {
             // Create the batch if this is the first time we're being drawn
             if (Batch == null)
@@ -140,7 +140,7 @@ namespace CTC
             EndDraw();
 
             // Draw taskbar buttons
-            DrawChildren(CurrentBatch);
+            DrawChildren(CurrentBatch, new Rectangle(0, 0, Bounds.Width, Bounds.Height));
         }
 
         #endregion
