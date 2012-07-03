@@ -38,6 +38,13 @@ namespace CTC
         public UIVirtualFrame()
         {
             Scrollbar = (UIScrollbar)AddSubview(new UIScrollbar());
+            Scrollbar.ScrollbarMoved += delegate (UIScrollbar _)
+            {
+                Rectangle tmp = VirtualBounds;
+                tmp.Y = Scrollbar.ScrollbarPosition;
+                VirtualBounds = tmp;
+            };
+
             ClipsSubviews = true;
         }
 
@@ -72,7 +79,7 @@ namespace CTC
             // Important we call this before base.Layout, since
             // the scrollbar will make use of the position to position the gem.
             if (ContentView.FullBounds.Height > ClientBounds.Height)
-                Scrollbar.ScrollbarLength = ContentView.FullBounds.Height;
+                Scrollbar.ScrollbarLength = ContentView.FullBounds.Height - ClientBounds.Height;
             else
                 Scrollbar.ScrollbarLength = 0;
 
@@ -93,7 +100,13 @@ namespace CTC
 
         protected override void DrawChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
         {
-            base.DrawChildren(CurrentBatch, new Rectangle(VirtualBounds.X, VirtualBounds.Y, Bounds.Width, Bounds.Height));
+            // Draw the content view first with a more restrictive bounding box
+            ContentView.Draw(CurrentBatch, BoundingBox); //new Rectangle(VirtualBounds.X, VirtualBounds.Y, Bounds.Width, Bounds.Height));
+
+            // Then the rest of the elements as normal
+            foreach (UIView Subview in Children)
+                if (Subview != ContentView)
+                    Subview.Draw(CurrentBatch, BoundingBox);
         }
     }
 }

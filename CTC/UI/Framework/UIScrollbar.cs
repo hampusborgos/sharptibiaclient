@@ -48,15 +48,24 @@ namespace CTC
                     _ScrollbarPosition = value;
 
                 PositionGem();
+
+                if (ScrollbarMoved != null)
+                    ScrollbarMoved(this);
             }
         }
         private int _ScrollbarPosition;
 
-        protected UIButton TopButton;
-        protected UIButton BottomButton;
-        protected UIButton GemButton;
+        public UIButton TopButton;
+        public UIButton BottomButton;
+        public UIButton GemButton;
 
-        public delegate void ScrollbarMoved(UIScrollbar Scrollbar);
+        public delegate void ScrollbarEvent(UIScrollbar Scrollbar);
+
+        /// <summary>
+        /// Fired when the scrollbar has changed it's position.
+        /// This can happen both through user interaction and programmatic action.
+        /// </summary>
+        public event ScrollbarEvent ScrollbarMoved;
 
         /// <summary>
         /// Constructor of the scrollbar
