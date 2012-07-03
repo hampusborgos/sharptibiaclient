@@ -283,6 +283,7 @@ namespace CTC
         public virtual void LayoutSubviews()
         {
             NeedsLayout = false;
+
             foreach (UIView Subview in Subviews)
                 Subview.LayoutSubviews();
         }
