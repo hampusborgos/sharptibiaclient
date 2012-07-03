@@ -59,22 +59,30 @@ namespace CTC
         public UIScrollbar(UIView Parent)
             : base(Parent)
         {
+            // Set the background for this element
             ElementType = UIElementType.ScrollbarBackground;
+
+            // Create the 3 buttons
             TopButton = new UIButton(this);
-            TopButton.ElementType = UIElementType.ScrollbarTop;
+            TopButton.NormalType = UIElementType.ScrollbarTop;
+            TopButton.HightlightType = UIElementType.ScrollbarTopHighlight;
             AddSubview(TopButton);
 
             BottomButton = new UIButton(this);
-            BottomButton.ElementType = UIElementType.ScrollbarBottom;
+            BottomButton.NormalType = UIElementType.ScrollbarBottom;
+            BottomButton.HightlightType = UIElementType.ScrollbarBottomHighlight;
             AddSubview(BottomButton);
 
             GemButton = new UIButton(this);
-            GemButton.ElementType = UIElementType.ScrollbarGem;
+            GemButton.NormalType = UIElementType.ScrollbarGem;
+            GemButton.HightlightType = UIElementType.ScrollbarGem;
             AddSubview(GemButton);
 
-            ScrollbarLength = 1000;
+            // Set some defaults for the scrollbar
+            ScrollbarLength = 100;
             ScrollbarPosition = 0;
 
+            // Figure out how wide we are (dependant on the STUFF!)
             CalculateWidth();
         }
 

@@ -28,22 +28,8 @@ namespace CTC
             Bounds.Width = 34;
             Bounds.Height = 34;
 
-            ElementType = UIElementType.InventorySlot;
-        }
-
-        public override bool Highlighted
-        {
-            get
-            {
-                return base.Highlighted;
-            }
-            set
-            {
-                base.Highlighted = value;
-
-                // Reset 'our' element type
-                ElementType = UIElementType.InventorySlot;
-            }
+            NormalType = UIElementType.InventorySlot;
+            HightlightType = UIElementType.InventorySlot;
         }
 
         public override bool MouseLeftClick(Microsoft.Xna.Framework.Input.MouseState mouse)

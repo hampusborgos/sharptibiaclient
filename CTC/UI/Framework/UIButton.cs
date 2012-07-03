@@ -10,12 +10,43 @@ namespace CTC
 {
     public class UIButton : UIView
     {
+        public UIElementType NormalType
+        {
+            get { return _NormalType; }
+            set
+            {
+                if (!Highlighted)
+                    ElementType = value;
+                _NormalType = value;
+            }
+        }
+        private UIElementType _NormalType;
+
+        public UIElementType HightlightType
+        {
+            get { return _HighlightType; }
+            set
+            {
+                if (Highlighted)
+                    ElementType = value;
+                _HighlightType = value;
+            }
+        }
+        private UIElementType _HighlightType;
+
+        /// <summary>
+        /// The name of the button, will be displayed centered on it.
+        /// </summary>
+        // TODO: Replace this with an UILabel
         public String Label;
 
         public UIButton(UIView Parent)
             : base(Parent)
         {
             ElementType = UIElementType.Button;
+            NormalType = UIElementType.Button;
+            HightlightType = UIElementType.ButtonHighlight;
+
             Bounds = new Rectangle(0, 0, 32, 32);
         }
 
@@ -29,9 +60,9 @@ namespace CTC
             set
             {
                 if (value)
-                    ElementType = UIElementType.ButtonHighlight;
+                    ElementType = HightlightType;
                 else
-                    ElementType = UIElementType.Button;
+                    ElementType = NormalType;
                 _Highlighted = value;
             }
         }
