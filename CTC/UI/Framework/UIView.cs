@@ -23,6 +23,8 @@ namespace CTC
         public Boolean Visible = true;
         public Boolean InteractionEnabled = true;
         public int ZOrder = 0;
+        public String Tag;
+        public Boolean NeedsLayout = true;
 
 
         /// <summary>
@@ -199,7 +201,15 @@ namespace CTC
             return views;
         }
 
-        public UIView AddSubview(UIView newView)
+        public virtual UIView GetSubviewWithTag(String SearchTag)
+        {
+            foreach (UIView Subview in Subviews)
+                if (Subview.Tag == SearchTag)
+                    return Subview;
+            return null;
+        }
+
+        public virtual UIView AddSubview(UIView newView)
         {
             int i = Children.FindIndex(delegate(UIView subview) {
                 return subview.ZOrder > newView.ZOrder;
@@ -211,14 +221,16 @@ namespace CTC
             return newView;
         }
 
-        public void RemoveSubview(UIView subview)
+        public virtual void RemoveSubview(UIView subview)
         {
             Children.Remove(subview);
         }
 
         public void RemoveSubviewsMatching(Predicate<UIView> match)
         {
-            Children.RemoveAll(match);
+            List<UIView> matches = Children.FindAll(match);
+            foreach (UIView view in matches)
+                RemoveSubview(view);
         }
 
         public void RemoveFromSuperview()
@@ -232,6 +244,13 @@ namespace CTC
             Children.RemoveAt(oldIndex);
 
             AddSubview(view);
+        }
+
+        public virtual void LayoutSubviews()
+        {
+            NeedsLayout = false;
+            foreach (UIView Subview in Subviews)
+                Subview.LayoutSubviews();
         }
 
         #endregion
@@ -341,18 +360,13 @@ namespace CTC
             return true;
         }
 
-        public virtual void LayoutSubviews()
-        {
-            foreach (UIView Subview in Subviews)
-                Subview.LayoutSubviews();
-        }
-
         public virtual void Update(GameTime time)
         {
+            if (NeedsLayout)
+                LayoutSubviews();
+
             foreach (UIView Child in Children)
-            {
                 Child.Update(time);
-            }
         }
 
         #region Drawing

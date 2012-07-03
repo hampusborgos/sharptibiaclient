@@ -12,8 +12,6 @@ namespace CTC
     {
         ClientViewport Viewport;
         GameRenderer Renderer;
-        UIStackView ContentView;
-        UIButton UpButton;
         public readonly int ContainerID;
 
         public ContainerPanel(UIView Parent, ClientViewport Viewport, int ContainerID)
@@ -23,11 +21,11 @@ namespace CTC
             this.ContainerID = ContainerID;
             Renderer = new GameRenderer(this.Context, Viewport.GameData);
             Padding = new Margin(4, 7);
-            ContentView = new UIStackView(this, UIStackDirection.HorizontalThenVertical)
-            {
-                Size = new Vector2(156, 220)
-            };
-            AddSubview(ContentView);
+            ContentView = new UIStackView(this, UIStackDirection.HorizontalThenVertical);
+
+            UIButton UpButton = CreateButton("U");
+            UpButton.Tag = "_ContainerUpButton";
+            AddFrameButton(UpButton);
 
             Bounds.Width = 176;
             Bounds.Height = 220;
@@ -42,22 +40,6 @@ namespace CTC
             OnUpdateContainer(Viewport, Viewport.Containers[ContainerID]);
         }
 
-        public override List<UIView> Subviews
-        {
-            get
-            {
-                return ContentView.Subviews;
-            }
-        }
-
-        public override void LayoutSubviews()
-        {
-            ContentView.Bounds.X = ClientBounds.Left;
-            ContentView.Bounds.Y = ClientBounds.Top;
-
-            ContentView.LayoutSubviews();
-        }
-
         public void OnNewState(ClientState NewState)
         {
             Visible = (NewState.Viewport == Viewport);
@@ -65,16 +47,7 @@ namespace CTC
 
         protected void OnUpdateContainer(ClientViewport Viewport, ClientContainer Container)
         {
-            if (Container.HasParent && UpButton == null)
-            {
-                UpButton = CreateButton("U");
-                AddButton(UpButton);
-            }
-            else if (UpButton != null)
-            {
-                UpButton.RemoveFromSuperview();
-                UpButton = null;
-            }
+            GetSubviewWithTag("_ContainerUpButton").Visible = false;
 
             // Update the title
             Name = Container.Name;
@@ -98,7 +71,7 @@ namespace CTC
                 });
             }
 
-            LayoutSubviews();
+            NeedsLayout = true;
         }
 
         protected void OnCloseContainer(ClientViewport Viewport, ClientContainer Container)
@@ -114,7 +87,7 @@ namespace CTC
                 ClientContainer Container = Viewport.Containers[ContainerID];
 
                 int Slot = 0;
-                foreach (UIView Subview in Subviews)
+                foreach (UIView Subview in ContentView.Subviews)
                 {
                     if (Subview.GetType() == typeof(ItemButton))
                     {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace CTC
 {
@@ -35,6 +36,17 @@ namespace CTC
         public int TotalHeight
         {
             get { return Top + Bottom; }
+        }
+
+        public Rectangle SubtractFrom(Rectangle rect)
+        {
+            return new Rectangle
+            {
+                X = rect.Left + Left,
+                Y = rect.Top + Top,
+                Width = rect.Width - Right,
+                Height = rect.Height - Bottom
+            };
         }
     };
 }

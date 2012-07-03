@@ -12,6 +12,23 @@ namespace CTC
     {
         private Vector2? BeingDraggedFrom;
         private Vector2? DraggedFromPosition;
+        public String Name;
+
+        private UIView _ContentView = null;
+        public UIView ContentView
+        {
+            get
+            {
+                return _ContentView;
+            }
+            set
+            {
+                if (_ContentView != null)
+                    RemoveSubview(_ContentView);
+                _ContentView = value;
+                AddSubview(value);
+            }
+        }
 
         public bool BeingDragged
         {
@@ -23,44 +40,15 @@ namespace CTC
         {
             ElementType = UIElementType.Frame;
             Name = "UIFrame";
+            ContentView = new UIView(this);
 
-            AddDefultButtons();
+            AddDefaultButtons();
         }
-
-        protected List<UIButton> Buttons = new List<UIButton>();
-        public String Name;
-
-        #region Methods
-
-        public void AddButton(UIButton Button)
-        {;
-            Buttons.Add(Button);
-            Recalculate();
-        }
-
-        protected void Recalculate()
-        {
-            int X = Bounds.Width - 2;
-
-            foreach (UIButton Button in Buttons)
-            {
-                X -= Button.Bounds.Width + 1;
-                Button.Bounds.X = X;
-                Button.Bounds.Y = 3;
-            }
-        }
-
-        #endregion
 
         public override bool MouseLeftClick(MouseState mouse)
         {
             if (base.MouseLeftClick(mouse))
                 return true;
-
-            foreach (UIButton Button in Buttons)
-                if (Button.AcceptsMouseEvent(mouse))
-                    if (Button.MouseLeftClick(mouse))
-                        return true;
 
             // Check if the frame was grabbed
             if (mouse.LeftButton == ButtonState.Pressed)
@@ -114,12 +102,42 @@ namespace CTC
             return false;
         }
 
-        public override void Update(GameTime time)
+        public override void LayoutSubviews()
         {
-            base.Update(time);
+            // Layout the buttons
+            int N = 1;
+            foreach (UIButton Button in FrameButtons)
+            {
+                Button.Position = new Vector2(
+                    Bounds.Width - (Button.Bounds.Width + 1) * N - 3,
+                    ClientBounds.Top - Button.Bounds.Height - 6
+                );
+                ++N;
+            }
 
-            Recalculate();
+            // Make the content fill up the frame
+            ContentView.Bounds = ContentView.Padding.SubtractFrom(ClientBounds);
+            base.LayoutSubviews();
         }
+
+        #region Button management
+
+        protected List<UIButton> FrameButtons = new List<UIButton>();
+
+        public override void RemoveSubview(UIView Subview)
+        {
+            if (Subview is UIButton)
+                FrameButtons.Remove((UIButton)Subview);
+            base.RemoveSubview(Subview);
+        }
+
+        public void AddFrameButton(UIButton Button)
+        {
+            AddSubview(Button);
+            FrameButtons.Add(Button);
+        }
+
+        #endregion
 
         #region Drawing
 
@@ -137,19 +155,6 @@ namespace CTC
             );
         }
 
-        protected override void DrawChildren(SpriteBatch CurrentBatch)
-        {
-            foreach (UIButton Button in Buttons)
-            {
-                if (Button.Visible)
-                {
-                    Button.Draw(CurrentBatch);
-                }
-            }
-
-            base.DrawChildren(CurrentBatch);
-        }
-
         #endregion
 
         #region Creation and Loading
@@ -160,16 +165,17 @@ namespace CTC
             Button.Bounds.Width = 12;
             Button.Bounds.Height = 12;
             Button.Label = Label;
+            Button.Margin.Top = -10;
             return Button;
         }
 
-        protected void AddDefultButtons()
+        protected void AddDefaultButtons()
         {
             UIButton CloseButton = CreateButton("X");
-            AddButton(CloseButton);
+            AddFrameButton(CloseButton);
 
             UIButton MinimizeButton = CreateButton("-");
-            AddButton(MinimizeButton);
+            AddFrameButton(MinimizeButton);
         }
 
         #endregion

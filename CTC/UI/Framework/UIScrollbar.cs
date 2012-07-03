@@ -74,11 +74,24 @@ namespace CTC
 
             ScrollbarLength = 1000;
             ScrollbarPosition = 0;
+
+            CalculateWidth();
         }
 
-        public override void Update(GameTime time)
+        private void CalculateWidth()
         {
-            base.Update(time);
+            int width = 0;
+            width += (int)Context.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Left).X;
+            width += (int)Context.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Center).X;
+            width += (int)Context.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Right).X;
+            Bounds.Width = width;
+        }
+
+        public override void LayoutSubviews()
+        {
+            CalculateWidth();
+
+            base.LayoutSubviews();
         }
 
         protected override void DrawContent(SpriteBatch CurrentBatch)
