@@ -110,7 +110,7 @@ namespace CTC
             {
                 Button.Position = new Vector2(
                     Bounds.Width - (Button.Bounds.Width + 1) * N - 3,
-                    ClientBounds.Top - Button.Bounds.Height - 6
+                    SkinPadding.Top - Button.Bounds.Height - 1
                 );
                 ++N;
             }
