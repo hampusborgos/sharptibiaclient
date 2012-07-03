@@ -267,6 +267,12 @@ namespace CTC
                 RemoveSubview(view);
         }
 
+        public void RemoveAllSubviews()
+        {
+            foreach (UIView view in Subviews)
+                RemoveSubview(view);
+        }
+
         public void RemoveFromSuperview()
         {
             Parent.RemoveSubview(this);

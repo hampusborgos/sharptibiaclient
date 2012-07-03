@@ -26,7 +26,7 @@ namespace CTC
         public Color TextColor;
 
         public UILabel(String Text)
-            : base (null, UIElementType.None)
+            : base (new Rectangle(0, 0, 100, 20) , UIElementType.None)
         {
             _Text = Text;
             TextColor = Color.LightGray;
@@ -37,7 +37,7 @@ namespace CTC
             CurrentBatch.DrawString(
                 Context.StandardFont,
                 _Text,
-                ScreenCoordinate(Bounds.X, Bounds.Y),
+                ScreenCoordinate(0, 0),
                 TextColor
             );
         }

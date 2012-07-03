@@ -14,13 +14,8 @@ namespace CTC
         public VIPPanel()
         {
             Name = "VIP List";
-
-
-            this.Padding = new Margin
-            {
-                Top = 5,
-                Left = 5
-            };
+            Padding = new Margin(5);
+            ContentView = new UIStackView();
 
             Bounds.Width = 200;
             Bounds.Height = 200;
@@ -28,9 +23,36 @@ namespace CTC
 
         public void OnNewState(ClientState NewState)
         {
+            if (Viewport != null)
+                Viewport.VIPStatusChanged -= VIPStatusChanged;
+
             Viewport = NewState.Viewport;
+            UpdateList();
+
+            Viewport.VIPStatusChanged += VIPStatusChanged;
         }
 
+        private void VIPStatusChanged(ClientViewport Viewport, ClientCreature Creature)
+        {
+            if (Viewport != this.Viewport)
+                return;
+
+            UpdateList();
+        }
+
+        private void UpdateList()
+        {
+            ContentView.RemoveAllSubviews();
+
+            foreach (ClientCreature VIP in Viewport.VIPList.Values)
+            {
+                UILabel Label = new UILabel(VIP.Name);
+                Label.TextColor = VIP.Online ? Color.LightGreen : Color.Red;
+                ContentView.AddSubview(Label);
+            }
+        }
+        
+        /*
         protected override void DrawContent(SpriteBatch CurrentBatch)
         {
             Vector2 pos = new Vector2(0, 0);
@@ -49,5 +71,6 @@ namespace CTC
                 pos.Y += 16;
             }
         }
+        */
     }
 }

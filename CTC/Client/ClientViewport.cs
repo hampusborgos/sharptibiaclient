@@ -67,10 +67,32 @@ namespace CTC
         #region Events
 
         public delegate void ContainerEvent(ClientViewport Viewport, ClientContainer Container);
+        public delegate void VIPEvent(ClientViewport Viewport, ClientCreature Creature);
 
+        /// <summary>
+        /// Fired when a new container is opened.
+        /// Do not store the ClientContainer as it might be replace
+        /// be calls to UpdateContainer, instead store the ContanerID.
+        /// </summary>
         public event ContainerEvent OpenContainer;
+
+        /// <summary>
+        /// Fired when a container has been updated.
+        /// Look at the ContainerID of the passed Container to figure out what
+        /// container changed, do NOT use the ClientContainer as it might be an
+        /// entirely new container.
+        /// </summary>
         public event ContainerEvent UpdateContainer;
+
+        /// <summary>
+        /// A container was closed, check the ContainerID to figure out which one it was.
+        /// </summary>
         public event ContainerEvent CloseContainer;
+
+        /// <summary>
+        /// Fired when a VIP is added, logs in or logs out.
+        /// </summary>
+        public event VIPEvent VIPStatusChanged;
 
         #endregion
 
@@ -140,7 +162,8 @@ namespace CTC
             return null;
         }
 
-        // Player related
+        #region Player
+
         private void OnPlayerLogin(Packet props)
         {
             Player = (ClientPlayer)props["Player"];
@@ -190,7 +213,9 @@ namespace CTC
             Player.Conditions = (ConditionState)props["ConditionState"];
         }
 
-        // Map related
+        #endregion
+
+        #region Map
 
         private void OnAddThing(Packet props)
         {
@@ -263,7 +288,10 @@ namespace CTC
             }
         }
 
-        // Creature actions
+        #endregion
+
+        #region Creature
+
         private void OnCreatureMove(Packet props)
         {
             MapPosition OldPosition = (MapPosition)props["OldPosition"];
@@ -323,7 +351,10 @@ namespace CTC
             Creature.Skull = (CreatureSkull)props["Skull"];
         }
 
-        // VIP actions
+        #endregion
+
+        #region VIP
+
         private void OnVIPState(Packet props)
         {
             ClientCreature Creature = null;
@@ -334,13 +365,19 @@ namespace CTC
             }
             Creature.Name = (String)props["Name"];
             Creature.Online = (Boolean)props["Online"];
+            if (VIPStatusChanged != null)
+                VIPStatusChanged(this, Creature);
         }
 
         private void OnVIPLogin(Packet props)
         {
             ClientCreature Creature = VIPList[(UInt32)props["CreatureID"]];
             if (Creature != null)
+            {
                 Creature.Online = true;
+                if (VIPStatusChanged != null)
+                    VIPStatusChanged(this, Creature);
+            }
             else
                 Log.Warning("Receieved vip login for unknown creature (" + props["CreatureID"] + ")");
         }
@@ -349,12 +386,19 @@ namespace CTC
         {
             ClientCreature Creature = VIPList[(UInt32)props["CreatureID"]];
             if (Creature != null)
+            {
                 Creature.Online = false;
+                if (VIPStatusChanged != null)
+                    VIPStatusChanged(this, Creature);
+            }
             else
                 Log.Warning("Receieved vip login for unknown creature (" + props["CreatureID"] + ")");
         }
+        
+        #endregion
 
-        // Channel related
+        #region Chat
+
         private void OnCreatureSpeak(Packet props)
         {
             ClientMessage Message = (ClientMessage)props["Message"];
@@ -387,6 +431,10 @@ namespace CTC
             DefaultChannel.Add(Message);
             //Log.Debug(Message.Text, this);
         }
+
+        #endregion
+
+        #region Inventory
 
         private void OnUpdateInventory(Packet props)
         {
@@ -483,5 +531,8 @@ namespace CTC
             if (UpdateContainer != null)
                 UpdateContainer(this, Container);
         }
+
+        #endregion
+
     }
 }
