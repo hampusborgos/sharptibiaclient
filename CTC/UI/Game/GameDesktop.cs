@@ -125,17 +125,14 @@ namespace CTC
             ContainerPanel Panel = new ContainerPanel(Viewport, Container.ContainerID);
             Panel.Bounds.X = 1000;
             Panel.ZOrder = 1;
-            this.AddSubview(Panel);
+            AddSubview(Panel);
         }
 
         protected void OnCloseContainer(ClientViewport Viewport, ClientContainer Container)
         {
-            Children.RemoveAll(delegate(UIView Panel)
-            {
-                if (Panel.GetType() == typeof(ContainerPanel))
-                    return ((ContainerPanel)Panel).ContainerID == Container.ContainerID;
-                return false;
-            });
+            foreach (ContainerPanel CPanel in SubviewsOfType<ContainerPanel>())
+                if (CPanel.ContainerID == Container.ContainerID)
+                    CPanel.RemoveFromSuperview();
         }
 
         #endregion

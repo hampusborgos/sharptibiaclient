@@ -123,6 +123,9 @@ namespace CTC
             Protocol.ClearInventory.Add(OnClearInventory);
             Protocol.OpenContainer.Add(OnOpenContainer);
             Protocol.CloseContainer.Add(OnCloseContainer);
+            Protocol.ContainerAddItem.Add(OnContainerAddItem);
+            Protocol.ContainerRemoveItem.Add(OnContainerRemoveItem);
+            Protocol.ContainerTransformItem.Add(OnContainerTransformItem);
         }
 
         /// <summary>
@@ -442,30 +445,43 @@ namespace CTC
         private void OnContainerAddItem(Packet props)
         {
             int ContainerID = (int)props["ContainerID"];
-            ClientContainer container = Containers[ContainerID];
+            ClientContainer Container = Containers[ContainerID];
             ClientItem item = (ClientItem)props["Item"];
 
             // Items are always added on index 0
-            container.Contents.Insert(0, item);
+            Container.Contents.Insert(0, item);
+
+            // Dispatch an event
+            if (UpdateContainer != null)
+                UpdateContainer(this, Container);
         }
 
         private void OnContainerTransformItem(Packet props)
         {
             int ContainerID = (int)props["ContainerID"];
-            ClientContainer container = Containers[ContainerID];
+            ClientContainer Container = Containers[ContainerID];
             int slot = (int)props["Slot"];
             ClientItem item = (ClientItem)props["Item"];
 
-            container.Contents[slot] = item;
+            Container.Contents[slot] = item;
+
+            // Dispatch an event
+            if (UpdateContainer != null)
+                UpdateContainer(this, Container);
         }
 
         private void OnContainerRemoveItem(Packet props)
         {
             int ContainerID = (int)props["ContainerID"];
-            ClientContainer container = Containers[ContainerID];
+            ClientContainer Container = Containers[ContainerID];
             int slot = (int)props["Slot"];
 
-            container.Contents.RemoveAt(slot);
+            // Just remove it
+            Container.Contents.RemoveAt(slot);
+
+            // Dispatch an event
+            if (UpdateContainer != null)
+                UpdateContainer(this, Container);
         }
     }
 }

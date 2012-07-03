@@ -45,35 +45,55 @@ namespace CTC
 
         protected void OnUpdateContainer(ClientViewport Viewport, ClientContainer Container)
         {
+            // Ignore updates for other containers
+            if (Container.ContainerID != ContainerID)
+                return;
+
             GetSubviewWithTag("_ContainerUpButton").Visible = false;
 
             // Update the title
             Name = Container.Name;
 
-            // Replace the child views
-            ContentView.Subviews.RemoveAll(delegate(UIView view) {
-                return view.GetType() == typeof(ItemButton);
-            });
+            List<ItemButton> ItemButtons = ContentView.SubviewsOfType<ItemButton>();
 
-            for (int Slot = 0; Slot < Container.MaximumVolume; ++Slot)
+            // Check if the volume has changed, then we need to recreate the subviews
+            if (ItemButtons.Count != Container.MaximumVolume)
             {
-                ContentView.AddSubview(new ItemButton(Renderer, null)
+                // Replace the child views
+                ContentView.RemoveSubviewsMatching(delegate(UIView view)
                 {
-                    Margin = new Margin
-                    {
-                        Top = 0,
-                        Right = 0,
-                        Bottom = 3,
-                        Left = 3,
-                    }
+                    return view is ItemButton;
                 });
+
+                for (int ButtonIndex = 0; ButtonIndex < Container.MaximumVolume; ++ButtonIndex)
+                {
+                    ContentView.AddSubview(new ItemButton(Renderer, null)
+                    {
+                        Margin = new Margin
+                        {
+                            Top = 0,
+                            Right = 0,
+                            Bottom = 3,
+                            Left = 3,
+                        }
+                    });
+                }
+
+                ItemButtons = ContentView.SubviewsOfType<ItemButton>();
             }
 
-            NeedsLayout = true;
+            // Update the item buttons with the new contents
+            int Slot = 0;
+            foreach (ItemButton Button in ItemButtons)
+                Button.Item = Container.GetItem(Slot++);
         }
 
         protected void OnCloseContainer(ClientViewport Viewport, ClientContainer Container)
         {
+            // Ignore updates for other containers
+            if (Container.ContainerID != ContainerID)
+                return;
+
             Viewport.UpdateContainer -= OnUpdateContainer;
             Viewport.CloseContainer -= OnCloseContainer;
         }
@@ -82,6 +102,7 @@ namespace CTC
 
         protected override void BeginDraw()
         {
+            // Create the renderer if required (and propagate it)
             if (Renderer == null)
             {
                 Renderer = new GameRenderer(Context, Viewport.GameData);
@@ -91,23 +112,6 @@ namespace CTC
             }
 
             base.BeginDraw();
-        }
-
-        protected override void DrawContent(SpriteBatch Batch)
-        {
-            if (Viewport != null)
-            {
-                ClientContainer Container = Viewport.Containers[ContainerID];
-
-                int Slot = 0;
-                foreach (ItemButton Button in ContentView.SubviewsOfType<ItemButton>())
-                {
-                    Button.Item = Container.GetItem(Slot);
-                    ++Slot;
-                }
-            }
-
-            base.DrawContent(Batch);
         }
 
         #endregion

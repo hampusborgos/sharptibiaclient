@@ -267,7 +267,7 @@ namespace CTC
                 {
                     Packet props = new Packet(parserName);
                     props["ContainerID"] = (int)nmsg.ReadByte();
-                    props["Slot"] = nmsg.ReadByte();
+                    props["Slot"] = (int)nmsg.ReadByte();
                     return props;
                 };
 
