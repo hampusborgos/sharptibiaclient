@@ -17,6 +17,7 @@ namespace CTC
             : base(null, UIElementType.None)
         {
             _StackDirection = Direction;
+            Autoresizable = false;
             this.Overflow = Overflow;
         }
 
@@ -42,7 +43,15 @@ namespace CTC
         /// Should the stack view fill up in the other direction once the primary
         /// direction is full?
         /// </summary>
-        public Boolean Overflow = false;
+        public Boolean Overflow
+        {
+            get { return _Overflow; }
+            set
+            {
+                _Overflow = value;
+            }
+        }
+        private Boolean _Overflow;
 
         public override void LayoutSubviews()
         {
@@ -56,11 +65,11 @@ namespace CTC
 
         private void LayoutHorizontal()
         {
-            int SpaceLeft = 0;
+            int SpaceLeft = FullBounds.Width; ;
             int RowLeft = 0;
             int RowTop = SkinPadding.Top + Padding.Top;
             int HighestThisRow = 0;
-            int Row = -1; // start on -1 since first iteration will increase it
+            int Row = 0; // start on -1 since first iteration will increase it
 
             foreach (UIView Subview in Children)
             {
@@ -83,8 +92,11 @@ namespace CTC
                 SpaceLeft -= Subview.FullBounds.Width;
             }
 
-            if (!Overflow)
+            if (!Autoresizable)
+            {
                 Bounds.Width = RowLeft;
+                Bounds.Height = RowTop + HighestThisRow;
+            }
         }
 
         private void LayoutVertical()
@@ -93,7 +105,7 @@ namespace CTC
             int ColumnTop = SkinPadding.Top + Padding.Top;
             int ColumnLeft = SkinPadding.Left + Padding.Left;
             int WidestThisColumn = 0;
-            int Column = -1; // start on -1 since first iteration will increase it
+            int Column = 0; // start on -1 since first iteration will increase it
 
             foreach (UIView Subview in Children)
             {
@@ -116,8 +128,11 @@ namespace CTC
                 SpaceLeft -= Subview.FullBounds.Height;
             }
 
-            if (!Overflow)
+            if (!Autoresizable)
+            {
+                Bounds.Width = ColumnLeft + WidestThisColumn;
                 Bounds.Height = ColumnTop;
+            }
         }
     }
 }

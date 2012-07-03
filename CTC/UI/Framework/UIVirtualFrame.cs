@@ -65,9 +65,12 @@ namespace CTC
 
         public override void LayoutSubviews()
         {
+            // This will layout the buttons etc. on the frame
+            base.LayoutSubviews();
+
             // Position the scrollbar to the right
             Margin sp = SkinPadding;
-            Rectangle sc = sp.SubtractFrom(Bounds);
+            Rectangle sc = Bounds.Subtract(sp);
             Scrollbar.Bounds = new Rectangle
             {
                 X = Bounds.Width - sp.Right - Scrollbar.Bounds.Width,
@@ -84,19 +87,24 @@ namespace CTC
             else
                 Scrollbar.ScrollbarLength = 0;
 
-            // This will layout the buttons etc. on the frame
-            base.LayoutSubviews();
-
             // Now we layout the content view as *we* want it.
             if (ContentView.FullBounds.Height > ClientBounds.Height)
             {
                 // Content is larger than we are...
                 VirtualBounds = new Rectangle(
-                    0, 0,
+                    VirtualBounds.X, VirtualBounds.Y,
                     ClientBounds.Width,
                     ContentView.FullBounds.Height
                 );
             }
         }
+
+        /*
+        protected override void DrawBackgroundChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
+        {
+            base.DrawBackgroundChildren(CurrentBatch,
+                new Rectangle(0, VirtualBounds.Y, Bounds.Width, Bounds.Height));
+        }
+         */
     }
 }

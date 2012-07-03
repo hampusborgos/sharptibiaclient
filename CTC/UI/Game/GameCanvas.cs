@@ -34,6 +34,8 @@ namespace CTC
 
         public override void LayoutSubviews()
         {
+            base.LayoutSubviews();
+
             if (Backbuffer == null)
             {
                 Renderer = new GameRenderer(Context, Viewport.GameData);
@@ -47,8 +49,6 @@ namespace CTC
             }
 
             Bounds = new Rectangle(0, 0, 883, 883 / 4 * 3);
-
-            base.LayoutSubviews();
         }
 
         public override void Update(GameTime Time)

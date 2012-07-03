@@ -37,16 +37,25 @@ namespace CTC
         {
             get { return Top + Bottom; }
         }
+    };
 
-        public Rectangle SubtractFrom(Rectangle rect)
+    public static class RectangleExtensions
+    {
+        public static Rectangle Subtract(this Rectangle self, Margin margin)
         {
             return new Rectangle
             {
-                X = rect.Left + Left,
-                Y = rect.Top + Top,
-                Width = rect.Width - Right,
-                Height = rect.Height - Bottom
+                X = self.Left + margin.Left,
+                Y = self.Top + margin.Top,
+                Width = self.Width - margin.Right,
+                Height = self.Height - margin.Bottom
             };
         }
-    };
+
+        public static bool Overlaps(this Rectangle self, Rectangle other)
+        {
+            return self.Left <= other.Right && self.Right >= other.Left &&
+                self.Top <= other.Bottom && self.Bottom >= other.Top;
+        }
+    }
 }

@@ -48,6 +48,11 @@ namespace CTC
         public Boolean ClipsSubviews = false;
 
         /// <summary>
+        /// This view will be resized by it's parent view to fit.
+        /// </summary>
+        public Boolean Autoresizable = true;
+
+        /// <summary>
         /// User-customizable padding inside this view.
         /// </summary>
         public Margin Padding = new Margin();
@@ -500,7 +505,8 @@ namespace CTC
         {
             if (!Visible)
                 return;
-            if (!BoundingBox.Intersects(Bounds))
+            //if (!(this is UIStackView))
+            if (!BoundingBox.Overlaps(new Rectangle(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height)))
                 return;
 
             BeginDraw();
@@ -512,7 +518,6 @@ namespace CTC
             // Draw the views that are behind the borders of this view
             if (ClipsSubviews)
                 Context.ScissorStack.Push(ScreenBounds);
-
             DrawBackgroundChildren(Batch, BoundingBox);
             
             // Draw the borders etc. around this view
@@ -522,7 +527,6 @@ namespace CTC
 
             // Draw the foreground elements of this view
             DrawForegroundChildren(Batch, BoundingBox);
-
             if (ClipsSubviews)
                 Context.ScissorStack.Pop();
         }
@@ -560,7 +564,7 @@ namespace CTC
         /// </summary>
         /// <param name="CurrentBatch"></param>
         /// <param name="BoundingBox">If the subview does not intersect this area, it won't be drawn.</param>
-        protected void DrawBackgroundChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
+        protected virtual void DrawBackgroundChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
         {
             foreach (UIView Subview in Children)
                 if (Subview.ZOrder <= 0)
@@ -573,7 +577,7 @@ namespace CTC
         /// </summary>
         /// <param name="CurrentBatch"></param>
         /// <param name="BoundingBox">If the subview does not intersect this area, it won't be drawn.</param>
-        protected void DrawForegroundChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
+        protected virtual void DrawForegroundChildren(SpriteBatch CurrentBatch, Rectangle BoundingBox)
         {
             foreach (UIView Subview in Children)
                 if (Subview.ZOrder > 0)

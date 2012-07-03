@@ -123,6 +123,8 @@ namespace CTC
         {
             CalculateWidth();
 
+            base.LayoutSubviews();
+
             // Position the Top button
             Rectangle top = new Rectangle();
             top.Width = (int)Context.Skin.Measure(UIElementType.ScrollbarTop, UISkinOrientation.Center).X;
@@ -144,8 +146,6 @@ namespace CTC
             GemButton.Bounds = gem;
 
             PositionGem();
-
-            base.LayoutSubviews();
         }
     }
 }

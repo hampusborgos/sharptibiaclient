@@ -92,6 +92,8 @@ namespace CTC
             int Slot = 0;
             foreach (ItemButton Button in ItemButtons)
                 Button.Item = Container.GetItem(Slot++);
+
+            NeedsLayout = true;
         }
 
         protected void OnCloseContainer(ClientViewport Viewport, ClientContainer Container)

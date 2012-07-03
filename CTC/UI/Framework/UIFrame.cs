@@ -103,6 +103,11 @@ namespace CTC
 
         public override void LayoutSubviews()
         {
+            // Make the content fill up the frame
+            ContentView.Bounds = ClientBounds.Subtract(ContentView.Padding);
+
+            base.LayoutSubviews();
+
             // Layout the buttons
             int N = 1;
             foreach (UIButton Button in FrameButtons)
@@ -113,10 +118,6 @@ namespace CTC
                 );
                 ++N;
             }
-
-            // Make the content fill up the frame
-            ContentView.Bounds = ContentView.Padding.SubtractFrom(ClientBounds);
-            base.LayoutSubviews();
         }
 
         #region Button management

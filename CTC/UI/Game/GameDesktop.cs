@@ -124,6 +124,8 @@ namespace CTC
         {
             ContainerPanel Panel = new ContainerPanel(Viewport, Container.ContainerID);
             Panel.Bounds.X = 1000;
+            Panel.Bounds.Y = Viewport.Containers.Count * 100;
+            Panel.Bounds.Height = 100;
             Panel.ZOrder = 1;
             AddSubview(Panel);
         }
