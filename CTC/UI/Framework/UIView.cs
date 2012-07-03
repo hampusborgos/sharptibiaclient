@@ -207,7 +207,7 @@ namespace CTC
         {
             get
             {
-                return Children;
+                return new List<UIView>(Children);
             }
         }
         
