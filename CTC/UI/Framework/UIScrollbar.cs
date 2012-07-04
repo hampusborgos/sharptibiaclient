@@ -41,9 +41,9 @@ namespace CTC
             set
             {
                 if (value > ScrollbarLength)
-                    throw new ArgumentException("Scrollbar Position cannot be greater than Length.");
+                    _ScrollbarPosition = _ScrollbarLength;
                 else if (value < 0)
-                    throw new ArgumentException("Scrollbar Position cannot be less than 0.");
+                    _ScrollbarPosition = 0;
                 else
                     _ScrollbarPosition = value;
 
@@ -79,11 +79,19 @@ namespace CTC
             TopButton = new UIButton();
             TopButton.NormalType = UIElementType.ScrollbarTop;
             TopButton.HighlightType = UIElementType.ScrollbarTopHighlight;
+            TopButton.ButtonReleasedInside += delegate(UIButton Button, MouseState mouse)
+            {
+                ScrollbarPosition -= ScrollbarLength / 10;
+            };
             AddSubview(TopButton);
 
             BottomButton = new UIButton();
             BottomButton.NormalType = UIElementType.ScrollbarBottom;
             BottomButton.HighlightType = UIElementType.ScrollbarBottomHighlight;
+            BottomButton.ButtonReleasedInside += delegate(UIButton Button, MouseState mouse)
+            {
+                ScrollbarPosition += ScrollbarLength / 10;
+            };
             AddSubview(BottomButton);
 
             GemButton = new UIButton();
