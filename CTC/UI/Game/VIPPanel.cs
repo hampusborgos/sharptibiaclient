@@ -44,28 +44,21 @@ namespace CTC
         {
             ContentView.RemoveAllSubviews();
 
-            List<String> OfflineNames = new List<String>();
-            List<String> OnlineNames = new List<String>();
-
-            foreach (ClientCreature VIP in Viewport.VIPList.Values)
+            List<ClientCreature> VIPs = new List<ClientCreature>(Viewport.VIPList.Values);
+            VIPs.Sort(delegate(ClientCreature A, ClientCreature B)
             {
-                if (VIP.Online)
-                    OnlineNames.Add(VIP.Name);
-                else
-                    OfflineNames.Add(VIP.Name);
-            }
+                if (A.Online && !B.Online)
+                    return -1;
+                else if (B.Online && !A.Online)
+                    return 1;
+                return A.Name.CompareTo(B.Name);
+            });
 
-            foreach (String VIP in OnlineNames)
+            foreach (ClientCreature VIP in VIPs)
             {
-                UILabel Label = new UILabel(VIP);
-                Label.TextColor = Color.LightGreen;
-                ContentView.AddSubview(Label);
-            }
-
-            foreach (String VIP in OfflineNames)
-            {
-                UILabel Label = new UILabel(VIP);
-                Label.TextColor = Color.Red;
+                UILabel Label = new UILabel(VIP.Name);
+                Label.Bounds.Width = ClientBounds.Width;
+                Label.TextColor = VIP.Online ? Color.LightGreen : Color.Red;
                 ContentView.AddSubview(Label);
             }
         }
