@@ -7,6 +7,13 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CTC
 {
+    public enum UITextAlignment
+    {
+        Left,
+        Center,
+        Right
+    };
+
     class UILabel : UIView
     {
         /// <summary>
@@ -22,22 +29,27 @@ namespace CTC
             }
         }
         private String _Text;
-        
-        public Color TextColor;
+
+        public UITextAlignment TextAlignment = UITextAlignment.Left;
+        public Color TextColor = Color.LightGray;
 
         public UILabel(String Text)
             : base (new Rectangle(0, 0, 100, 18) , UIElementType.None)
         {
             _Text = Text;
-            TextColor = Color.LightGray;
         }
 
         protected override void DrawContent(SpriteBatch CurrentBatch)
         {
+            int RL = 0;
+            if (TextAlignment == UITextAlignment.Center)
+                RL = (int)(Bounds.Width - Context.StandardFont.MeasureString(Text).X) / 2;
+            else if (TextAlignment == UITextAlignment.Right)
+                RL = (int)(Bounds.Width - Context.StandardFont.MeasureString(Text).X);
             CurrentBatch.DrawString(
                 Context.StandardFont,
                 _Text,
-                ScreenCoordinate(0, 0),
+                ScreenCoordinate(RL, 0),
                 TextColor
             );
         }
