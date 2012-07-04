@@ -324,7 +324,8 @@ namespace CTC
         {
             // If you call ReleaseMouse, the panel *will* lose mouse focus
             // If it fails to do so, something bad is going on.
-            Debug.Assert(MouseLost(), "Did not release mouse when attempting to do so by itself.");
+            bool worked = MouseLost();
+            Debug.Assert(worked, "Did not release mouse when attempting to do so by itself.");
             Context.MouseFocusedPanel = null;
         }
 
