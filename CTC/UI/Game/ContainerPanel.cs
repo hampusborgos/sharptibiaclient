@@ -18,10 +18,10 @@ namespace CTC
         {
             this.Viewport = Viewport;
             this.ContainerID = ContainerID;
-            ContentView.Margin = new Margin
+            ContentView.Padding = new Margin
             {
                 Top = 4,
-                Left = 2,
+                Left = 7,
                 Bottom = 4,
                 Right = 0
             };
