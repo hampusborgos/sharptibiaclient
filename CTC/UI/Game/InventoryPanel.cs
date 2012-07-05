@@ -16,7 +16,7 @@ namespace CTC
         public InventoryPanel()
         {
             Name = "Inventory";
-            Bounds = new Rectangle(0, 0, 200, 200);
+            Bounds = new Rectangle(0, 0, 176, 200);
 
             for (InventorySlot slot = InventorySlot.First; slot <= InventorySlot.Last; slot++)
             {

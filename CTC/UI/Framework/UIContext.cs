@@ -17,7 +17,10 @@ namespace CTC
 
         /// <summary>
         /// The size of the OS window the game is contained in.
-        /// We use this value since it's 'safe'.
+        /// We use this value since it's 'safe'. It is updated when we receive
+        /// OnResize from the OS, which means the OS window has been safely resized,
+        /// if we read the values directly from the GameWindow, it might be that
+        /// are actually larger than the window.
         /// </summary>
         public Rectangle GameWindowSize;
 

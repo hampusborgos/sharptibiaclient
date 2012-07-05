@@ -135,11 +135,8 @@ namespace CTC
         protected void OnOpenContainer(ClientViewport Viewport, ClientContainer Container)
         {
             ContainerPanel Panel = new ContainerPanel(Viewport, Container.ContainerID);
-            Panel.Bounds.X = 1000;
-            Panel.Bounds.Y = Viewport.Containers.Count * 100;
             Panel.Bounds.Height = 100;
-            Panel.ZOrder = 1;
-            AddSubview(Panel);
+            Sidebar.AddWindow(Panel);
         }
 
         protected void OnCloseContainer(ClientViewport Viewport, ClientContainer Container)

@@ -12,11 +12,11 @@ namespace CTC
     {
         public UIStackView ContentView;
 
+        public int Columns = 1;
+
         public GameSidebar()
         {
             ElementType = UIElementType.Window;
-
-            Bounds.Width = 208;
             
             ContentView = new UIStackView(UIStackDirection.Vertical);
             ContentView.ZOrder = -1;
@@ -74,6 +74,7 @@ namespace CTC
         public override void LayoutSubviews()
         {
             ContentView.Bounds = ClientBounds;
+            Bounds.Width = 176 * Columns + SkinPadding.TotalWidth;
 
             base.LayoutSubviews();
         }

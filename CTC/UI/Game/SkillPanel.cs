@@ -15,7 +15,7 @@ namespace CTC
         {
             Name = "Skills";
 
-            Bounds.Width = 200;
+            Bounds.Width = 176;
             Bounds.Height = 200;
         }
 
