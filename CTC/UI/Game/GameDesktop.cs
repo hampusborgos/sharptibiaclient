@@ -22,6 +22,8 @@ namespace CTC
             Bounds.Width = Window.ClientBounds.Width;
             Bounds.Height = Window.ClientBounds.Height;
 
+            Context.GameWindowSize = Bounds;
+
             // Listener when window changes size
             Window.ClientSizeChanged += new EventHandler<EventArgs>(OnResize);
         }
@@ -79,13 +81,22 @@ namespace CTC
 
         #region Event Handlers
 
+        /// <summary>
+        /// The game window was resized
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="args"></param>
         void OnResize(object o, EventArgs args)
         {
+            System.Console.WriteLine("Game Window was resized!");
             if (Context.Window.ClientBounds.Height > 0 && Context.Window.ClientBounds.Width > 0)
             {
                 // Change the size of this view
                 Bounds.Width = Context.Window.ClientBounds.Width;
                 Bounds.Height = Context.Window.ClientBounds.Height;
+
+                // Update the context size
+                Context.GameWindowSize = Bounds;
 
                 NeedsLayout = true;
             }

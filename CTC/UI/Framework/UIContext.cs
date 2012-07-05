@@ -10,10 +10,24 @@ namespace CTC
 {
     public class UIContext
     {
+        /// <summary>
+        /// The OS window of the game (as provided by XNA)
+        /// </summary>
         public GameWindow Window;
+
+        /// <summary>
+        /// The size of the OS window the game is contained in.
+        /// We use this value since it's 'safe'.
+        /// </summary>
+        public Rectangle GameWindowSize;
+
         public GraphicsDeviceManager Graphics;
         public ContentManager Content;
         public RasterizerState Rasterizer;
+
+        /// <summary>
+        /// The time elapsed in the game
+        /// </summary>
         public GameTime GameTime;
 
         public UIView MouseFocusedPanel;

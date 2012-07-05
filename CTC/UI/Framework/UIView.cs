@@ -452,7 +452,7 @@ namespace CTC
 
         protected Rectangle GetClipRectangle()
         {
-            Rectangle Screen = Context.Window.ClientBounds;
+            Rectangle Screen = Context.GameWindowSize;
             Rectangle clip = ScreenBounds;
             if (Context.ScissorStack.Count > 0)
             {
@@ -506,7 +506,7 @@ namespace CTC
             Batch.Begin(SpriteSortMode.Deferred, null, null, null, Context.Rasterizer);
 
             // Set up the scissors for this view
-            Rectangle Screen = Context.Window.ClientBounds;
+            Rectangle Screen = Context.GameWindowSize;
             Screen.X = 0;
             Screen.Y = 0;
             if (Screen.Intersects(ScreenBounds))
