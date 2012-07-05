@@ -136,7 +136,7 @@ namespace CTC
 
         protected void OnCloseContainer(ClientViewport Viewport, ClientContainer Container)
         {
-            foreach (ContainerPanel CPanel in SubviewsOfType<ContainerPanel>())
+            foreach (ContainerPanel CPanel in Sidebar.SubviewsOfType<ContainerPanel>())
                 if (CPanel.ContainerID == Container.ContainerID)
                     CPanel.RemoveFromSuperview();
         }
