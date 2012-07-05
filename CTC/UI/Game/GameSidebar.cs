@@ -37,7 +37,9 @@ namespace CTC
         {
             // Remove it from content view and add it as a subview to this view
             ContentView.RemoveSubview(MovedFrame);
+            ContentView.NeedsLayout = false;
             AddSubview(MovedFrame);
+            NeedsLayout = false;
             // Offset it's position so it's still under the cursor
             MovedFrame.Bounds.X += ContentView.Bounds.Left;
             MovedFrame.Bounds.Y += ContentView.Bounds.Top;

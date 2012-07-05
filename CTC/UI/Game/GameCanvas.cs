@@ -135,7 +135,7 @@ namespace CTC
             Rectangle Target = new Rectangle
             {
                 X = ClientBounds.Width / 2,
-                Y = ClientBounds.Top,
+                Y = 0,
                 Width = (ClientBounds.Height * 480 / 352),
                 Height = ClientBounds.Height
             };

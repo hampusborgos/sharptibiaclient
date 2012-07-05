@@ -374,17 +374,13 @@ namespace CTC
 
         public Rectangle ScreenCoordinate(Rectangle rect)
         {
-            return new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+            return ScreenCoordinate(rect.X, rect.Y, rect.Width, rect.Height);
         }
 
         public Rectangle ScreenCoordinate(int X, int Y, int W, int H)
         {
-            return new Rectangle(
-                ScreenClientBounds.Left + X,
-                ScreenClientBounds.Top + Y,
-                W,
-                H
-            );
+            Rectangle scb = ScreenClientBounds;
+            return new Rectangle(scb.Left + X, scb.Top + Y, W, H);
         }
 
         public Vector2 ScreenCoordinate(int X, int Y)
