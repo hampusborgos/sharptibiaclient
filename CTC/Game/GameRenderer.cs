@@ -311,14 +311,14 @@ namespace CTC
             }
         }
 
-        public void DrawSceneForeground(SpriteBatch Batch, Vector2 Scale, GameTime Time, ClientViewport Viewport, Dictionary<MapPosition, TileAnimations> PlayingAnimations = null)
+        public void DrawSceneForeground(SpriteBatch Batch, Vector2 ScreenOffset, Vector2 Scale, GameTime Time, ClientViewport Viewport, Dictionary<MapPosition, TileAnimations> PlayingAnimations = null)
         {
             MapPosition Center = Viewport.ViewPosition;
 
             Vector2 TopLeft = new Vector2(
-                -(Center.X - 8) * 32,
-                -(Center.Y - 6) * 32
-            );
+                 -(Center.X - 8) * 32,
+                 -(Center.Y - 6) * 32
+             );
 
             // Offset based on the Z position
             if (Center.Z <= 7)
@@ -338,13 +338,13 @@ namespace CTC
                 {
                     ClientTile Tile = Viewport.Map[new MapPosition(X, Y, Center.Z)];
 
-                    Vector2 Offset = new Vector2(32 * X + TopLeft.X, 32 * Y + TopLeft.Y);
-                    Offset *= Scale;
+                    Vector2 DrawOffset = new Vector2(32 * X + TopLeft.X, 32 * Y + TopLeft.Y);
+                    DrawOffset *= Scale;
 
                     TileAnimations Animations = null;
                     if (PlayingAnimations != null && Tile != null)
                         PlayingAnimations.TryGetValue(Tile.Position, out Animations);
-                    DrawTileForeground(Batch, Time, Offset, Tile, Animations);
+                    DrawTileForeground(Batch, Time, ScreenOffset + DrawOffset, Tile, Animations);
                 }
             }
         }

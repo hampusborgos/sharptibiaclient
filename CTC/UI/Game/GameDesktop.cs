@@ -166,6 +166,14 @@ namespace CTC
                 Height = Chat.Bounds.Height
             }.Subtract(Chat.Margin);
 
+            Frame.Bounds = new Rectangle
+            {
+                X = ClientBounds.Top,
+                Y = ClientBounds.Left,
+                Width = ClientBounds.Width - Sidebar.FullBounds.Width,
+                Height = ClientBounds.Height - Chat.Bounds.Height
+            }.Subtract(Frame.Margin);
+
             base.LayoutSubviews();
         }
 

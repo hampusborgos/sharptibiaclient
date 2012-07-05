@@ -14,8 +14,6 @@ namespace CTC
         public VIPPanel()
         {
             Name = "VIP List";
-            Padding = new Margin(5);
-            ContentView = new UIStackView(UIStackDirection.Vertical);
 
             Bounds.Width = 176;
             Bounds.Height = 200;

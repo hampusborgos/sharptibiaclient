@@ -55,6 +55,7 @@ namespace CTC
             ElementType = UIElementType.Frame;
             Name = "";
             ContentView = new UIStackView();
+            ContentView.Padding = new Margin(5);
 
             AddDefaultButtons();
         }
@@ -128,7 +129,7 @@ namespace CTC
         public override void LayoutSubviews()
         {
             // Make the content fill up the frame
-            ContentView.Bounds = ClientBounds.Subtract(ContentView.Padding);
+            ContentView.Bounds = ClientBounds.Subtract(ContentView.Margin);
 
             base.LayoutSubviews();
 

@@ -47,8 +47,8 @@ namespace CTC
             {
                 X = self.Left + margin.Left,
                 Y = self.Top + margin.Top,
-                Width = self.Width - margin.Right,
-                Height = self.Height - margin.Bottom
+                Width = self.Width - margin.TotalWidth,
+                Height = self.Height - margin.TotalHeight
             };
         }
 

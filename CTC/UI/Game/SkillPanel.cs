@@ -112,14 +112,6 @@ namespace CTC
         {
             Name = "Skills";
 
-            Padding = new Margin
-            {
-                Left = 5,
-                Top = 5,
-                Bottom = 5,
-                Right = 5
-            };
-
             ((UIStackView)ContentView).StretchOtherDirection = true;
 
             Bounds.Width = 176;

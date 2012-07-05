@@ -14,7 +14,7 @@ namespace CTC
     class UIStackView : UIView
     {
         public UIStackView(UIStackDirection Direction = UIStackDirection.Vertical, Boolean Overflow = false)
-            : base(null, UIElementType.None)
+            : base(null, UIElementType.BorderlessWindow)
         {
             _StackDirection = Direction;
             Autoresizable = false;

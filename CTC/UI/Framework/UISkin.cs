@@ -11,6 +11,7 @@ namespace CTC
     {
         None,
         Frame,
+        BorderlessWindow,
         Window,
         Button,
         Textbox,
@@ -197,27 +198,31 @@ namespace CTC
             UISkinElement e;
 
             e = new UISkinElement(UIElementType.Frame);
-            e.Set(UISkinOrientation.TopLeft,        new Rectangle(106,       183,    4,      17));
-            e.Set(UISkinOrientation.Top,            new Rectangle(114,       183,    96,     17));
-            e.Set(UISkinOrientation.TopRight,       new Rectangle(110,       183,    4,      17));
-            e.Set(UISkinOrientation.Left,           new Rectangle(256,       0,      4,      96));
-            e.Set(UISkinOrientation.Center,         new Rectangle(0,	        0,		96,		96));
-            e.Set(UISkinOrientation.Right,          new Rectangle(260,	    0,	    4,		96));
-            e.Set(UISkinOrientation.BottomLeft,     new Rectangle(98,        193,	4,		4));
-            e.Set(UISkinOrientation.Bottom,         new Rectangle(2,	        193,	96,		4));
-            e.Set(UISkinOrientation.BottomRight,    new Rectangle(102,       193,	4,		4));
+            e.Set(UISkinOrientation.TopLeft, new Rectangle(106, 183, 4, 17));
+            e.Set(UISkinOrientation.Top, new Rectangle(114, 183, 96, 17));
+            e.Set(UISkinOrientation.TopRight, new Rectangle(110, 183, 4, 17));
+            e.Set(UISkinOrientation.Left, new Rectangle(256, 0, 4, 96));
+            e.Set(UISkinOrientation.Center, new Rectangle(0, 0, 96, 96));
+            e.Set(UISkinOrientation.Right, new Rectangle(260, 0, 4, 96));
+            e.Set(UISkinOrientation.BottomLeft, new Rectangle(98, 193, 4, 4));
+            e.Set(UISkinOrientation.Bottom, new Rectangle(2, 193, 96, 4));
+            e.Set(UISkinOrientation.BottomRight, new Rectangle(102, 193, 4, 4));
             AddElement(e);
 
             e = new UISkinElement(UIElementType.Window);
-            e.Set(UISkinOrientation.TopLeft,        new Rectangle(106,      184,    4,      3));
-            e.Set(UISkinOrientation.Top,            new Rectangle(2,        211,    96,     3));
-            e.Set(UISkinOrientation.TopRight,       new Rectangle(110,      184,    4,      3));
-            e.Set(UISkinOrientation.Left,           new Rectangle(256,      0,      4,      96));
-            e.Set(UISkinOrientation.Center,         new Rectangle(0,        0,      96,     96));
-            e.Set(UISkinOrientation.Right,          new Rectangle(260,      0,      4,      96));
-            e.Set(UISkinOrientation.BottomLeft,     new Rectangle(98,       193,    4,      4));
-            e.Set(UISkinOrientation.Bottom,         new Rectangle(2,        193,    96,     4));
-            e.Set(UISkinOrientation.BottomRight,    new Rectangle(102,      193,    4,      4));
+            e.Set(UISkinOrientation.TopLeft, new Rectangle(106, 184, 4, 3));
+            e.Set(UISkinOrientation.Top, new Rectangle(2, 211, 96, 3));
+            e.Set(UISkinOrientation.TopRight, new Rectangle(110, 184, 4, 3));
+            e.Set(UISkinOrientation.Left, new Rectangle(256, 0, 4, 96));
+            e.Set(UISkinOrientation.Center, new Rectangle(0, 0, 96, 96));
+            e.Set(UISkinOrientation.Right, new Rectangle(260, 0, 4, 96));
+            e.Set(UISkinOrientation.BottomLeft, new Rectangle(98, 193, 4, 4));
+            e.Set(UISkinOrientation.Bottom, new Rectangle(2, 193, 96, 4));
+            e.Set(UISkinOrientation.BottomRight, new Rectangle(102, 193, 4, 4));
+            AddElement(e);
+
+            e = new UISkinElement(UIElementType.BorderlessWindow);
+            e.Set(UISkinOrientation.Center, new Rectangle(0, 0, 96, 96));
             AddElement(e);
 
             e = new UISkinElement(UIElementType.Button);

@@ -545,7 +545,7 @@ namespace CTC
         /// Draws the background of the panel (no borders)
         /// </summary>
         /// <param name="CurrentBatch"></param>
-        protected void DrawBackground(SpriteBatch CurrentBatch)
+        protected virtual void DrawBackground(SpriteBatch CurrentBatch)
         {
             UIContext.Skin.DrawBackground(CurrentBatch, ElementType, ScreenBounds);
         }

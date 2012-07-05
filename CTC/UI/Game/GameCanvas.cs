@@ -9,7 +9,7 @@ namespace CTC
 {
     public class GameCanvas : UIView, ICleanupable
     {
-        public GameCanvas(ClientState State)
+        public GameCanvas(ClientState State) : base(null, UIElementType.Window)
         {
             Protocol = State.Protocol;
             Viewport = State.Viewport;
@@ -48,7 +48,7 @@ namespace CTC
                 );
             }
 
-            Bounds = new Rectangle(0, 0, 883, 883 / 4 * 3);
+            // Bounds = new Rectangle(0, 0, 883, 883 / 4 * 3);
         }
 
         public override void Update(GameTime Time)
@@ -110,6 +110,11 @@ namespace CTC
 
         #region Drawing Code
 
+        protected override void DrawBackground(SpriteBatch CurrentBatch)
+        {
+            // do nothing
+        }
+
         public override void Draw(SpriteBatch CurrentBatch, Rectangle BoundingBox)
         {
             // Create the batch if this is the first time we're being drawn
@@ -127,13 +132,24 @@ namespace CTC
             BeginDraw();
 
             // Draw the backbuffer to the screen
-            Batch.Draw(Backbuffer, ScreenClientBounds, Color.White);
+            Rectangle Target = new Rectangle
+            {
+                X = ClientBounds.Width / 2,
+                Y = ClientBounds.Top,
+                Width = (ClientBounds.Height * 480 / 352),
+                Height = ClientBounds.Height
+            };
 
+            Target.X -= Target.Width / 2;
+
+            Batch.Draw(Backbuffer, ScreenCoordinate(Target), Color.White);
+
+            Vector2 Offset = ScreenCoordinate(Target.X, Target.Y);
             Vector2 Scale = new Vector2(
-                ScreenClientBounds.Width / 480f,
-                ScreenClientBounds.Height / 352f
+                Target.Width / 480f,
+                Target.Height / 352f
             );
-            Renderer.DrawSceneForeground(Batch, Scale, UIContext.GameTime, Viewport, PlayingAnimations);
+            Renderer.DrawSceneForeground(Batch, Offset, Scale, UIContext.GameTime, Viewport, PlayingAnimations);
 
 
             DrawBorder(Batch);

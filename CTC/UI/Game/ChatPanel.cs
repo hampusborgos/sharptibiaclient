@@ -19,6 +19,7 @@ namespace CTC
 
             ChatLog = new UIVirtualFrame();
             ChatLog.ElementType = UIElementType.Window;
+            ChatLog.ContentView.ElementType = UIElementType.BorderlessWindow;
             AddSubview(ChatLog);
         }
 
