@@ -31,7 +31,7 @@ namespace CTC
         public int Capacity = 0;
         public int Experience = 0;
         public ClientSkill Level = new ClientSkill("Level");
-        public ClientSkill MagicLevel = new ClientSkill("MagicLevel");
+        public ClientSkill MagicLevel = new ClientSkill("Magic Level");
 
         public ConditionState Conditions = ConditionState.None;
 
