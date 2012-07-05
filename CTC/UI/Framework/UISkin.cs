@@ -313,11 +313,11 @@ namespace CTC
             e.Set(UISkinOrientation.TopLeft,        new Rectangle(186,	64, 	1,		1));
             e.Set(UISkinOrientation.Top,            new Rectangle(187,	64, 	31,		1));
             e.Set(UISkinOrientation.TopRight,       new Rectangle(219,	64, 	1,		1));
-            e.Set(UISkinOrientation.Left,           new Rectangle(186,	65,	    1,		31));
-            e.Set(UISkinOrientation.Center,         new Rectangle(187,	65,	    31,		31));
-            e.Set(UISkinOrientation.Right,          new Rectangle(219,	65,	    1,		31));
+            e.Set(UISkinOrientation.Left,           new Rectangle(186,	65,	    1,		32));
+            e.Set(UISkinOrientation.Center,         new Rectangle(187,	65,	    32,		32));
+            e.Set(UISkinOrientation.Right,          new Rectangle(219,	65,	    1,		32));
             e.Set(UISkinOrientation.BottomLeft,     new Rectangle(186,	97, 	1,		1));
-            e.Set(UISkinOrientation.Bottom,         new Rectangle(187,	97,	    31,		1));
+            e.Set(UISkinOrientation.Bottom,         new Rectangle(187,	97,	    32,		1));
             e.Set(UISkinOrientation.BottomRight,    new Rectangle(219,	97,	    1,		1));
             AddElement(e);
 
