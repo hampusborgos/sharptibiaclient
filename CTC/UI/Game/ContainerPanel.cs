@@ -21,7 +21,7 @@ namespace CTC
             ContentView.Margin = new Margin
             {
                 Top = 4,
-                Left = 7,
+                Left = 2,
                 Bottom = 4,
                 Right = 0
             };

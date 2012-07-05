@@ -72,7 +72,7 @@ namespace CTC
         private void LayoutHorizontal()
         {
             int SpaceLeft = FullBounds.Width; ;
-            int RowLeft = 0;
+            int RowLeft = SkinPadding.Left + Padding.Left;
             int RowTop = SkinPadding.Top + Padding.Top;
             int HighestThisRow = 0;
             int Row = 0;
