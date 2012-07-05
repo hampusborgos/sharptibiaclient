@@ -24,12 +24,10 @@ namespace CTC
     {
         TibiaGameData GameData;
         GraphicsDevice Device;
-        UIContext Context;
 
-        public GameRenderer(UIContext Context, TibiaGameData GameData)
+        public GameRenderer(TibiaGameData GameData)
         {
-            this.Context = Context;
-            this.Device = Context.Graphics.GraphicsDevice;
+            this.Device = UIContext.Graphics.GraphicsDevice;
             this.GameData = GameData;
         }
 
@@ -154,19 +152,19 @@ namespace CTC
             if (Item.Sprite == null)
                 return;
 
-            DrawSprite(Batch, Context.GameTime, null, Item.Sprite, Item.Subtype, 0, new Vector2(rect.X, rect.Y), Color.White);
+            DrawSprite(Batch, UIContext.GameTime, null, Item.Sprite, Item.Subtype, 0, new Vector2(rect.X, rect.Y), Color.White);
 
             if (Item.Type.IsStackable)
             {
                 String count = Item.Subtype.ToString();
-                Vector2 textSize = Context.StandardFont.MeasureString(count);
+                Vector2 textSize = UIContext.StandardFont.MeasureString(count);
                 DrawBoldedText(Batch, count, new Vector2(rect.X + 32 - textSize.X - 1, rect.Y + 32 - textSize.Y + 1), false, Color.LightGray);
             }
         }
 
         public void DrawInventorySlot(SpriteBatch Batch, Rectangle rect)
         {
-            Context.Skin.DrawBox(Batch, UIElementType.InventorySlot, rect);
+            UIContext.Skin.DrawBox(Batch, UIElementType.InventorySlot, rect);
         }
 
         public void DrawCreature(SpriteBatch Batch, GameTime Time, ClientCreature Creature, Vector2 Offset, Color clr)
@@ -204,7 +202,7 @@ namespace CTC
         public void DrawText(SpriteBatch Batch, String Text, Vector2 Offset, Color Color)
         {
             Batch.DrawString(
-                Context.StandardFont, Text, Offset,
+                UIContext.StandardFont, Text, Offset,
                 Color, 0.0f, new Vector2(0.0f, 0.0f),
                 1.0f, SpriteEffects.None, 0.5f
            );
@@ -214,7 +212,7 @@ namespace CTC
         {
             if (Centered)
             {
-                Vector2 TextSize = Context.StandardFont.MeasureString(Text);
+                Vector2 TextSize = UIContext.StandardFont.MeasureString(Text);
                 Offset.X -= (int)(TextSize.X / 2);
             }
             DrawText(Batch, Text, new Vector2(Offset.X + 1, Offset.Y), Color.Black);
@@ -229,7 +227,7 @@ namespace CTC
             if (Creature.Name != "")
             {
                 GameSprite Sprite = GameData.GetCreatureSprite(Creature.Outfit.LookType);
-                Vector2 TextSize = Context.StandardFont.MeasureString(Creature.Name);
+                Vector2 TextSize = UIContext.StandardFont.MeasureString(Creature.Name);
                 Offset.X = (int)(Offset.X + 38 - TextSize.X / 2);
                 Offset.Y = (int)(Offset.Y + 16);
                 

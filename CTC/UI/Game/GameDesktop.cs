@@ -13,19 +13,18 @@ namespace CTC
 
     class GameDesktop : UIView
     {
-        public GameDesktop(GameWindow Window, GraphicsDeviceManager Graphics, ContentManager Content)
-            : base(new UIContext(Window, Graphics, Content))
+        public GameDesktop()
         {
             // Store window size
             Bounds.X = 0;
             Bounds.Y = 0;
-            Bounds.Width = Window.ClientBounds.Width;
-            Bounds.Height = Window.ClientBounds.Height;
+            Bounds.Width = UIContext.Window.ClientBounds.Width;
+            Bounds.Height = UIContext.Window.ClientBounds.Height;
 
-            Context.GameWindowSize = Bounds;
+            UIContext.GameWindowSize = Bounds;
 
             // Listener when window changes size
-            Window.ClientSizeChanged += new EventHandler<EventArgs>(OnResize);
+            UIContext.Window.ClientSizeChanged += new EventHandler<EventArgs>(OnResize);
         }
 
         #region Data Members and Properties
@@ -89,14 +88,14 @@ namespace CTC
         void OnResize(object o, EventArgs args)
         {
             System.Console.WriteLine("Game Window was resized!");
-            if (Context.Window.ClientBounds.Height > 0 && Context.Window.ClientBounds.Width > 0)
+            if (UIContext.Window.ClientBounds.Height > 0 && UIContext.Window.ClientBounds.Width > 0)
             {
                 // Change the size of this view
-                Bounds.Width = Context.Window.ClientBounds.Width;
-                Bounds.Height = Context.Window.ClientBounds.Height;
+                Bounds.Width = UIContext.Window.ClientBounds.Width;
+                Bounds.Height = UIContext.Window.ClientBounds.Height;
 
                 // Update the context size
-                Context.GameWindowSize = Bounds;
+                UIContext.GameWindowSize = Bounds;
 
                 NeedsLayout = true;
             }
@@ -109,8 +108,8 @@ namespace CTC
         /// <returns></returns>
         public override bool MouseLeftClick(MouseState mouse)
         {
-            if (Context.MouseFocusedPanel != null)
-                return Context.MouseFocusedPanel.MouseLeftClick(mouse);
+            if (UIContext.MouseFocusedPanel != null)
+                return UIContext.MouseFocusedPanel.MouseLeftClick(mouse);
 
             // We use a copy so that event handling can modify the list
             List<UIView> SubviewListCopy = new List<UIView>(Children);
@@ -127,8 +126,8 @@ namespace CTC
         public override bool MouseMove(MouseState mouse)
         {
             // To get mouse move events you must capture the mouse first
-            if (Context.MouseFocusedPanel != null)
-                return Context.MouseFocusedPanel.MouseMove(mouse);
+            if (UIContext.MouseFocusedPanel != null)
+                return UIContext.MouseFocusedPanel.MouseMove(mouse);
             return false;
         }
 
@@ -153,9 +152,9 @@ namespace CTC
             // Resize the sidebar to fit
             Sidebar.Bounds = new Rectangle
             {
-                X = Context.Window.ClientBounds.Width - Sidebar.Bounds.Width,
+                X = UIContext.Window.ClientBounds.Width - Sidebar.Bounds.Width,
                 Y = 0,
-                Height = Context.Window.ClientBounds.Height,
+                Height = UIContext.Window.ClientBounds.Height,
                 Width = Sidebar.Bounds.Width
             };
 
@@ -164,8 +163,7 @@ namespace CTC
 
         public override void Update(GameTime Time)
         {
-            Boolean newSkin = Context.SkinChanged;
-            Context.Update(Time);
+            UIContext.Update(Time);
 
             LFPS.Enqueue(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
             // Remove ticks older than one second
@@ -176,12 +174,6 @@ namespace CTC
                 State.Update(Time);
 
             base.Update(Time);
-
-            // Layout needs to be done in two steps after skin change
-            // First step to remeasure all interface elements, second to
-            // position them.
-            if (newSkin)
-                NeedsLayout = true;
         }
 
         #region Drawing Code
@@ -201,13 +193,13 @@ namespace CTC
             o += " RCTC";
 
             // Find the center of the string
-            Vector2 FontOrigin = Context.StandardFont.MeasureString(o);
-            FontOrigin.X = Context.Window.ClientBounds.Width - FontOrigin.X - 4;
+            Vector2 FontOrigin = UIContext.StandardFont.MeasureString(o);
+            FontOrigin.X = UIContext.Window.ClientBounds.Width - FontOrigin.X - 4;
             FontOrigin.Y = 4;
 
             // Draw the string
             ForegroundBatch.DrawString(
-                Context.StandardFont, o, FontOrigin,
+                UIContext.StandardFont, o, FontOrigin,
                 Color.LightGreen, 0.0f, new Vector2(0.0f, 0.0f),
                 1.0f, SpriteEffects.None, 0.5f);
 
@@ -226,9 +218,7 @@ namespace CTC
 
         public void Load()
         {
-            Context.Load();
-
-            ForegroundBatch = new SpriteBatch(Context.Graphics.GraphicsDevice);
+            ForegroundBatch = new SpriteBatch(UIContext.Graphics.GraphicsDevice);
         }
 
         public void CreatePanels()
@@ -249,6 +239,7 @@ namespace CTC
             SkillPanel Skills = new SkillPanel();
             Skills.Bounds.X = 4;
             Skills.Bounds.Y = Sidebar.ClientBounds.Top;
+            Skills.Bounds.Height = 200;
             Sidebar.AddWindow(Skills);
 
             VIPPanel VIPs = new VIPPanel();

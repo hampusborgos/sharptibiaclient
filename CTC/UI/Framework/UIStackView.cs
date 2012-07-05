@@ -39,6 +39,8 @@ namespace CTC
         }
         private UIStackDirection _StackDirection;
 
+        public Boolean StretchOtherDirection = false;
+
         /// <summary>
         /// Should the stack view fill up in the other direction once the primary
         /// direction is full?
@@ -55,12 +57,16 @@ namespace CTC
 
         public override void LayoutSubviews()
         {
-            NeedsLayout = false;
+            base.LayoutSubviews();
 
             if (StackDirection == UIStackDirection.Vertical)
                 LayoutVertical();
             else
                 LayoutHorizontal();
+
+            // Layout subviews again if we changed size
+            if (!Autoresizable)
+                base.LayoutSubviews();
         }
 
         private void LayoutHorizontal()
@@ -69,7 +75,7 @@ namespace CTC
             int RowLeft = 0;
             int RowTop = SkinPadding.Top + Padding.Top;
             int HighestThisRow = 0;
-            int Row = 0; // start on -1 since first iteration will increase it
+            int Row = 0;
 
             foreach (UIView Subview in Children)
             {
@@ -95,6 +101,13 @@ namespace CTC
                 SpaceLeft -= Subview.FullBounds.Width;
             }
 
+            if (Row == 0 && StretchOtherDirection)
+            {
+                HighestThisRow = Math.Max(ClientBounds.Height, HighestThisRow);
+                foreach (UIView Subview in Subviews)
+                    Subview.Bounds.Height = HighestThisRow;
+            }
+
             if (!Autoresizable)
             {
                 Bounds.Width = RowLeft;
@@ -108,7 +121,7 @@ namespace CTC
             int ColumnTop = SkinPadding.Top + Padding.Top;
             int ColumnLeft = SkinPadding.Left + Padding.Left;
             int WidestThisColumn = 0;
-            int Column = 0; // start on -1 since first iteration will increase it
+            int Column = 0;
 
             foreach (UIView Subview in Children)
             {
@@ -132,6 +145,13 @@ namespace CTC
                 ColumnTop += Subview.FullBounds.Height;
 
                 SpaceLeft -= Subview.FullBounds.Height;
+            }
+
+            if (Column == 0 && StretchOtherDirection)
+            {
+                WidestThisColumn = Math.Max(ClientBounds.Width, WidestThisColumn);
+                foreach (UIView Subview in Subviews)
+                    Subview.Bounds.Width = WidestThisColumn;
             }
 
             if (!Autoresizable)

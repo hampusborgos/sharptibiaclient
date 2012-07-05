@@ -8,12 +8,12 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CTC
 {
-    public class UIContext
+    public static class UIContext
     {
         /// <summary>
         /// The OS window of the game (as provided by XNA)
         /// </summary>
-        public GameWindow Window;
+        public static GameWindow Window;
 
         /// <summary>
         /// The size of the OS window the game is contained in.
@@ -22,30 +22,30 @@ namespace CTC
         /// if we read the values directly from the GameWindow, it might be that
         /// are actually larger than the window.
         /// </summary>
-        public Rectangle GameWindowSize;
+        public static Rectangle GameWindowSize;
 
-        public GraphicsDeviceManager Graphics;
-        public ContentManager Content;
-        public RasterizerState Rasterizer;
+        public static GraphicsDeviceManager Graphics;
+        public static ContentManager Content;
+        public static RasterizerState Rasterizer;
 
         /// <summary>
         /// The time elapsed in the game
         /// </summary>
-        public GameTime GameTime;
+        public static GameTime GameTime;
 
-        public UIView MouseFocusedPanel;
+        public static UIView MouseFocusedPanel;
 
-        public Boolean SkinChanged = true;
-        public UISkin Skin;
-        public SpriteFont StandardFont;
+        public static Boolean SkinChanged;
+        public static UISkin Skin;
+        public static SpriteFont StandardFont;
 
-        public Stack<Rectangle> ScissorStack = new Stack<Rectangle>();
+        public static Stack<Rectangle> ScissorStack = new Stack<Rectangle>();
 
-        public UIContext(GameWindow Window, GraphicsDeviceManager Graphics, ContentManager Content)
+        public static void Initialize(GameWindow Window, GraphicsDeviceManager Graphics, ContentManager Content)
         {
-            this.Window = Window;
-            this.Graphics = Graphics;
-            this.Content = Content;
+            UIContext.Window = Window;
+            UIContext.Graphics = Graphics;
+            UIContext.Content = Content;
 
             Rasterizer = new RasterizerState()
             {
@@ -53,16 +53,16 @@ namespace CTC
             };
         }
 
-        public void Load()
+        public static void Load()
         {
             StandardFont = Content.Load<SpriteFont>("StandardFont");
-            Skin = new UISkin(this);
+            Skin = new UISkin();
             Skin.Load(null);
+            SkinChanged = true;
         }
 
-        public void Update(GameTime Time)
+        public static void Update(GameTime Time)
         {
-            SkinChanged = false;
             GameTime = Time;
         }
     }

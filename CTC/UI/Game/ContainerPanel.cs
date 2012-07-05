@@ -114,7 +114,7 @@ namespace CTC
             // Create the renderer if required (and propagate it)
             if (Renderer == null)
             {
-                Renderer = new GameRenderer(Context, Viewport.GameData);
+                Renderer = new GameRenderer(Viewport.GameData);
 
                 foreach (ItemButton Button in ContentView.SubviewsOfType<ItemButton>())
                     Button.Renderer = Renderer;

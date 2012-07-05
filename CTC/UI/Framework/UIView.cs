@@ -12,19 +12,6 @@ namespace CTC
 
     public class UIView
     {
-        private UIContext _Context;
-        protected UIContext Context
-        {
-            get { return _Context; }
-            set
-            {
-                _Context = value;
-                foreach (UIView Subview in Children)
-                    Subview.Context = value;
-
-                NeedsLayout = true;
-            }
-        }
         protected List<UIView> Children = new List<UIView>();
 
         /// <summary>
@@ -94,15 +81,12 @@ namespace CTC
         {
             get
             {
-                if (Context == null)
-                    return new Margin(0);
-
                 return new Margin
                 {
-                    Top = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Top).Y,
-                    Left = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Left).X,
-                    Bottom = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Bottom).Y,
-                    Right = (int)Context.Skin.Measure(ElementType, UISkinOrientation.Right).X
+                    Top = (int)UIContext.Skin.Measure(ElementType, UISkinOrientation.Top).Y,
+                    Left = (int)UIContext.Skin.Measure(ElementType, UISkinOrientation.Left).X,
+                    Bottom = (int)UIContext.Skin.Measure(ElementType, UISkinOrientation.Bottom).Y,
+                    Right = (int)UIContext.Skin.Measure(ElementType, UISkinOrientation.Right).X
                 };
             }
         }
@@ -184,16 +168,6 @@ namespace CTC
         #region Creation
 
         /// <summary>
-        /// Constructor for UIPanel without parent (Only applicable for the top frame)
-        /// </summary>
-        /// <param name="Context"></param>
-        public UIView(UIContext Context)
-        {
-            ElementType = UIElementType.Window;
-            this.Context = Context;
-        }
-
-        /// <summary>
         /// Base constructor for all UIPanels
         /// </summary>
         /// <param name="Frame">The size and position of the element </param>
@@ -251,7 +225,6 @@ namespace CTC
 
             // Inform it it's a parent of us
             newView._Parent = this;
-            newView.Context = Context;
 
             // We will need re-layout now...
             NeedsLayout = true;
@@ -294,7 +267,6 @@ namespace CTC
         {
             Children.Remove(subview);
             subview._Parent = null;
-            subview.Context = null;
         }
 
         public void RemoveSubviewsMatching(Predicate<UIView> match)
@@ -337,14 +309,14 @@ namespace CTC
 
         public bool CaptureMouse()
         {
-            if (Context.MouseFocusedPanel != null)
+            if (UIContext.MouseFocusedPanel != null)
             {
                 // Ask the old panel to relinquish control
-                if (!Context.MouseFocusedPanel.MouseLost())
+                if (!UIContext.MouseFocusedPanel.MouseLost())
                     // If it didn't want to, we couldn't capture the mouse
                     return false;
             }
-            Context.MouseFocusedPanel = this;
+            UIContext.MouseFocusedPanel = this;
             MouseCaptured();
             return true;
         }
@@ -355,7 +327,7 @@ namespace CTC
             // If it fails to do so, something bad is going on.
             bool worked = MouseLost();
             Debug.Assert(worked, "Did not release mouse when attempting to do so by itself.");
-            Context.MouseFocusedPanel = null;
+            UIContext.MouseFocusedPanel = null;
         }
 
         public virtual void MouseCaptured()
@@ -452,11 +424,11 @@ namespace CTC
 
         protected Rectangle GetClipRectangle()
         {
-            Rectangle Screen = Context.GameWindowSize;
+            Rectangle Screen = UIContext.GameWindowSize;
             Rectangle clip = ScreenBounds;
-            if (Context.ScissorStack.Count > 0)
+            if (UIContext.ScissorStack.Count > 0)
             {
-                Rectangle pclip = Context.ScissorStack.Peek();
+                Rectangle pclip = UIContext.ScissorStack.Peek();
                 clip = new Rectangle()
                 {
                     X = Math.Max(0, Math.Max(pclip.Left, clip.Left)),
@@ -500,13 +472,13 @@ namespace CTC
         {
             // Create the batch if this is the first time we're being drawn
             if (Batch == null)
-                Batch = new SpriteBatch(Context.Graphics.GraphicsDevice);
+                Batch = new SpriteBatch(UIContext.Graphics.GraphicsDevice);
 
             // Begin the batch
-            Batch.Begin(SpriteSortMode.Deferred, null, null, null, Context.Rasterizer);
+            Batch.Begin(SpriteSortMode.Deferred, null, null, null, UIContext.Rasterizer);
 
             // Set up the scissors for this view
-            Rectangle Screen = Context.GameWindowSize;
+            Rectangle Screen = UIContext.GameWindowSize;
             Screen.X = 0;
             Screen.Y = 0;
             if (Screen.Intersects(ScreenBounds))
@@ -547,7 +519,7 @@ namespace CTC
 
             // Draw the views that are behind the borders of this view
             if (ClipsSubviews)
-                Context.ScissorStack.Push(ScreenBounds);
+                UIContext.ScissorStack.Push(ScreenBounds);
             DrawBackgroundChildren(Batch, BoundingBox);
             
             // Draw the borders etc. around this view
@@ -558,7 +530,7 @@ namespace CTC
             // Draw the foreground elements of this view
             DrawForegroundChildren(Batch, BoundingBox);
             if (ClipsSubviews)
-                Context.ScissorStack.Pop();
+                UIContext.ScissorStack.Pop();
         }
 
         /// <summary>
@@ -575,7 +547,7 @@ namespace CTC
         /// <param name="CurrentBatch"></param>
         protected void DrawBackground(SpriteBatch CurrentBatch)
         {
-            Context.Skin.DrawBackground(CurrentBatch, ElementType, ScreenBounds);
+            UIContext.Skin.DrawBackground(CurrentBatch, ElementType, ScreenBounds);
         }
 
         /// <summary>
@@ -584,7 +556,7 @@ namespace CTC
         /// <param name="CurrentBatch"></param>
         protected virtual void DrawBorder(SpriteBatch CurrentBatch)
         {
-            Context.Skin.DrawBox(CurrentBatch, ElementType, ScreenBounds);
+            UIContext.Skin.DrawBox(CurrentBatch, ElementType, ScreenBounds);
         }
 
         /// <summary>

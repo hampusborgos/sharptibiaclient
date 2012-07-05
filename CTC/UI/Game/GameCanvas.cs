@@ -38,10 +38,10 @@ namespace CTC
 
             if (Backbuffer == null)
             {
-                Renderer = new GameRenderer(Context, Viewport.GameData);
+                Renderer = new GameRenderer(Viewport.GameData);
 
                 Backbuffer = new RenderTarget2D(
-                    Context.Graphics.GraphicsDevice,
+                    UIContext.Graphics.GraphicsDevice,
                     480, 352, false,
                     SurfaceFormat.Color, DepthFormat.None, 0,
                     RenderTargetUsage.PreserveContents
@@ -114,14 +114,14 @@ namespace CTC
         {
             // Create the batch if this is the first time we're being drawn
             if (Batch == null)
-                Batch = new SpriteBatch(Context.Graphics.GraphicsDevice);
+                Batch = new SpriteBatch(UIContext.Graphics.GraphicsDevice);
 
             // Draw the game to a backbuffer
-            Context.Graphics.GraphicsDevice.SetRenderTarget(Backbuffer);
+            UIContext.Graphics.GraphicsDevice.SetRenderTarget(Backbuffer);
             Batch.Begin();
-            Renderer.DrawScene(Batch, Context.GameTime, Viewport, PlayingAnimations);
+            Renderer.DrawScene(Batch, UIContext.GameTime, Viewport, PlayingAnimations);
             Batch.End();
-            Context.Graphics.GraphicsDevice.SetRenderTarget(null);
+            UIContext.Graphics.GraphicsDevice.SetRenderTarget(null);
             
             // Then start the normal drawing cycle
             BeginDraw();
@@ -133,7 +133,7 @@ namespace CTC
                 ScreenClientBounds.Width / 480f,
                 ScreenClientBounds.Height / 352f
             );
-            Renderer.DrawSceneForeground(Batch, Scale, Context.GameTime, Viewport, PlayingAnimations);
+            Renderer.DrawSceneForeground(Batch, Scale, UIContext.GameTime, Viewport, PlayingAnimations);
 
 
             DrawBorder(Batch);

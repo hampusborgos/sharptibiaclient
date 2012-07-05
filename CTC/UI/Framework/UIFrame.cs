@@ -174,7 +174,7 @@ namespace CTC
                 Vector2 pos = new Vector2(ScreenBounds.X + 5, ScreenBounds.Y + 2);
 
                 CurrentBatch.DrawString(
-                    Context.StandardFont, Name, pos,
+                    UIContext.StandardFont, Name, pos,
                     Color.LightGray,
                     0.0f, new Vector2(0.0f, 0.0f),
                     1.0f, SpriteEffects.None, 0.5f

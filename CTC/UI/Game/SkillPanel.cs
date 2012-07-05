@@ -7,25 +7,77 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CTC
 {
-    class SkillPanel : UIVirtualFrame
+    class SkillLabel : UIView
     {
-        protected ClientViewport Viewport;
-
-        public SkillPanel()
+        public struct SkillValue
         {
-            Name = "Skills";
+            public int Value;
+            public int Percent;
+        };
 
-            Bounds.Width = 176;
-            Bounds.Height = 200;
+        public delegate SkillValue SkillInspector();
+
+        private SkillInspector Inspector;
+        private ClientSkill Skill;
+        private UILabel NameLabel;
+        private UILabel ValueLabel;
+
+        public SkillLabel(ClientSkill Skill)
+            : base(null, UIElementType.None)
+        {
+            this.Skill = Skill;
+
+            NameLabel = new UILabel();
+            AddSubview(NameLabel);
+
+            ValueLabel = new UILabel();
+            ValueLabel.TextAlignment = UITextAlignment.Right;
+            AddSubview(ValueLabel);
         }
 
-        public void OnNewState(ClientState NewState)
+        public SkillLabel(String SkillName, SkillInspector Inspector)
+            : base(null, UIElementType.None)
         {
-            Viewport = NewState.Viewport;
+            this.Inspector = Inspector;
+
+            NameLabel = new UILabel(SkillName);
+            AddSubview(NameLabel);
+
+            ValueLabel = new UILabel();
+            ValueLabel.TextAlignment = UITextAlignment.Right;
+            AddSubview(ValueLabel);
+        }
+
+        public override void LayoutSubviews()
+        {
+            NameLabel.Bounds.Width = ClientBounds.Width;
+            ValueLabel.Bounds.Width = ClientBounds.Width;
+            Bounds.Height = Math.Max(NameLabel.Bounds.Height, ValueLabel.Bounds.Height);
+
+            base.LayoutSubviews();
         }
 
         public override void Update(GameTime time)
         {
+            SkillValue s;
+            if (Inspector != null)
+            {
+                // Read from the callback
+                s = Inspector();
+            }
+            else
+            {
+                // Read from the client state instead
+                NameLabel.Text = Skill.LongName;
+                s = new SkillValue()
+                {
+                    Value = Skill.Value,
+                    Percent = Skill.Percent
+                };
+            }
+
+            ValueLabel.Text = FormatNumber(s.Value);
+
             base.Update(time);
         }
 
@@ -50,46 +102,82 @@ namespace CTC
             }
             return o;
         }
+    }
 
-        private void DrawSkill(SpriteBatch Batch, int y, string name, int value)
+    class SkillPanel : UIVirtualFrame
+    {
+        protected ClientViewport Viewport;
+
+        public SkillPanel()
         {
-            int x = 5;
-            y += 5;
+            Name = "Skills";
 
-            Vector2 left = new Vector2(ScreenClientBounds.X + x, ScreenClientBounds.Top + y);
-            Batch.DrawString(Context.StandardFont, name, left, Color.LightGray, 0.0f, new Vector2(0.0f, 0.0f), 1.0f, SpriteEffects.None, 0.5f);
-            
-            string N = FormatNumber(value);
-            Vector2 size = Context.StandardFont.MeasureString(N);
-            Vector2 right = new Vector2(ScreenClientBounds.Right - size.X - x, ScreenClientBounds.Top + y);
-            Batch.DrawString(Context.StandardFont, FormatNumber(value), right, Color.LightGray, 0.0f, new Vector2(0.0f, 0.0f), 1.0f, SpriteEffects.None, 0.5f);
+            Padding = new Margin
+            {
+                Left = 5,
+                Top = 5,
+                Bottom = 5,
+                Right = 5
+            };
+
+            ((UIStackView)ContentView).StretchOtherDirection = true;
+
+            Bounds.Width = 176;
+            Bounds.Height = 200;
         }
 
-        protected override void DrawContent(SpriteBatch Batch)
+        public void OnNewState(ClientState NewState)
         {
-            if (Viewport != null)
-            {
-                try
-                {
-                    DrawSkill(Batch, 0, "Experience", Viewport.Player.Experience);
-                    DrawSkill(Batch, 16, "Level", Viewport.Player.Skill["Level"]);
-                    DrawSkill(Batch, 32, "Hitpoints", Viewport.Player.Health);
-                    DrawSkill(Batch, 48, "Mana", Viewport.Player.Mana);
-                    DrawSkill(Batch, 64, "Capacity", Viewport.Player.Capacity);
-                    DrawSkill(Batch, 80, "Magic Level", Viewport.Player.Skill["MagicLevel"]);
+            Viewport = NewState.Viewport;
 
-                    DrawSkill(Batch, 112, "Fist Fighting", Viewport.Player.Skill["Fist"]);
-                    DrawSkill(Batch, 128, "Club Fighting", Viewport.Player.Skill["Club"]);
-                    DrawSkill(Batch, 144, "Sword Fighting", Viewport.Player.Skill["Sword"]);
-                    DrawSkill(Batch, 160, "Axe Fighting", Viewport.Player.Skill["Axe"]);
-                    DrawSkill(Batch, 176, "Distance Fighting", Viewport.Player.Skill["Dist"]);
-                    DrawSkill(Batch, 192, "Shielding", Viewport.Player.Skill["Shield"]);
-                    DrawSkill(Batch, 208, "Fishing", Viewport.Player.Skill["Fish"]);
-                }
-                catch (KeyNotFoundException)
+            ContentView.AddSubview(new SkillLabel(Viewport.Player.Level));
+
+            SkillLabel ExperienceLabel = new SkillLabel("Experience", delegate()
+            {
+                return new SkillLabel.SkillValue()
                 {
-                }
-            }
+                    Value = Viewport.Player.Experience,
+                    Percent = 0
+                };
+            });
+            ContentView.AddSubview(ExperienceLabel);
+
+            SkillLabel HitpointLabel = new SkillLabel("Hitpoints", delegate()
+            {
+                return new SkillLabel.SkillValue()
+                {
+                    Value = Viewport.Player.Health,
+                    Percent = 0
+                };
+            });
+            ContentView.AddSubview(HitpointLabel);
+
+            SkillLabel ManaLabel = new SkillLabel("Mana", delegate()
+            {
+                return new SkillLabel.SkillValue()
+                {
+                    Value = Viewport.Player.Mana,
+                    Percent = 0
+                };
+            });
+            ContentView.AddSubview(ManaLabel);
+
+            SkillLabel CapacityLabel = new SkillLabel("Capacity", delegate()
+            {
+                return new SkillLabel.SkillValue()
+                {
+                    Value = Viewport.Player.Capacity,
+                    Percent = 0
+                };
+            });
+            ContentView.AddSubview(CapacityLabel);
+
+            ContentView.AddSubview(new SkillLabel(Viewport.Player.MagicLevel));
+
+            foreach (ClientSkill Skill in Viewport.Player.Skill.Values)
+                ContentView.AddSubview(new SkillLabel(Skill));
+
+            NeedsLayout = true;
         }
     }
 }

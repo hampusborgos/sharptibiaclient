@@ -73,7 +73,7 @@ namespace CTC
                     continue;
 
                 CurrentBatch.DrawString(
-                    Context.StandardFont, vip.Name, ScreenCoordinate(pos),
+                    UIContext.StandardFont, vip.Name, ScreenCoordinate(pos),
                     (vip.Online ? Color.LightGreen : Color.Red),
                     0.0f, new Vector2(0.0f, 0.0f),
                     1.0f, SpriteEffects.None, 0.5f

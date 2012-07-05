@@ -174,21 +174,21 @@ namespace CTC
             if (Player == null)
                 throw new ProtocolException("Received skill update before PlayerLogin");
 
-            Player.Skill["Fist"] = (int)props["Fist"];
-            Player.Skill["Club"] = (int)props["Club"];
-            Player.Skill["Sword"] = (int)props["Sword"];
-            Player.Skill["Axe"] = (int)props["Axe"];
-            Player.Skill["Dist"] = (int)props["Dist"];
-            Player.Skill["Shield"] = (int)props["Shield"];
-            Player.Skill["Fish"] = (int)props["Fish"];
+            Player.Skill["Fist"].Value   = (int)props["Fist"];
+            Player.Skill["Club"].Value   = (int)props["Club"];
+            Player.Skill["Sword"].Value  = (int)props["Sword"];
+            Player.Skill["Axe"].Value    = (int)props["Axe"];
+            Player.Skill["Dist"].Value   = (int)props["Dist"];
+            Player.Skill["Shield"].Value = (int)props["Shield"];
+            Player.Skill["Fish"].Value   = (int)props["Fish"];
 
-            Player.SkillPercent["Fist"] = (int)props["FistPercent"];
-            Player.SkillPercent["Club"] = (int)props["ClubPercent"];
-            Player.SkillPercent["Sword"] = (int)props["SwordPercent"];
-            Player.SkillPercent["Axe"] = (int)props["AxePercent"];
-            Player.SkillPercent["Dist"] = (int)props["DistPercent"];
-            Player.SkillPercent["Shield"] = (int)props["ShieldPercent"];
-            Player.SkillPercent["Fish"] = (int)props["FishPercent"];
+            Player.Skill["Fist"].Percent   = (int)props["FistPercent"];
+            Player.Skill["Club"].Percent   = (int)props["ClubPercent"];
+            Player.Skill["Sword"].Percent  = (int)props["SwordPercent"];
+            Player.Skill["Axe"].Percent    = (int)props["AxePercent"];
+            Player.Skill["Dist"].Percent   = (int)props["DistPercent"];
+            Player.Skill["Shield"].Percent = (int)props["ShieldPercent"];
+            Player.Skill["Fish"].Percent   = (int)props["FishPercent"];
         }
 
         private void OnUpdateStats(Packet props)
@@ -202,10 +202,11 @@ namespace CTC
             Player.MaxMana = (int)props["MaxMana"];
             Player.Capacity = (int)props["Capacity"];
             Player.Experience = (int)props["Experience"];
-            Player.Skill["Level"] = (int)props["Level"];
-            Player.SkillPercent["LevelPercent"] = (int)props["LevelPercent"];
-            Player.Skill["MagicLevel"] = (int)props["MagicLevel"];
-            Player.Skill["MagicLevelPercent"] = (int)props["MagicLevelPercent"];
+
+            Player.Level.Value = (int)props["Level"];
+            Player.Level.Percent = (int)props["LevelPercent"];
+            Player.MagicLevel.Value = (int)props["MagicLevel"];
+            Player.MagicLevel.Percent = (int)props["MagicLevelPercent"];
         }
 
         private void OnPlayerIcons(Packet props)

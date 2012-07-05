@@ -17,19 +17,19 @@ namespace CTC
     /// </summary>
     public class Game : Microsoft.Xna.Framework.Game
     {
-        GraphicsDeviceManager graphics;
+        GraphicsDeviceManager Graphics;
 
         GameDesktop Desktop;
         MouseState LastMouseState;
 
         public Game()
         {
-            graphics = new GraphicsDeviceManager(this);
+            Graphics = new GraphicsDeviceManager(this);
             
 
-            graphics.PreparingDeviceSettings += PrepareDevice;
-            graphics.PreferredBackBufferWidth = 1280;
-            graphics.PreferredBackBufferHeight = 800;
+            Graphics.PreparingDeviceSettings += PrepareDevice;
+            Graphics.PreferredBackBufferWidth = 1280;
+            Graphics.PreferredBackBufferHeight = 800;
             Content.RootDirectory = "Content";
         }
 
@@ -45,13 +45,13 @@ namespace CTC
 
             // Setup the window
             IsFixedTimeStep = false;
-            graphics.SynchronizeWithVerticalRetrace = false;
+            Graphics.SynchronizeWithVerticalRetrace = false;
             //graphics.GraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.One;
             //graphics.PreferWaitForVerticalTrace = false;
             IsMouseVisible = true;
             Window.AllowUserResizing = true;
 
-            graphics.ApplyChanges();
+            Graphics.ApplyChanges();
         }
 
         /// <summary>
@@ -60,12 +60,18 @@ namespace CTC
         /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
+            // Initialize the context
+            UIContext.Initialize(Window, Graphics, Content);
+            UIContext.Load();
 
             // Create the game frame
-            Desktop = new GameDesktop(Window, graphics, Content);
+            Desktop = new GameDesktop();
             Desktop.Load();
             Desktop.CreatePanels();
+
+            // Initial layout of all views
+            Desktop.LayoutSubviews();
+            Desktop.NeedsLayout = true;
 
             ///////////////////////////////////////////////////////////////////
             // For debugging

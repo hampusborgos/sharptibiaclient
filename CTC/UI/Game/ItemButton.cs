@@ -71,7 +71,7 @@ namespace CTC
         protected override void BeginDraw()
         {
             if (Renderer == null)
-                this.Renderer = new GameRenderer(Context, Viewport.GameData);
+                this.Renderer = new GameRenderer(Viewport.GameData);
 
             base.BeginDraw();
         }

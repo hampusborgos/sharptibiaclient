@@ -66,15 +66,13 @@ namespace CTC
 
     public class UISkin
     {
-        UIContext Context;
         Dictionary<UIElementType, UISkinElement> Types = new Dictionary<UIElementType, UISkinElement>();
 
-        Texture2D UISheet;
+        public Texture2D UISheet;
 
-        public UISkin(UIContext Context)
+        public UISkin()
         {
-            this.Context = Context;
-            UISheet = Context.Content.Load<Texture2D>("DefaultSkin");
+            UISheet = UIContext.Content.Load<Texture2D>("DefaultSkin");
         }
 
         public void AddElement(UISkinElement e)

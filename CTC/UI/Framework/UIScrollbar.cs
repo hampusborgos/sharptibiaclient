@@ -75,6 +75,9 @@ namespace CTC
             // Set the background for this element
             ElementType = UIElementType.ScrollbarBackground;
 
+            // Calculate our dimension
+            CalculateWidth();
+
             // Create the 3 buttons
             TopButton = new UIButton();
             TopButton.NormalType = UIElementType.ScrollbarTop;
@@ -114,9 +117,9 @@ namespace CTC
         private void CalculateWidth()
         {
             int width = 0;
-            width += (int)Context.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Left).X;
-            width += (int)Context.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Center).X;
-            width += (int)Context.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Right).X;
+            width += (int)UIContext.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Left).X;
+            width += (int)UIContext.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Center).X;
+            width += (int)UIContext.Skin.Measure(UIElementType.ScrollbarBackground, UISkinOrientation.Right).X;
             Bounds.Width = width;
         }
 
@@ -135,22 +138,22 @@ namespace CTC
 
             // Position the Top button
             Rectangle top = new Rectangle();
-            top.Width = (int)Context.Skin.Measure(UIElementType.ScrollbarTop, UISkinOrientation.Center).X;
-            top.Height = (int)Context.Skin.Measure(UIElementType.ScrollbarTop, UISkinOrientation.Center).Y;
+            top.Width = (int)UIContext.Skin.Measure(UIElementType.ScrollbarTop, UISkinOrientation.Center).X;
+            top.Height = (int)UIContext.Skin.Measure(UIElementType.ScrollbarTop, UISkinOrientation.Center).Y;
             TopButton.Bounds = top;
 
             // Position the bottom
             Rectangle bottom = new Rectangle();
-            bottom.Width = (int)Context.Skin.Measure(UIElementType.ScrollbarBottom, UISkinOrientation.Center).X;
-            bottom.Height = (int)Context.Skin.Measure(UIElementType.ScrollbarBottom, UISkinOrientation.Center).Y;
+            bottom.Width = (int)UIContext.Skin.Measure(UIElementType.ScrollbarBottom, UISkinOrientation.Center).X;
+            bottom.Height = (int)UIContext.Skin.Measure(UIElementType.ScrollbarBottom, UISkinOrientation.Center).Y;
             bottom.Y += Bounds.Height;
             bottom.Y -= bottom.Height;
             BottomButton.Bounds = bottom;
 
             // Position the gem
             Rectangle gem = new Rectangle();
-            gem.Width = (int)Context.Skin.Measure(UIElementType.ScrollbarGem, UISkinOrientation.Center).X;
-            gem.Height = (int)Context.Skin.Measure(UIElementType.ScrollbarGem, UISkinOrientation.Center).Y;
+            gem.Width = (int)UIContext.Skin.Measure(UIElementType.ScrollbarGem, UISkinOrientation.Center).X;
+            gem.Height = (int)UIContext.Skin.Measure(UIElementType.ScrollbarGem, UISkinOrientation.Center).Y;
             GemButton.Bounds = gem;
 
             PositionGem();

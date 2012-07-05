@@ -133,14 +133,14 @@ namespace CTC
         {
             if (Label != null)
             {
-                Vector2 Size = Context.StandardFont.MeasureString(Label);
+                Vector2 Size = UIContext.StandardFont.MeasureString(Label);
                 Vector2 Offset = new Vector2(
                     (int)((ClientBounds.Width - Size.X) / 2),
                     (int)((ClientBounds.Height - Size.Y) / 2)
                 );
 
                 CurrentBatch.DrawString(
-                    Context.StandardFont, Label, ScreenCoordinate(Offset),
+                    UIContext.StandardFont, Label, ScreenCoordinate(Offset),
                     Color.LightGray,
                     0.0f, new Vector2(0.0f, 0.0f),
                     1.0f, SpriteEffects.None, 0.5f
