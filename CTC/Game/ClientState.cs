@@ -47,6 +47,8 @@ namespace CTC
                 try
                 {
                     NetworkMessage nmsg = InStream.Read();
+                    if (nmsg == null)
+                        return;
                     Protocol.parsePacket(nmsg);
                 }
                 catch (Exception ex)
