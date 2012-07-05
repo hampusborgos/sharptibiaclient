@@ -19,10 +19,14 @@ namespace CTC
             Bounds = new Rectangle(0, 0, 200, 200);
 
             for (InventorySlot slot = InventorySlot.First; slot <= InventorySlot.Last; slot++)
-                ContentView.AddSubview(new InventoryItemButton(Viewport, slot)
+            {
+                InventoryItemButton InventoryItem = new InventoryItemButton(Viewport, slot)
                 {
                     Bounds = GetSlotPosition(slot)
-                });
+                };
+                InventoryItem.Autoresizable = false;
+                ContentView.AddSubview(InventoryItem);
+            }
         }
 
         public void OnNewState(ClientState NewState)

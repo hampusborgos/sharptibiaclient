@@ -31,9 +31,7 @@ namespace CTC
         List<ClientState> Clients = new List<ClientState>();
 
         TopTaskbar Taskbar;
-        SkillPanel Skills;
-        VIPPanel VIPs;
-        InventoryPanel Inventory;
+        GameSidebar Sidebar;
         ChatPanel Chat;
         GameFrame Frame;
 
@@ -221,27 +219,22 @@ namespace CTC
             Frame.ZOrder = -1;
             AddSubview(Frame);
 
-            UIFrame Sidebar = new UIFrame();
-            Sidebar.Name = "Sidebar";
-            Sidebar.Bounds = new Rectangle(Bounds.Width - 200 - 50, 50, 206, 700);
+            Sidebar = new GameSidebar();
 
-            Skills = new SkillPanel();
-            Skills.Bounds.X = 3;
-            Skills.Bounds.Y = 10;
-            Skills.ZOrder = 1;
-            Sidebar.AddSubview(Skills);
+            SkillPanel Skills = new SkillPanel();
+            Skills.Bounds.X = 4;
+            Skills.Bounds.Y = Sidebar.ClientBounds.Top;
+            Sidebar.AddWindow(Skills);
 
-            VIPs = new VIPPanel();
-            VIPs.Bounds.X = 3;
+            VIPPanel VIPs = new VIPPanel();
+            VIPs.Bounds.X = 4;
             VIPs.Bounds.Y = 210;
-            VIPs.ZOrder = 1;
-            Sidebar.AddSubview(VIPs);
+            Sidebar.AddWindow(VIPs);
 
-            Inventory = new InventoryPanel();
-            Inventory.Bounds.X = 3;
+            InventoryPanel Inventory = new InventoryPanel();
+            Inventory.Bounds.X = 4;
             Inventory.Bounds.Y = 410;
-            Inventory.ZOrder = 1;
-            Sidebar.AddSubview(Inventory);
+            Sidebar.AddWindow(Inventory);
 
             AddSubview(Sidebar);
 

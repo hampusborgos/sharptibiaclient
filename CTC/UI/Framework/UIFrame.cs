@@ -10,6 +10,8 @@ namespace CTC
 {
     public class UIFrame : UIView
     {
+        #region Properties
+
         private Vector2? BeingDraggedFrom;
         private Vector2? DraggedFromPosition;
         public String Name;
@@ -35,11 +37,24 @@ namespace CTC
             get { return BeingDraggedFrom != null; }
         }
 
+        #endregion
+
+        #region Events
+
+        public delegate void FrameMovedEvent(UIFrame Frame);
+
+        public event FrameMovedEvent FrameStartedToMove;
+        public event FrameMovedEvent FrameMoved;
+        public event FrameMovedEvent FrameStoppedMoving;
+
+        #endregion
+
+
         public UIFrame()
         {
             ElementType = UIElementType.Frame;
-            Name = "UIFrame";
-            ContentView = new UIView(null, UIElementType.None);
+            Name = "";
+            ContentView = new UIStackView();
 
             AddDefaultButtons();
         }
@@ -59,16 +74,12 @@ namespace CTC
                     {
                         DraggedFromPosition = new Vector2(Bounds.X, Bounds.Y);
                         BeingDraggedFrom = new Vector2(mouse.X, mouse.Y);
-                        Parent.BringSubviewToFront(this);
+                        if (FrameStartedToMove != null)
+                            FrameStartedToMove(this);
                     }
                 }
-                else
-                {
-                    // Put us ontop
-                    Parent.BringSubviewToFront(this);
-                }
             }
-            else
+            else if (BeingDragged)
             {
                 BeingDraggedFrom = null;
                 DraggedFromPosition = null;
@@ -96,9 +107,22 @@ namespace CTC
                     Bounds.X = ParentBounds.Right - Bounds.Width;
                 if (Bounds.Bottom > ParentBounds.Bottom)
                     Bounds.Y = ParentBounds.Bottom - Bounds.Height;
+                
+                // Events!
+                if (FrameMoved != null)
+                    FrameMoved(this);
+
                 return true;
             }
+         
             return false;
+        }
+
+        public override bool MouseLost()
+        {
+            if (FrameStoppedMoving != null)
+                FrameStoppedMoving(this);
+            return base.MouseLost();
         }
 
         public override void LayoutSubviews()
@@ -145,14 +169,17 @@ namespace CTC
         {
             base.DrawBorder(CurrentBatch);
 
-            Vector2 pos = new Vector2(ScreenBounds.X + 5, ScreenBounds.Y + 2);
-            
-            CurrentBatch.DrawString(
-                Context.StandardFont, Name, pos,
-                Color.LightGray,
-                0.0f, new Vector2(0.0f, 0.0f),
-                1.0f, SpriteEffects.None, 0.5f
-            );
+            if (Name != "")
+            {
+                Vector2 pos = new Vector2(ScreenBounds.X + 5, ScreenBounds.Y + 2);
+
+                CurrentBatch.DrawString(
+                    Context.StandardFont, Name, pos,
+                    Color.LightGray,
+                    0.0f, new Vector2(0.0f, 0.0f),
+                    1.0f, SpriteEffects.None, 0.5f
+                );
+            }
         }
 
         #endregion

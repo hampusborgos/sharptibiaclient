@@ -73,6 +73,9 @@ namespace CTC
 
             foreach (UIView Subview in Children)
             {
+                if (!Subview.Autoresizable)
+                    return;
+
                 // Start on the next row?
                 if (SpaceLeft - Subview.Bounds.Width <= 0 && Overflow)
                 {
@@ -109,6 +112,9 @@ namespace CTC
 
             foreach (UIView Subview in Children)
             {
+                if (!Subview.Autoresizable)
+                    return;
+
                 // Start on the next row?
                 if (SpaceLeft - Subview.Bounds.Height <= 0 && Overflow)
                 {

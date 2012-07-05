@@ -25,7 +25,8 @@ namespace CTC
                 Bottom = 4,
                 Right = 0
             };
-            ContentView = new UIStackView(UIStackDirection.Horizontal, true);
+            ((UIStackView)ContentView).StackDirection = UIStackDirection.Horizontal;
+            ((UIStackView)ContentView).Overflow = true;
 
             UIButton UpButton = CreateButton("U");
             UpButton.Tag = "_ContainerUpButton";

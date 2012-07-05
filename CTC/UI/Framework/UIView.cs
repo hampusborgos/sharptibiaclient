@@ -220,7 +220,7 @@ namespace CTC
         {
             List<T> views = new List<T>();
             foreach (UIView Subview in Subviews)
-                if (Subview.GetType() == typeof(T))
+                if (Subview is T)
                     views.Add((T)Subview);
 
             return views;
@@ -234,16 +234,20 @@ namespace CTC
             return null;
         }
 
-        private void AddSubviewInternal(UIView newView)
+        private void AddSubviewInternal(UIView newView, int atIndex = -1)
         {
-            int i = Children.FindIndex(delegate(UIView subview)
+            if (atIndex == -1)
             {
-                return subview.ZOrder > newView.ZOrder;
-            });
-            if (i == -1)
+                atIndex = Children.FindIndex(delegate(UIView subview)
+                {
+                    return subview.ZOrder > newView.ZOrder;
+                });
+            }
+
+            if (atIndex == -1)
                 Children.Add(newView);
             else
-                Children.Insert(i, newView);
+                Children.Insert(atIndex, newView);
 
             // Inform it it's a parent of us
             newView._Parent = this;
@@ -262,10 +266,35 @@ namespace CTC
 
             return newView;
         }
+        
+        /// <summary>
+        /// Adds a subview before the specified other view in the view hierachy.
+        /// The views must have the same ZOrder, else an exception is thrown.
+        /// </summary>
+        /// <param name="newView"></param>
+        /// <param name="beforeView">The view to add before, if null, appends the view as normal.</param>
+        /// <returns>The added view</returns>
+        public virtual UIView AddSubviewBefore(UIView newView, UIView beforeView)
+        {
+            if (newView.Parent != null)
+                throw new UIException("Remove the view from it's own superview first.");
+
+            if (newView.ZOrder != beforeView.ZOrder)
+                throw new UIException("Cannot add before another subview with a different ZOrder");
+
+            if (beforeView == null)
+                AddSubviewInternal(newView);
+            else
+                AddSubviewInternal(newView, Children.IndexOf(beforeView));
+
+            return newView;
+        }
 
         public virtual void RemoveSubview(UIView subview)
         {
             Children.Remove(subview);
+            subview._Parent = null;
+            subview.Context = null;
         }
 
         public void RemoveSubviewsMatching(Predicate<UIView> match)
