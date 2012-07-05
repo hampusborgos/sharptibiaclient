@@ -172,7 +172,7 @@ namespace CTC
         /// </summary>
         /// <param name="Frame">The size and position of the element </param>
         /// <param name="ElementType">What style type this element should use.</param>
-        public UIView(Rectangle? Frame = null, UIElementType ElementType = UIElementType.Window)
+        public UIView(Rectangle? Frame = null, UIElementType ElementType = UIElementType.None)
         {
             Bounds = Frame ?? new Rectangle(0, 0, 0, 0);
             this.ElementType = ElementType;

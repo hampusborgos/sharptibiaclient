@@ -26,6 +26,16 @@ namespace CTC
 
         #region Data Members
 
+        public override Margin SkinPadding
+        {
+            get
+            {
+                Margin m = base.SkinPadding;
+                m.Top += 18;
+                return m;
+            }
+        }
+
         protected List<UITab> Tabs = new List<UITab>();
 
         private int _TabWidth;

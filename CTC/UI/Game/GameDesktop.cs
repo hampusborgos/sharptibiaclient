@@ -90,12 +90,8 @@ namespace CTC
             System.Console.WriteLine("Game Window was resized!");
             if (UIContext.Window.ClientBounds.Height > 0 && UIContext.Window.ClientBounds.Width > 0)
             {
-                // Change the size of this view
-                Bounds.Width = UIContext.Window.ClientBounds.Width;
-                Bounds.Height = UIContext.Window.ClientBounds.Height;
-
                 // Update the context size
-                UIContext.GameWindowSize = Bounds;
+                UIContext.GameWindowSize = UIContext.Window.ClientBounds;
 
                 NeedsLayout = true;
             }
@@ -149,14 +145,26 @@ namespace CTC
 
         public override void LayoutSubviews()
         {
+            // Change the size of this view
+            Bounds.Width = UIContext.GameWindowSize.Width;
+            Bounds.Height = UIContext.GameWindowSize.Height;
+
             // Resize the sidebar to fit
             Sidebar.Bounds = new Rectangle
             {
-                X = UIContext.Window.ClientBounds.Width - Sidebar.Bounds.Width,
-                Y = 0,
-                Height = UIContext.Window.ClientBounds.Height,
-                Width = Sidebar.Bounds.Width
-            };
+                X = ClientBounds.Width - Sidebar.FullBounds.Width,
+                Y = ClientBounds.Top,
+                Height = ClientBounds.Height,
+                Width = Sidebar.FullBounds.Width
+            }.Subtract(Sidebar.Margin);
+
+            Chat.Bounds = new Rectangle
+            {
+                X = ClientBounds.Top,
+                Y = ClientBounds.Height - Chat.FullBounds.Height,
+                Width = ClientBounds.Width - Sidebar.FullBounds.Width,
+                Height = Chat.Bounds.Height
+            }.Subtract(Chat.Margin);
 
             base.LayoutSubviews();
         }
@@ -255,11 +263,8 @@ namespace CTC
             AddSubview(Sidebar);
 
             Chat = new ChatPanel();
-            Chat.Bounds.X = 10;
-            Chat.Bounds.Y = 640;
-            Chat.Bounds.Height = 150;
-            Chat.Bounds.Width = 800;
-            Chat.ZOrder = 0;
+            Chat.Bounds.Height = 180;
+            // Chat.Margin.Right = 10;
             AddSubview(Chat);
 
             // Register listeners

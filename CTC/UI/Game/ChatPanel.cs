@@ -19,7 +19,6 @@ namespace CTC
 
             ChatLog = new UIVirtualFrame();
             ChatLog.ElementType = UIElementType.Window;
-            ChatLog.Bounds = new Rectangle(0, 18, 800, 140);
             AddSubview(ChatLog);
         }
 
@@ -29,14 +28,16 @@ namespace CTC
 
         #endregion
 
-        protected override void DrawContent(SpriteBatch CurrentBatch)
-        {
-            ;
-        }
-
         public void OnNewState(ClientState NewState)
         {
             Viewport = NewState.Viewport;
+        }
+
+        public override void LayoutSubviews()
+        {
+            ChatLog.Bounds = ClientBounds;
+
+            base.LayoutSubviews();
         }
     }
 }
