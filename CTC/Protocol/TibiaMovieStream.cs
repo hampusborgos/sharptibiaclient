@@ -37,7 +37,17 @@ namespace CTC
         /// </summary>
         public TimeSpan Duration = new TimeSpan(0);
 
+        /// <summary>
+        /// How much of the movie has played out so far.
+        /// Note that this update in increments with each packet received,
+        /// so it's not an absolute measure
+        /// </summary>
         public TimeSpan Elapsed = new TimeSpan(0);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double PlaybackSpeed = 1;
 
         /// <summary>
         /// Construct a TibiaMovieStream from a normal stream
@@ -131,7 +141,7 @@ namespace CTC
                     }
 
                     // Schedule next
-                    NextTime = DateTime.Now.Ticks + delay * TimeSpan.TicksPerMillisecond / 10;
+                    NextTime = DateTime.Now.Ticks + (int)(delay * TimeSpan.TicksPerMillisecond / PlaybackSpeed);
                     if (PendingPackets.Count == 0)
                         return null;
                     return PendingPackets.Dequeue();

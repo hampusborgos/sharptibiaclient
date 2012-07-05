@@ -29,6 +29,7 @@ namespace CTC
             Viewport = new ClientViewport(GameData, Protocol);
 
             TibiaMovieStream MS = (TibiaMovieStream)InStream;
+            MS.PlaybackSpeed = 25;
             while (MS.Elapsed.TotalMinutes < 20 || MS.Elapsed.Seconds < 20)
                 Protocol.parsePacket(InStream.Read());
         }
