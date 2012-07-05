@@ -83,8 +83,11 @@ namespace CTC
         {
             if (Context.Window.ClientBounds.Height > 0 && Context.Window.ClientBounds.Width > 0)
             {
+                // Change the size of this view
                 Bounds.Width = Context.Window.ClientBounds.Width;
                 Bounds.Height = Context.Window.ClientBounds.Height;
+
+                NeedsLayout = true;
             }
         }
 
@@ -136,6 +139,20 @@ namespace CTC
         }
 
         #endregion
+
+        public override void LayoutSubviews()
+        {
+            // Resize the sidebar to fit
+            Sidebar.Bounds = new Rectangle
+            {
+                X = Context.Window.ClientBounds.Width - Sidebar.Bounds.Width,
+                Y = 0,
+                Height = Context.Window.ClientBounds.Height,
+                Width = Sidebar.Bounds.Width
+            };
+
+            base.LayoutSubviews();
+        }
 
         public override void Update(GameTime Time)
         {

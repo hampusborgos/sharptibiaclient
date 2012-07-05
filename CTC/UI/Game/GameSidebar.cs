@@ -15,8 +15,12 @@ namespace CTC
         public GameSidebar()
         {
             ElementType = UIElementType.Window;
+
+            Bounds.Width = 208;
+            
             ContentView = new UIStackView(UIStackDirection.Vertical);
             ContentView.ZOrder = -1;
+
             AddSubview(ContentView);
         }
 
@@ -69,14 +73,6 @@ namespace CTC
 
         public override void LayoutSubviews()
         {
-            Bounds = new Rectangle
-            {
-                X = Context.Window.ClientBounds.Width - 200 - 50,
-                Y = 10,
-                Width = 208,
-                Height = Context.Window.ClientBounds.Height - 20
-            };
-
             ContentView.Bounds = ClientBounds;
 
             base.LayoutSubviews();
