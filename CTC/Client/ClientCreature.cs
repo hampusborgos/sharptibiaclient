@@ -9,6 +9,13 @@ namespace CTC
     {
         public UInt32 ID;
         public int Health = 0, MaxHealth = 100;
+        public float HealthPercent
+        {
+            get
+            {
+                return 1f * Health / MaxHealth;
+            }
+        }
         public int Mana = 0, MaxMana = 100;
         public int Speed = 0;
 

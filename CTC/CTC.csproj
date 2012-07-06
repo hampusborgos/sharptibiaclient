@@ -161,6 +161,7 @@
     <Compile Include="Game\GameEffect.cs" />
     <Compile Include="Game\GameRenderer.cs" />
     <Compile Include="Game\MagicEffect.cs" />
+    <Compile Include="UI\Framework\ColorGradient.cs" />
     <Compile Include="UI\Framework\Margin.cs" />
     <Compile Include="UI\Framework\UIException.cs" />
     <Compile Include="UI\Framework\UILabel.cs" />

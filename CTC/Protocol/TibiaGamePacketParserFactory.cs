@@ -565,7 +565,7 @@ namespace CTC
                     Packet props = new Packet(parserName);
 
                     props["Creature"] = KnownCreatures[nmsg.ReadU32()];
-                    props["HealthPercent"] = nmsg.ReadByte();
+                    props["Health"] = (int)nmsg.ReadByte();
                     return props;
                 };
             else if (parserName == "CreatureLight")

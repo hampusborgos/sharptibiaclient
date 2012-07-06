@@ -135,7 +135,7 @@ namespace CTC
             Protocol.CreatureSpeed.Add(OnCreatureSpeed);
             Protocol.CreatureShield.Add(OnCreatureShield);
             Protocol.CreatureSkull.Add(OnCreatureSkull);
-            Protocol.CreatureTurn.Add(OnCreatureHealth);
+            Protocol.CreatureHealth.Add(OnCreatureHealth);
             Protocol.CreatureTurn.Add(OnCreatureLight);
 
             Protocol.CreatureSpeak.Add(OnCreatureSpeak);

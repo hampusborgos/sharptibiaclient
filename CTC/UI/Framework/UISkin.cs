@@ -68,6 +68,7 @@ namespace CTC
     public class UISkin
     {
         Dictionary<UIElementType, UISkinElement> Types = new Dictionary<UIElementType, UISkinElement>();
+        Dictionary<String, ColorGradient> Gradients = new Dictionary<string, ColorGradient>();
 
         public Texture2D UISheet;
 
@@ -192,9 +193,29 @@ namespace CTC
                 Batch.Draw(UISheet, pos, e[UISkinOrientation.BottomRight], Color.White);
             }
         }
+
+        public ColorGradient Gradient(String Name)
+        {
+            ColorGradient cg = null;
+            Gradients.TryGetValue(Name, out cg);
+            return cg;
+        }
     
         public void Load(System.IO.Stream File)
         {
+            //
+            float[] cutoffs = { 0.00f, 0.05f, 0.33f, 0.99f, 1f };
+            Color[] colors =
+            {
+                new Color(100, 0, 0),
+                new Color(187, 46, 46),
+                new Color(187, 187, 0),
+                new Color(100, 187, 100),
+                new Color(0, 187, 0)
+            };
+            Gradients["Health"] = new ColorGradient(cutoffs, colors);
+
+            //
             UISkinElement e;
 
             e = new UISkinElement(UIElementType.Frame);

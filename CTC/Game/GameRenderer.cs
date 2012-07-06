@@ -228,6 +228,14 @@ namespace CTC
             DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y), Primary);
         }
 
+        public Color LifeColorForCreature(ClientCreature Creature)
+        {
+            ColorGradient cg = UIContext.Skin.Gradient("Health");
+            if (cg != null)
+                return cg.Sample(Creature.HealthPercent);
+            return new Color(255, 255, 255);
+        }
+
         public void DrawCreatureBars(SpriteBatch Batch, ClientCreature Creature, Vector2 Offset)
         {
             if (Creature.Name != "")
@@ -249,7 +257,7 @@ namespace CTC
                 Vector2 TextOffset = Offset;
                 // Move it above the health bar
                 TextOffset.Y -= 16;
-                DrawBoldedText(Batch, Creature.Name, TextOffset, false, Color.LightGreen);
+                DrawBoldedText(Batch, Creature.Name, TextOffset, false, LifeColorForCreature(Creature));
 
                 // 
             }

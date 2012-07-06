@@ -94,7 +94,7 @@ namespace CTC
                 Desktop.AddClient(State);
             };
 
-            MovieStream.PlaybackSpeed = 100;
+            MovieStream.PlaybackSpeed = 1;
             State.Update(new GameTime());
             /*
             while (MS.Elapsed.TotalMinutes < 0 || MS.Elapsed.Seconds < 0)
