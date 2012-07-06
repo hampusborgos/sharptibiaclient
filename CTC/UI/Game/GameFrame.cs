@@ -32,7 +32,7 @@ namespace CTC
             if (ActiveCanvas != null)
             {
                 double Scale;
-                if (ClientBounds.Width < ClientBounds.Height * 3 / 4)
+                if (ClientBounds.Width * 3 < ClientBounds.Height * 4)
                     Scale = ClientBounds.Width / 480f;
                 else
                     Scale = ClientBounds.Height / 352f;
