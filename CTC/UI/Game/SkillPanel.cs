@@ -122,6 +122,8 @@ namespace CTC
         {
             Viewport = NewState.Viewport;
 
+            ContentView.RemoveAllSubviews();
+
             ContentView.AddSubview(new SkillLabel(Viewport.Player.Level));
 
             SkillLabel ExperienceLabel = new SkillLabel("Experience", delegate()

@@ -70,7 +70,7 @@ namespace CTC
 
         protected override void BeginDraw()
         {
-            if (Renderer == null)
+            if (Renderer == null && Viewport != null)
                 this.Renderer = new GameRenderer(Viewport.GameData);
 
             base.BeginDraw();
@@ -78,13 +78,16 @@ namespace CTC
 
         protected override void DrawContent(SpriteBatch Batch)
         {
-            Item = Viewport.Inventory[(int)Slot];
-
-            base.DrawContent(Batch);
-
-            if (Item == null)
+            if (Viewport != null)
             {
-                // TODO: Draw the background image
+                Item = Viewport.Inventory[(int)Slot];
+
+                base.DrawContent(Batch);
+
+                if (Item == null)
+                {
+                    // TODO: Draw the background image
+                }
             }
         }
     }

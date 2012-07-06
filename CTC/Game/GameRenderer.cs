@@ -201,6 +201,9 @@ namespace CTC
 
         public void DrawText(SpriteBatch Batch, String Text, Vector2 Offset, Color Color)
         {
+            Offset.X = (int)Offset.X;
+            Offset.Y = (int)Offset.Y;
+
             Batch.DrawString(
                 UIContext.StandardFont, Text, Offset,
                 Color, 0.0f, new Vector2(0.0f, 0.0f),
@@ -210,6 +213,9 @@ namespace CTC
 
         public void DrawBoldedText(SpriteBatch Batch, String Text, Vector2 Offset, Boolean Centered, Color Primary)
         {
+            Offset.X = (int)Offset.X;
+            Offset.Y = (int)Offset.Y;
+
             if (Centered)
             {
                 Vector2 TextSize = UIContext.StandardFont.MeasureString(Text);
@@ -228,18 +234,24 @@ namespace CTC
             {
                 GameSprite Sprite = GameData.GetCreatureSprite(Creature.Outfit.LookType);
                 Vector2 TextSize = UIContext.StandardFont.MeasureString(Creature.Name);
-                Offset.X = (int)(Offset.X + 38 - TextSize.X / 2);
-                Offset.Y = (int)(Offset.Y + 16);
+                // Center the text
+                Offset.X = (int)(Offset.X - TextSize.X / 2);
                 
+                // Put at the center of the sprite
+                Offset.X += Sprite.Width * 16;
+                Offset.Y -= Sprite.Height * 16;
+                
+                // Render offsets are negative
                 Offset.X += Sprite.RenderOffset;
                 Offset.Y += Sprite.RenderOffset;
-                /*
-                int HealthOffset = Sprite.HealthOffset;
 
-                Offset.X += HealthOffset;
-                Offset.Y += HealthOffset;
-                */
-                DrawBoldedText(Batch, Creature.Name, Offset, false, Color.LightGreen);
+                // Render the text
+                Vector2 TextOffset = Offset;
+                // Move it above the health bar
+                TextOffset.Y -= 16;
+                DrawBoldedText(Batch, Creature.Name, TextOffset, false, Color.LightGreen);
+
+                // 
             }
         }
 
@@ -325,11 +337,6 @@ namespace CTC
             {
                 TopLeft.X -= (7 - Center.Z) * 32;
                 TopLeft.Y -= (7 - Center.Z) * 32;
-            }
-            else
-            {
-                TopLeft.X -= 64;
-                TopLeft.Y -= 64;
             }
 
             for (int X = Center.X - 8; X <= Center.X + 8; ++X)

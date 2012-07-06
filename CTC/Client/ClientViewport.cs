@@ -66,8 +66,14 @@ namespace CTC
 
         #region Events
 
+        public delegate void LoginEvent(ClientViewport Viewport);
         public delegate void ContainerEvent(ClientViewport Viewport, ClientContainer Container);
         public delegate void VIPEvent(ClientViewport Viewport, ClientCreature Creature);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event LoginEvent Login;
 
         /// <summary>
         /// Fired when a new container is opened.
@@ -167,6 +173,8 @@ namespace CTC
         private void OnPlayerLogin(Packet props)
         {
             Player = (ClientPlayer)props["Player"];
+            if (Login != null)
+                Login(this);
         }
 
         private void OnUpdateSkills(Packet props)
