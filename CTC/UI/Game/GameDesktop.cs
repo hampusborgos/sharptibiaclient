@@ -198,12 +198,25 @@ namespace CTC
         {
             ForegroundBatch.Begin();
 
-            string o = "";
-
+            // Count the FPS
             GFPS.Enqueue(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
             while (GFPS.Count > 0 && GFPS.First() < DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - 1000)
                 GFPS.Dequeue();
 
+            // DrawFPS();
+
+            // Draw UI
+            DrawBackgroundChildren(ForegroundBatch, Bounds);
+            DrawForegroundChildren(ForegroundBatch, Bounds);
+            // End draw UI
+
+            ForegroundBatch.End();
+        }
+
+        protected void DrawFPS()
+        {
+
+            string o = "";
             o += " LFPS: " + LFPS.Count;
             o += " GFPS: " + GFPS.Count;
             o += " RCTC";
@@ -218,13 +231,6 @@ namespace CTC
                 UIContext.StandardFont, o, FontOrigin,
                 Color.LightGreen, 0.0f, new Vector2(0.0f, 0.0f),
                 1.0f, SpriteEffects.None, 0.5f);
-
-            // Draw UI
-            DrawBackgroundChildren(ForegroundBatch, Bounds);
-            DrawForegroundChildren(ForegroundBatch, Bounds);
-            // End draw UI
-
-            ForegroundBatch.End();
         }
 
         #endregion

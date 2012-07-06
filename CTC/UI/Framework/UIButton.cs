@@ -75,8 +75,9 @@ namespace CTC
         public event ButtonPressedEvent ButtonReleasedInside;
         public event ButtonPressedEvent ButtonReleasedOutside;
 
-        public UIButton()
+        public UIButton(String Label = "")
         {
+            this.Label = Label;
             ElementType = UIElementType.Button;
             NormalType = UIElementType.Button;
             HighlightType = UIElementType.ButtonHighlight;

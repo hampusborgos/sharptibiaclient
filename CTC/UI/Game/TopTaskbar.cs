@@ -11,10 +11,10 @@ namespace CTC
     {
         public TopTaskbar()
         {
-            Bounds = new Rectangle(0, 0, 20, 20);
+            Bounds = new Rectangle(0, 0, 18, 18);
 
             UIButton StartButton = new UIButton();
-            StartButton.Bounds = new Rectangle(0, 0, 20, 20);
+            StartButton.Bounds = new Rectangle(0, 0, 18, 18);
             AddSubview(StartButton);
         }
     }
