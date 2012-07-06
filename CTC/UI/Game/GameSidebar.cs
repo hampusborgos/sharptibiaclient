@@ -10,7 +10,7 @@ namespace CTC
 {
     class GameSidebar : UIView
     {
-        public UIView Menu;
+        public UIStackView MenuView;
         public UIStackView ContentView;
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace CTC
         /// <summary>
         /// How many columns are in this sidebar
         /// </summary>
-        public int Columns = 1;
+        public int Columns = 2;
 
         /// <summary>
         /// Need a reference to be able to unsubscribe to state change events.
@@ -121,7 +121,7 @@ namespace CTC
             Bounds.Width = 176 * Columns + SkinPadding.TotalWidth;
 
             Rectangle cb = ClientBounds;
-            Menu.Bounds = new Rectangle
+            MenuView.Bounds = new Rectangle
             {
                 X = cb.Left,
                 Y = cb.Top,
@@ -131,9 +131,9 @@ namespace CTC
             ContentView.Bounds = new Rectangle
             {
                 X = cb.Left,
-                Y = cb.Top + Menu.Bounds.Height,
+                Y = cb.Top + MenuView.Bounds.Height,
                 Width = cb.Width,
-                Height = cb.Height - Menu.Bounds.Height
+                Height = cb.Height - MenuView.Bounds.Height
             };
 
             base.LayoutSubviews();
@@ -141,10 +141,28 @@ namespace CTC
 
         private void CreateMenu()
         {
-            Menu = new UIView(null, UIElementType.BorderlessWindow);
-            
+            Rectangle ButtonSize = new Rectangle(0, 0, 58, 15);
+            MenuView = new UIStackView(UIStackDirection.Horizontal, true);
+
+            UIToggleButton InventoryToggle = new UIToggleButton("Player");
+            InventoryToggle.Bounds = ButtonSize;
+            InventoryToggle.ButtonToggled += delegate(UIToggleButton Button, MouseState mouse)
+            {
+                if (Button.On && InventoryView == null)
+                {
+                    InventoryView = new InventoryPanel(Desktop);
+                    AddWindow(InventoryView);
+                }
+                else if (!Button.On && InventoryView != null)
+                {
+                    InventoryView.RemoveFromSuperview();
+                    InventoryView = null;
+                }
+            };
+            MenuView.AddSubview(InventoryToggle);
+
             UIToggleButton SkillToggle = new UIToggleButton("Skills");
-            SkillToggle.Bounds = new Rectangle(0, 0, 44, 15);
+            SkillToggle.Bounds = ButtonSize;
             SkillToggle.ButtonToggled += delegate(UIToggleButton Button, MouseState mouse)
             {
                 if (Button.On && SkillsView == null)
@@ -158,14 +176,14 @@ namespace CTC
                     SkillsView = null;
                 }
             };
-            Menu.AddSubview(SkillToggle);
+            MenuView.AddSubview(SkillToggle);
 
             UIToggleButton BattleToggle = new UIToggleButton("Battle");
-            BattleToggle.Bounds = new Rectangle(44, 0, 44, 15);
-            Menu.AddSubview(BattleToggle);
+            BattleToggle.Bounds = ButtonSize;
+            MenuView.AddSubview(BattleToggle);
 
             UIToggleButton VIPToggle = new UIToggleButton("VIP");
-            VIPToggle.Bounds = new Rectangle(88, 0, 44, 15);
+            VIPToggle.Bounds = ButtonSize;
             VIPToggle.ButtonToggled += delegate(UIToggleButton Button, MouseState mouse)
             {
                 if (Button.On && VIPView == null)
@@ -179,13 +197,17 @@ namespace CTC
                     VIPView = null;
                 }
             };
-            Menu.AddSubview(VIPToggle);
+            MenuView.AddSubview(VIPToggle);
 
             UIButton MapToggle = new UIButton("Map");
-            MapToggle.Bounds = new Rectangle(132, 0, 44, 15);
-            Menu.AddSubview(MapToggle);
+            MapToggle.Bounds = ButtonSize;
+            MenuView.AddSubview(MapToggle);
 
-            AddSubview(Menu);
+            UIButton MenuToggle = new UIButton("Menu");
+            MenuToggle.Bounds = ButtonSize;
+            MenuView.AddSubview(MenuToggle);
+
+            AddSubview(MenuView);
         }
     }
 }

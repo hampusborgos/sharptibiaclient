@@ -18,8 +18,8 @@ namespace CTC
             AddTab("Hemmd");
 
             ChatLog = new UIVirtualFrame();
-            ChatLog.ElementType = UIElementType.Window;
-            ChatLog.ContentView.ElementType = UIElementType.BorderlessWindow;
+            ChatLog.ElementType = UIElementType.None;
+            ChatLog.ContentView.ElementType = UIElementType.Window;
             AddSubview(ChatLog);
         }
 

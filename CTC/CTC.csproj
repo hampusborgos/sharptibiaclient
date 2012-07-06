@@ -192,7 +192,9 @@
     <Compile Include="UI\Game\VIPPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Game.cs" />
+    <Compile Include="Game.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
     <Compile Include="Protocol\NetworkMessage.cs" />
     <Compile Include="Protocol\PacketStream.cs" />
     <Compile Include="Protocol\TibiaConstants.cs" />

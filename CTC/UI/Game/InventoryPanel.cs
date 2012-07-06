@@ -11,9 +11,14 @@ namespace CTC
     public class InventoryPanel : UIFrame
     {
         ClientViewport Viewport;
-        GameRenderer Renderer;
 
-        public InventoryPanel(ViewportChangedEventHandler StateChangedSlot)
+        /// <summary>
+        /// Need a reference to be able to unsubscribe to state change events.
+        /// </summary>
+        protected GameDesktop Desktop;
+        
+
+        public InventoryPanel(GameDesktop Desktop)
         {
             Name = "Inventory";
             Bounds = new Rectangle(0, 0, 176, 200);
@@ -28,7 +33,9 @@ namespace CTC
                 ContentView.AddSubview(InventoryItem);
             }
 
-            StateChangedSlot += ViewportChanged;
+            this.Desktop = Desktop;
+            Desktop.ActiveViewportChanged += ViewportChanged;
+            ViewportChanged(Desktop.ActiveViewport);
         }
 
         public void ViewportChanged(ClientViewport NewViewport)
