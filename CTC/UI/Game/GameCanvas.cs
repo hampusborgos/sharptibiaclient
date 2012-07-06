@@ -29,7 +29,6 @@ namespace CTC
         private Dictionary<MapPosition, TileAnimations> PlayingAnimations = new Dictionary<MapPosition, TileAnimations>();
 
 
-
         #region Logic Code
 
         public override void LayoutSubviews()
@@ -108,6 +107,7 @@ namespace CTC
 
         #endregion
 
+
         #region Drawing Code
 
         protected override void DrawBackground(SpriteBatch CurrentBatch)
@@ -141,12 +141,12 @@ namespace CTC
             );
             Renderer.DrawSceneForeground(Batch, Offset, Scale, UIContext.GameTime, Viewport, PlayingAnimations);
 
-
             DrawBorder(Batch);
             EndDraw();
         }
 
         #endregion
+
 
         #region Protocol Event Handlers
 

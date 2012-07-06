@@ -267,6 +267,7 @@ namespace CTC
         {
             Children.Remove(subview);
             subview._Parent = null;
+            NeedsLayout = true;
         }
 
         public void RemoveSubviewsMatching(Predicate<UIView> match)

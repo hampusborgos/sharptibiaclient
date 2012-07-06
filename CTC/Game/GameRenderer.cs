@@ -242,8 +242,7 @@ namespace CTC
             {
                 GameSprite Sprite = GameData.GetCreatureSprite(Creature.Outfit.LookType);
                 Vector2 TextSize = UIContext.StandardFont.MeasureString(Creature.Name);
-                // Center the text
-                Offset.X = (int)(Offset.X - TextSize.X / 2);
+                Color LifeColor = LifeColorForCreature(Creature);
                 
                 // Put at the center of the sprite
                 Offset.X += Sprite.Width * 16;
@@ -256,10 +255,22 @@ namespace CTC
                 // Render the text
                 Vector2 TextOffset = Offset;
                 // Move it above the health bar
+                TextOffset.X = (int)(TextOffset.X - TextSize.X / 2);
                 TextOffset.Y -= 16;
-                DrawBoldedText(Batch, Creature.Name, TextOffset, false, LifeColorForCreature(Creature));
+                DrawBoldedText(Batch, Creature.Name, TextOffset, false, LifeColor);
 
                 // 
+                Rectangle BlackBar = new Rectangle(
+                    (int)(Offset.X - 14),
+                    (int)Offset.Y,
+                    28, 4
+                );
+                UIContext.Skin.DrawBorderedRectangle(Batch, BlackBar, Color.Black);
+
+                Rectangle InsideBar = BlackBar.Subtract(new Margin(1));
+                if (Creature.MaxHealth > 0)
+                    InsideBar.Width = InsideBar.Width * Creature.Health / Creature.MaxHealth;
+                UIContext.Skin.DrawBorderedRectangle(Batch, InsideBar, LifeColor);
             }
         }
 
@@ -323,8 +334,8 @@ namespace CTC
                     {
                         AnimatedText Text = (AnimatedText)Effect;
                         Vector2 DrawOffset = Offset + Text.Offset;
-                        DrawOffset.X += 16;
-                        DrawOffset.Y += 26;
+                        // DrawOffset.X += 16;
+                        // DrawOffset.Y += 26;
                         DrawBoldedText(Batch, Text.Text, DrawOffset, true, MakeColor(Text.Color));
                     }
                 }
@@ -336,8 +347,8 @@ namespace CTC
             MapPosition Center = Viewport.ViewPosition;
 
             Vector2 TopLeft = new Vector2(
-                 -(Center.X - 8) * 32,
-                 -(Center.Y - 6) * 32
+                 -(Center.X - 7) * 32,
+                 -(Center.Y - 5) * 32
              );
 
             // Offset based on the Z position
@@ -369,8 +380,8 @@ namespace CTC
             MapPosition Center = Viewport.ViewPosition;
 
             Vector2 TopLeft = new Vector2(
-                - (Center.X - 8) * 32,
-                - (Center.Y - 6) * 32
+                - (Center.X - 7) * 32,
+                - (Center.Y - 5) * 32
             );
 
             int StartZ = 7;

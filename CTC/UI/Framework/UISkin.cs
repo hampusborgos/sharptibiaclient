@@ -71,6 +71,7 @@ namespace CTC
         Dictionary<String, ColorGradient> Gradients = new Dictionary<string, ColorGradient>();
 
         public Texture2D UISheet;
+        public Texture2D WhiteTexture;
 
         public UISkin()
         {
@@ -214,6 +215,10 @@ namespace CTC
                 new Color(0, 187, 0)
             };
             Gradients["Health"] = new ColorGradient(cutoffs, colors);
+
+            // Create a texture to use as draw source for shapes
+            WhiteTexture = new Texture2D(UIContext.Graphics.GraphicsDevice, 1, 1);
+            WhiteTexture.SetData(new Color[] { Color.White });
 
             //
             UISkinElement e;
@@ -416,6 +421,16 @@ namespace CTC
             //e.Set(UISkinOrientation.Bottom,        null);
             //e.Set(UISkinOrientation.BottomRight,   null);
             AddElement(e);
+        }
+
+        public void DrawRectangle(SpriteBatch Batch, Rectangle r, Color color)
+        {
+            Batch.Draw(WhiteTexture, r, color);
+        }
+
+        public void DrawBorderedRectangle(SpriteBatch Batch, Rectangle r, Color color)
+        {
+            Batch.Draw(WhiteTexture, r, color);
         }
     }
 }
