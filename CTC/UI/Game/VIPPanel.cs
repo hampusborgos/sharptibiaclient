@@ -11,23 +11,36 @@ namespace CTC
     {
         ClientViewport Viewport;
 
-        public VIPPanel()
+        /// <summary>
+        /// Need a reference to be able to unsubscribe to state change events.
+        /// </summary>
+        protected GameDesktop Desktop;
+
+        public VIPPanel(GameDesktop Desktop)
         {
             Name = "VIP List";
 
             Bounds.Width = 176;
             Bounds.Height = 200;
+
+            this.Desktop = Desktop;
+            Desktop.ActiveViewportChanged += ViewportChanged;
+            ViewportChanged(Desktop.ActiveViewport);
         }
 
-        public void OnNewState(ClientState NewState)
+        protected void ViewportChanged(ClientViewport NewViewport)
         {
             if (Viewport != null)
                 Viewport.VIPStatusChanged -= VIPStatusChanged;
 
-            Viewport = NewState.Viewport;
+            // If there is no new state just clear the view
+            Viewport = NewViewport;
+
+            if (Viewport != null)
+                Viewport.VIPStatusChanged += VIPStatusChanged;
+
             UpdateList();
 
-            Viewport.VIPStatusChanged += VIPStatusChanged;
         }
 
         private void VIPStatusChanged(ClientViewport Viewport, ClientCreature Creature)
@@ -41,6 +54,9 @@ namespace CTC
         private void UpdateList()
         {
             ContentView.RemoveAllSubviews();
+
+            if (Viewport == null)
+                return;
 
             List<ClientCreature> VIPs = new List<ClientCreature>(Viewport.VIPList.Values);
             VIPs.Sort(delegate(ClientCreature A, ClientCreature B)

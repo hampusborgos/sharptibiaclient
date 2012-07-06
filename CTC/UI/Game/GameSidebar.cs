@@ -13,11 +13,43 @@ namespace CTC
         public UIView Menu;
         public UIStackView ContentView;
 
+        /// <summary>
+        /// The current viewport that is displayed in the sidebar.
+        /// </summary>
+        ClientViewport Viewport;
+
+        /// <summary>
+        /// The panel that displays skills
+        /// </summary>
+        SkillPanel SkillsView;
+
+        /// <summary>
+        /// The panel that displays VIPs
+        /// </summary>
+        VIPPanel VIPView;
+
+        /// <summary>
+        /// The panel that displays the player's current inventory
+        /// </summary>
+        InventoryPanel InventoryView;
+
+        /// <summary>
+        /// How many columns are in this sidebar
+        /// </summary>
         public int Columns = 1;
 
-        public GameSidebar()
+        /// <summary>
+        /// Need a reference to be able to unsubscribe to state change events.
+        /// </summary>
+        protected GameDesktop Desktop;
+
+
+        public GameSidebar(GameDesktop Desktop)
+            : base(null, UIElementType.Window)
         {
-            ElementType = UIElementType.Window;
+            this.Desktop = Desktop;
+            this.Viewport = Desktop.ActiveViewport;
+            Desktop.ActiveViewportChanged += ViewportChanged;
             
             ContentView = new UIStackView(UIStackDirection.Vertical);
             ContentView.ZOrder = -1;
@@ -25,6 +57,11 @@ namespace CTC
             CreateMenu();
 
             AddSubview(ContentView);
+        }
+
+        protected void ViewportChanged(ClientViewport Viewport)
+        {
+            this.Viewport = Viewport;
         }
 
         public void AddWindow(UIFrame Window)
@@ -106,16 +143,42 @@ namespace CTC
         {
             Menu = new UIView(null, UIElementType.BorderlessWindow);
             
-            UIButton SkillToggle = new UIButton("Skills");
+            UIToggleButton SkillToggle = new UIToggleButton("Skills");
             SkillToggle.Bounds = new Rectangle(0, 0, 44, 15);
+            SkillToggle.ButtonToggled += delegate(UIToggleButton Button, MouseState mouse)
+            {
+                if (Button.On && SkillsView == null)
+                {
+                    SkillsView = new SkillPanel(Desktop);
+                    AddWindow(SkillsView);
+                }
+                else if (!Button.On && SkillsView != null)
+                {
+                    SkillsView.RemoveFromSuperview();
+                    SkillsView = null;
+                }
+            };
             Menu.AddSubview(SkillToggle);
 
-            UIButton BattleToggle = new UIButton("Battle");
+            UIToggleButton BattleToggle = new UIToggleButton("Battle");
             BattleToggle.Bounds = new Rectangle(44, 0, 44, 15);
             Menu.AddSubview(BattleToggle);
 
-            UIButton VIPToggle = new UIButton("VIP");
+            UIToggleButton VIPToggle = new UIToggleButton("VIP");
             VIPToggle.Bounds = new Rectangle(88, 0, 44, 15);
+            VIPToggle.ButtonToggled += delegate(UIToggleButton Button, MouseState mouse)
+            {
+                if (Button.On && VIPView == null)
+                {
+                    VIPView = new VIPPanel(Desktop);
+                    AddWindow(VIPView);
+                }
+                else if (!Button.On && VIPView != null)
+                {
+                    VIPView.RemoveFromSuperview();
+                    VIPView = null;
+                }
+            };
             Menu.AddSubview(VIPToggle);
 
             UIButton MapToggle = new UIButton("Map");

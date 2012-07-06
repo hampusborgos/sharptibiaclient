@@ -9,9 +9,9 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
-    public delegate void StateChangedEventHandler(ClientState NewState);
+    public delegate void ViewportChangedEventHandler(ClientViewport NewViewport);
 
-    class GameDesktop : UIView
+    public class GameDesktop : UIView
     {
         public GameDesktop()
         {
@@ -42,11 +42,23 @@ namespace CTC
         {
             get
             {
-                return Clients[0];
+                return _ActiveClient;
             }
             set
             {
-                ActiveStateChanged(value);
+                ActiveViewportChanged(value.Viewport);
+                _ActiveClient = value;
+            }
+        }
+        protected ClientState _ActiveClient;
+
+        public ClientViewport ActiveViewport
+        {
+            get
+            {
+                if (ActiveClient != null)
+                    return ActiveClient.Viewport;
+                return null;
             }
         }
 
@@ -57,7 +69,7 @@ namespace CTC
 
         #region Event Slots
 
-        public event StateChangedEventHandler ActiveStateChanged;
+        public event ViewportChangedEventHandler ActiveViewportChanged;
 
         #endregion
 
@@ -65,8 +77,7 @@ namespace CTC
         public void AddClient(ClientState State)
         {
             Clients.Add(State);
-            if (Clients.Count == 1)
-                ActiveClient = State;
+            ActiveClient = State;
 
             // Read in some state (in case the game was fast-forwarded)
             foreach (ClientContainer Container in State.Viewport.Containers.Values)
@@ -256,24 +267,7 @@ namespace CTC
             Frame.ZOrder = -1;
             AddSubview(Frame);
 
-            Sidebar = new GameSidebar();
-
-            SkillPanel Skills = new SkillPanel();
-            Skills.Bounds.X = 4;
-            Skills.Bounds.Y = Sidebar.ClientBounds.Top;
-            Skills.Bounds.Height = 200;
-            Sidebar.AddWindow(Skills);
-
-            VIPPanel VIPs = new VIPPanel();
-            VIPs.Bounds.X = 4;
-            VIPs.Bounds.Y = 210;
-            Sidebar.AddWindow(VIPs);
-
-            InventoryPanel Inventory = new InventoryPanel();
-            Inventory.Bounds.X = 4;
-            Inventory.Bounds.Y = 410;
-            Sidebar.AddWindow(Inventory);
-
+            Sidebar = new GameSidebar(this);
             AddSubview(Sidebar);
 
             Chat = new ChatPanel();
@@ -282,11 +276,7 @@ namespace CTC
             AddSubview(Chat);
 
             // Register listeners
-            ActiveStateChanged += Skills.OnNewState;
-            ActiveStateChanged += VIPs.OnNewState;
-            ActiveStateChanged += Inventory.OnNewState;
-            ActiveStateChanged += Chat.OnNewState;
-            ActiveStateChanged += Chat.OnNewState;
+            // ActiveViewportChanged += Chat.OnNewState;
         }
 
         #endregion

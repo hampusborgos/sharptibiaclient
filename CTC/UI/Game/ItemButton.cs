@@ -63,9 +63,9 @@ namespace CTC
             this.Slot = Slot;
         }
 
-        public void OnNewState(ClientState NewState)
+        public void ViewportChanged(ClientViewport NewViewport)
         {
-            Viewport = NewState.Viewport;
+            Viewport = NewViewport;
         }
 
         protected override void BeginDraw()

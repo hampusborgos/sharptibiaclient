@@ -29,9 +29,9 @@ namespace CTC
 
         #endregion
 
-        public void OnNewState(ClientState NewState)
+        public void OnNewState(ClientViewport NewViewport)
         {
-            Viewport = NewState.Viewport;
+            Viewport = NewViewport;
         }
 
         public override void LayoutSubviews()

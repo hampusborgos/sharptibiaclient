@@ -13,7 +13,7 @@ namespace CTC
         ClientViewport Viewport;
         GameRenderer Renderer;
 
-        public InventoryPanel()
+        public InventoryPanel(ViewportChangedEventHandler StateChangedSlot)
         {
             Name = "Inventory";
             Bounds = new Rectangle(0, 0, 176, 200);
@@ -27,13 +27,15 @@ namespace CTC
                 InventoryItem.Autoresizable = false;
                 ContentView.AddSubview(InventoryItem);
             }
+
+            StateChangedSlot += ViewportChanged;
         }
 
-        public void OnNewState(ClientState NewState)
+        public void ViewportChanged(ClientViewport NewViewport)
         {
-            Viewport = NewState.Viewport;
+            Viewport = NewViewport;
             foreach (InventoryItemButton Button in ContentView.SubviewsOfType<InventoryItemButton>())
-                Button.OnNewState(NewState);
+                Button.ViewportChanged(NewViewport);
         }
 
         protected Rectangle GetSlotPosition(InventorySlot slot)
