@@ -132,22 +132,12 @@ namespace CTC
             BeginDraw();
 
             // Draw the backbuffer to the screen
-            Rectangle Target = new Rectangle
-            {
-                X = ClientBounds.Width / 2,
-                Y = 0,
-                Width = (ClientBounds.Height * 480 / 352),
-                Height = ClientBounds.Height
-            };
+            Batch.Draw(Backbuffer, ScreenClientBounds, Color.White);
 
-            Target.X -= Target.Width / 2;
-
-            Batch.Draw(Backbuffer, ScreenCoordinate(Target), Color.White);
-
-            Vector2 Offset = ScreenCoordinate(Target.X, Target.Y);
+            Vector2 Offset = new Vector2(ScreenClientBounds.X, ScreenClientBounds.Y);
             Vector2 Scale = new Vector2(
-                Target.Width / 480f,
-                Target.Height / 352f
+                Bounds.Width / 480f,
+                Bounds.Height / 352f
             );
             Renderer.DrawSceneForeground(Batch, Offset, Scale, UIContext.GameTime, Viewport, PlayingAnimations);
 

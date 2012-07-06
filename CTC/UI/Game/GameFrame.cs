@@ -21,8 +21,6 @@ namespace CTC
         public void AddClient(ClientState State)
         {
             GameCanvas Canvas = new GameCanvas(State);
-            Canvas.Bounds.X = 0;
-            Canvas.Bounds.Y = 18;
             AddSubview(Canvas);
             ActiveCanvas = Canvas;
 
@@ -33,13 +31,19 @@ namespace CTC
         {
             if (ActiveCanvas != null)
             {
+                double Scale;
+                if (ClientBounds.Width < ClientBounds.Height * 3 / 4)
+                    Scale = ClientBounds.Width / 480f;
+                else
+                    Scale = ClientBounds.Height / 352f;
+
                 ActiveCanvas.Bounds = new Rectangle
                 {
-                    X = ClientBounds.Left,
-                    Y = ClientBounds.Top,
-                    Width = ClientBounds.Width,
-                    Height = ClientBounds.Height
+                    Width = (int)(480 * Scale),
+                    Height = (int)(352 * Scale)
                 };
+                ActiveCanvas.Bounds.X = (ClientBounds.Width - ActiveCanvas.Bounds.Width) / 2;
+                ActiveCanvas.Bounds.Y = ClientBounds.Top;
             }
             base.LayoutSubviews();
         }

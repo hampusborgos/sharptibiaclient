@@ -11,7 +11,8 @@ namespace CTC
     {
         public UITab(int Width)
         {
-            ElementType = UIElementType.Tab;
+            NormalType = UIElementType.Tab;
+            HighlightType = UIElementType.TabHighlight;
             Bounds = new Rectangle(0, 0, Width, 18);
         }
     }
