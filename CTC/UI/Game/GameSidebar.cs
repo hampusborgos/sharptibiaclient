@@ -168,6 +168,8 @@ namespace CTC
                 if (Button.On && SkillsView == null)
                 {
                     SkillsView = new SkillPanel(Desktop);
+                    SkillsView.Bounds.Width = 176;
+                    SkillsView.Bounds.Height = 180;
                     AddWindow(SkillsView);
                 }
                 else if (!Button.On && SkillsView != null)

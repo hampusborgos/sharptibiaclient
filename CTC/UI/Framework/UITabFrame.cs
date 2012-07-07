@@ -59,7 +59,7 @@ namespace CTC
         {
             base.Update(time);
 
-            int X = 18;
+            int X = 6;
             foreach (UITab Tab in Tabs)
             {
                 Tab.Bounds.X = X;

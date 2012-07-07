@@ -76,7 +76,7 @@ namespace CTC
             ///////////////////////////////////////////////////////////////////
             // For debugging
 
-            FileInfo file = new FileInfo("C:\\Users\\hjn\\Documents\\TibiaRC\\GM_Remere.utmv");
+            FileInfo file = new FileInfo("C:\\Users\\hjn\\Documents\\TibiaRC\\Xyvero.tmv");
             Stream virtualStream = null;
 
             FileStream fileStream = file.OpenRead();
@@ -89,12 +89,23 @@ namespace CTC
             TibiaMovieStream MovieStream = new TibiaMovieStream(virtualStream, file.Name);
             ClientState State = new ClientState(MovieStream);
 
-            State.Viewport.Login += delegate(ClientViewport Viewport)
+            MovieStream.PlaybackSpeed = 50;
+            State.ForwardTo(new TimeSpan(0, 30, 0));
+
+            // If fast-forwarded, client tab immediately,
+            // otherwise delay until we receive the login packet.
+            if (State.Viewport.Player == null)
+            {
+                State.Viewport.Login += delegate(ClientViewport Viewport)
+                {
+                    Desktop.AddClient(State);
+                };
+            }
+            else
             {
                 Desktop.AddClient(State);
-            };
+            }
 
-            MovieStream.PlaybackSpeed = 1;
             State.Update(new GameTime());
             /*
             while (MS.Elapsed.TotalMinutes < 0 || MS.Elapsed.Seconds < 0)

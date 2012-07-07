@@ -31,7 +31,6 @@ namespace CTC
 
         List<ClientState> Clients = new List<ClientState>();
 
-        TopTaskbar Taskbar;
         GameSidebar Sidebar;
         ChatPanel Chat;
         GameFrame Frame;
@@ -214,7 +213,7 @@ namespace CTC
             while (GFPS.Count > 0 && GFPS.First() < DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond - 1000)
                 GFPS.Dequeue();
 
-            // DrawFPS();
+            DrawFPS();
 
             // Draw UI
             DrawBackgroundChildren(ForegroundBatch, Bounds);
@@ -235,7 +234,7 @@ namespace CTC
             // Find the center of the string
             Vector2 FontOrigin = UIContext.StandardFont.MeasureString(o);
             FontOrigin.X = UIContext.Window.ClientBounds.Width - FontOrigin.X - 4;
-            FontOrigin.Y = 4;
+            FontOrigin.Y = UIContext.Window.ClientBounds.Height - FontOrigin.Y - 4;
 
             // Draw the string
             ForegroundBatch.DrawString(
@@ -256,9 +255,6 @@ namespace CTC
 
         public void CreatePanels()
         {
-            Taskbar = new TopTaskbar();
-            AddSubview(Taskbar);
-
             Frame = new GameFrame();
             Frame.Bounds.X = 10;
             Frame.Bounds.Y = 20;

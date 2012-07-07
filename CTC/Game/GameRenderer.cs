@@ -346,16 +346,23 @@ namespace CTC
         {
             MapPosition Center = Viewport.ViewPosition;
 
-            Vector2 TopLeft = new Vector2(
-                 -(Center.X - 7) * 32,
-                 -(Center.Y - 5) * 32
-             );
 
-            // Offset based on the Z position
+            Vector2 TopLeft = new Vector2(
+                -(Center.X - 7) * 32,
+                -(Center.Y - 5) * 32
+            );
+
+            int StartZ = 7;
+            int EndZ = Center.Z;
             if (Center.Z <= 7)
             {
-                TopLeft.X -= (7 - Center.Z) * 32;
-                TopLeft.Y -= (7 - Center.Z) * 32;
+                Center.Y -= (7 - Center.Z);
+                Center.X -= (7 - Center.Z);
+            }
+            else
+            {
+                StartZ = Math.Min(Center.Z + 2, 15);
+                EndZ = Center.Z;
             }
 
             for (int X = Center.X - 8; X <= Center.X + 8; ++X)
@@ -379,27 +386,32 @@ namespace CTC
         {
             MapPosition Center = Viewport.ViewPosition;
 
-            Vector2 TopLeft = new Vector2(
-                - (Center.X - 7) * 32,
-                - (Center.Y - 5) * 32
-            );
-
             int StartZ = 7;
             int EndZ = Center.Z;
             if (Center.Z <= 7)
             {
+                Center.Y -= (7 - Center.Z);
+                Center.X -= (7 - Center.Z);
             }
             else
             {
                 StartZ = Math.Min(Center.Z + 2, 15);
                 EndZ = Center.Z;
+                Center.X -= 2;
+                Center.Y -= 2;
             }
+
+            Vector2 TopLeft = new Vector2(
+                -(Center.X - 7) * 32,
+                -(Center.Y - 5) * 32
+            );
+
 
             for (int Z = StartZ; Z >= EndZ; --Z)
             {
-                for (int X = Center.X - 8; X <= Center.X + 8; ++X)
+                for (int X = Center.X - 8; X <= Center.X + 9; ++X)
                 {
-                    for (int Y = Center.Y - 6; Y <= Center.Y + 6; ++Y)
+                    for (int Y = Center.Y - 6; Y <= Center.Y + 7; ++Y)
                     {
                         ClientTile Tile = Viewport.Map[new MapPosition(X, Y, Z)];
 

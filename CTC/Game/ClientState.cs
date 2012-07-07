@@ -54,6 +54,17 @@ namespace CTC
             }
         }
 
+        public void ForwardTo(TimeSpan Span)
+        {
+            if (!(InStream is TibiaMovieStream))
+                throw new NotSupportedException("Can't fast-forward non-movie streams.");
+
+            TibiaMovieStream Movie = (TibiaMovieStream)InStream;
+
+            while (Movie.Elapsed.TotalSeconds < Span.TotalSeconds)
+                Protocol.parsePacket(Movie.Read());
+        }
+
         public void Update(GameTime Time)
         {
             ReadPackets();

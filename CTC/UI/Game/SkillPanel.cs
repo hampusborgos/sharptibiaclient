@@ -26,9 +26,6 @@ namespace CTC
 
             ((UIStackView)ContentView).StretchOtherDirection = true;
 
-            Bounds.Width = 176;
-            Bounds.Height = 200;
-
             this.Desktop = Desktop;
             Desktop.ActiveViewportChanged += ViewportChanged;
             ViewportChanged(Desktop.ActiveViewport);
