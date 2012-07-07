@@ -233,7 +233,7 @@ namespace CTC
 
             // Find the center of the string
             Vector2 FontOrigin = UIContext.StandardFont.MeasureString(o);
-            FontOrigin.X = UIContext.Window.ClientBounds.Width - FontOrigin.X - 4;
+            FontOrigin.X = UIContext.Window.ClientBounds.Width - FontOrigin.X - 6;
             FontOrigin.Y = UIContext.Window.ClientBounds.Height - FontOrigin.Y - 4;
 
             // Draw the string
