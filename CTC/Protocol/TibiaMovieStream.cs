@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using Microsoft.Xna.Framework;
 
 namespace CTC
 {
@@ -25,7 +26,7 @@ namespace CTC
         /// <summary>
         /// Time next packet will arrive.
         /// </summary>
-        private long NextTime = 0;
+        private TimeSpan NextTime = new TimeSpan(0);
 
         /// <summary>
         /// Packets read from file but not passed yet.
@@ -92,12 +93,12 @@ namespace CTC
             }
         }
 
-        public Boolean Poll()
+        public Boolean Poll(GameTime Time)
         {
-            return PendingPackets.Count > 0 || DateTime.Now.Ticks > NextTime;
+            return PendingPackets.Count > 0 || Time.TotalGameTime > NextTime;
         }
 
-        public NetworkMessage Read()
+        public NetworkMessage Read(GameTime Time)
         {
             if (PendingPackets.Count > 0)
                 return PendingPackets.Dequeue();
@@ -141,7 +142,10 @@ namespace CTC
                     }
 
                     // Schedule next
-                    NextTime = DateTime.Now.Ticks + (int)(delay * TimeSpan.TicksPerMillisecond / PlaybackSpeed);
+                    if (Time != null)
+                        NextTime = Time.TotalGameTime +
+                            new TimeSpan((int)(delay * TimeSpan.TicksPerMillisecond / PlaybackSpeed));
+
                     if (PendingPackets.Count == 0)
                         return null;
                     return PendingPackets.Dequeue();

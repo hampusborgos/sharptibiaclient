@@ -22,8 +22,8 @@ namespace CTC
         public ClientState(PacketStream InStream)
         {
             this.InStream = InStream;
-            FileStream datFile = new FileStream("C:\\Users\\hjn\\Documents\\TibiaRC\\Tibia.dat", FileMode.Open);
-            FileStream sprFile = new FileStream("C:\\Users\\hjn\\Documents\\TibiaRC\\Tibia.spr", FileMode.Open);
+            FileStream datFile = new FileStream("./Tibia.dat", FileMode.Open);
+            FileStream sprFile = new FileStream("./Tibia.spr", FileMode.Open);
             GameData = new TibiaGameData(datFile, sprFile);
             Protocol = new TibiaGameProtocol(GameData);
             Viewport = new ClientViewport(GameData, Protocol);
@@ -36,13 +36,13 @@ namespace CTC
             }
         }
 
-        private void ReadPackets()
+        private void ReadPackets(GameTime Time)
         {
-            while (InStream.Poll())
+            while (InStream.Poll(Time))
             {
                 try
                 {
-                    NetworkMessage nmsg = InStream.Read();
+                    NetworkMessage nmsg = InStream.Read(Time);
                     if (nmsg == null)
                         return;
                     Protocol.parsePacket(nmsg);
@@ -62,12 +62,12 @@ namespace CTC
             TibiaMovieStream Movie = (TibiaMovieStream)InStream;
 
             while (Movie.Elapsed.TotalSeconds < Span.TotalSeconds)
-                Protocol.parsePacket(Movie.Read());
+                Protocol.parsePacket(Movie.Read(null));
         }
 
         public void Update(GameTime Time)
         {
-            ReadPackets();
+            ReadPackets(Time);
         }
     }
 }

@@ -74,9 +74,9 @@ namespace CTC
             Desktop.NeedsLayout = true;
 
             ///////////////////////////////////////////////////////////////////
-            // For debugging
+            // For debugging read a TMV file as input
 
-            FileInfo file = new FileInfo("C:\\Users\\hjn\\Documents\\TibiaRC\\Xyvero.tmv");
+            FileInfo file = new FileInfo("./Test.tmv");
             Stream virtualStream = null;
 
             FileStream fileStream = file.OpenRead();
