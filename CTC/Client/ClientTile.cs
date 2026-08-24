@@ -87,6 +87,26 @@ namespace CTC
             }
         }
 
+        /// <summary>
+        /// Copies the tile and everything on it.
+        ///
+        /// Objects are appended directly rather than through Add, which sorts by
+        /// stack order and caps the list: the tile is already in whatever order
+        /// the protocol put it in, and re-deriving it would not round-trip.
+        /// </summary>
+        public ClientTile Clone(CloneContext Context)
+        {
+            ClientTile Copy = new ClientTile(Position);
+
+            if (Ground != null)
+                Copy.Ground = (ClientItem)Ground.Clone(Context);
+
+            foreach (ClientThing Thing in Objects)
+                Copy.Objects.Add(Thing == null ? null : Thing.Clone(Context));
+
+            return Copy;
+        }
+
         public IEnumerable<ClientThing> ObjectsByDrawOrder
         {
             get

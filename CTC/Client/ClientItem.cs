@@ -38,5 +38,15 @@ namespace CTC
                 return Type.AlwaysOnTop;
             }
         }
+
+        /// <summary>
+        /// Type is shared, never copied: it is an immutable singleton owned by
+        /// TibiaGameData and reaches a live Texture2D through its GameSprite.
+        /// Plain items are not aliased anywhere, so they skip the identity map.
+        /// </summary>
+        public override ClientThing Clone(CloneContext Context)
+        {
+            return new ClientItem(Type, Subtype);
+        }
     }
 }

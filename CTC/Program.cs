@@ -29,6 +29,17 @@ namespace CTC
 
             try
             {
+                // --verify-seek checks the snapshot machinery against a straight
+                // play-through, headless. See SeekVerifier.
+                for (int i = 0; i < args.Length; ++i)
+                {
+                    if (args[i] == "--verify-seek")
+                    {
+                        Environment.Exit(SeekVerifier.Run(AppPaths.ResolveRecording(args)));
+                        return;
+                    }
+                }
+
                 using (Game game = new Game(args))
                 {
                     game.Run();

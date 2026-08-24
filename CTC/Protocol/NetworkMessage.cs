@@ -58,6 +58,25 @@ namespace CTC
             Index = 0;
         }
 
+        /// <summary>
+        /// Re-points this message at a recorded packet, without allocating.
+        ///
+        /// A recording holds tens of thousands of packets and every NetworkMessage
+        /// carries a 64KB buffer, so playback reuses one message rather than making
+        /// one per packet. The caller must not hold on to it: the next Load
+        /// overwrites the contents in place.
+        /// </summary>
+        public void Load(byte[] Bytes, int Length)
+        {
+            if (Length > Data.Length)
+                throw new ProtocolException(
+                    "Packet of " + Length + " bytes does not fit the message buffer");
+
+            Buffer.BlockCopy(Bytes, 0, Data, 0, Length);
+            Index = 0;
+            Size = Length;
+        }
+
         public byte ReadByte()
         {
             return Data[Index++];

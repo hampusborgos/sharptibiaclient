@@ -49,6 +49,12 @@ namespace CTC
         }
 
         /// <summary>
+        /// Flags that stand on their own. Everything else is followed by a value,
+        /// which must not be mistaken for the recording to play.
+        /// </summary>
+        private static readonly string[] ValuelessFlags = { "--verify-seek" };
+
+        /// <summary>
         /// The first bare argument, skipping any --flag together with its value.
         /// </summary>
         private static string FirstNonFlag(string[] Args)
@@ -60,13 +66,75 @@ namespace CTC
             {
                 if (Args[i].StartsWith("--"))
                 {
-                    // Every flag the client takes also has a value after it.
-                    ++i;
+                    if (Array.IndexOf(ValuelessFlags, Args[i]) < 0)
+                        ++i;
                     continue;
                 }
                 return Args[i];
             }
             return null;
+        }
+
+        /// <summary>
+        /// The value following a --flag, or null when it was not given.
+        /// </summary>
+        private static string FlagValue(string[] Args, string Flag)
+        {
+            if (Args == null)
+                return null;
+
+            for (int i = 0; i < Args.Length - 1; ++i)
+                if (Args[i] == Flag)
+                    return Args[i + 1];
+            return null;
+        }
+
+        /// <summary>
+        /// Where playback should start, from --start MM:SS (or HH:MM:SS, or a
+        /// plain number of seconds). Defaults to the beginning.
+        ///
+        /// This replaces the hardcoded 30 minute fast-forward the client used to
+        /// do on every launch, which existed to skip the dull opening of one
+        /// particular recording and cost a second and a half of blank window.
+        /// </summary>
+        public static TimeSpan StartPosition(string[] Args)
+        {
+            string Given = FlagValue(Args, "--start");
+            if (Given == null)
+                return TimeSpan.Zero;
+
+            // Deliberately not TimeSpan.Parse: it reads "30:00" as thirty hours,
+            // then rejects it for being out of range. A timecode is what anyone
+            // typing this actually means.
+            string[] Parts = Given.Split(':');
+            double[] Fields = new double[Parts.Length];
+            for (int i = 0; i < Parts.Length; ++i)
+                if (!double.TryParse(Parts[i], System.Globalization.NumberStyles.Float,
+                                     System.Globalization.CultureInfo.InvariantCulture, out Fields[i]))
+                    throw new FormatException(
+                        "Could not read --start '" + Given + "'; expected [HH:]MM:SS or a number of seconds.");
+
+            double Total = 0;
+            foreach (double Field in Fields)
+                Total = Total * 60 + Field;
+
+            return TimeSpan.FromSeconds(Total);
+        }
+
+        /// <summary>
+        /// The playback speed to start at, from --speed N. Defaults to realtime.
+        /// </summary>
+        public static double StartSpeed(string[] Args)
+        {
+            string Given = FlagValue(Args, "--speed");
+            if (Given == null)
+                return 1.0;
+
+            double Speed;
+            if (!double.TryParse(Given, System.Globalization.NumberStyles.Float,
+                                 System.Globalization.CultureInfo.InvariantCulture, out Speed) || Speed <= 0)
+                throw new FormatException("Could not read --speed '" + Given + "'; expected a positive number.");
+            return Speed;
         }
 
         /// <summary>

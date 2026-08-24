@@ -108,6 +108,47 @@ namespace CTC
 
         #endregion
 
+        #region Event Raisers
+
+        // A restore has to tell the panels what changed, but an event can only be
+        // raised from the class that declares it, so these are the way in.
+
+        public void RaiseOpenContainer(ClientContainer Container)
+        {
+            if (OpenContainer != null)
+                OpenContainer(this, Container);
+        }
+
+        public void RaiseUpdateContainer(ClientContainer Container)
+        {
+            if (UpdateContainer != null)
+                UpdateContainer(this, Container);
+        }
+
+        public void RaiseCloseContainer(ClientContainer Container)
+        {
+            if (CloseContainer != null)
+                CloseContainer(this, Container);
+        }
+
+        /// <summary>
+        /// VIPPanel rebuilds its whole list from VIPList and ignores the creature
+        /// it is handed, so a null here is a valid "everything changed".
+        /// </summary>
+        public void RaiseVIPStatusChanged(ClientCreature Creature)
+        {
+            if (VIPStatusChanged != null)
+                VIPStatusChanged(this, Creature);
+        }
+
+        public void RaiseLogin()
+        {
+            if (Login != null)
+                Login(this);
+        }
+
+        #endregion
+
         public ClientViewport(TibiaGameData GameData, TibiaGameProtocol Protocol)
         {
             this.GameData = GameData;
@@ -286,6 +327,42 @@ namespace CTC
                     Map[Tile.Position] = Tile;
                 }
             }
+
+            ForgetCreaturesOutOfView();
+        }
+
+        /// <summary>
+        /// Drops creatures that are no longer anywhere: not on a tile, not on the
+        /// VIP list, and not us.
+        ///
+        /// The map is already pruned to a 19x15 window on every description, but
+        /// this dictionary was not, so it accumulated every creature seen for the
+        /// whole session. Nothing reads it - the protocol keeps its own cache of
+        /// the creatures it is allowed to refer to - so the growth went unnoticed
+        /// until snapshots started copying it.
+        /// </summary>
+        private void ForgetCreaturesOutOfView()
+        {
+            HashSet<UInt32> Visible = new HashSet<UInt32>();
+
+            foreach (ClientTile Tile in Map.AllTiles)
+                foreach (ClientThing Thing in Tile.Objects)
+                    if (Thing is ClientCreature)
+                        Visible.Add(((ClientCreature)Thing).ID);
+
+            foreach (UInt32 ID in VIPList.Keys)
+                Visible.Add(ID);
+
+            if (Player != null)
+                Visible.Add(Player.ID);
+
+            List<UInt32> Gone = new List<UInt32>();
+            foreach (UInt32 ID in Creatures.Keys)
+                if (!Visible.Contains(ID))
+                    Gone.Add(ID);
+
+            foreach (UInt32 ID in Gone)
+                Creatures.Remove(ID);
         }
 
         private void ProbeTileForCreatures(ClientTile Tile)

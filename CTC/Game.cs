@@ -26,9 +26,17 @@ namespace CTC
         /// </summary>
         private readonly String MoviePath;
 
+        /// <summary>
+        /// Where playback starts and how fast, from --start and --speed.
+        /// </summary>
+        private readonly TimeSpan StartPosition;
+        private readonly double StartSpeed;
+
         public Game(String[] Args)
         {
             MoviePath = AppPaths.ResolveRecording(Args);
+            StartPosition = AppPaths.StartPosition(Args);
+            StartSpeed = AppPaths.StartSpeed(Args);
 
             Graphics = new GraphicsDeviceManager(this);
             
@@ -82,7 +90,7 @@ namespace CTC
             Desktop.NeedsLayout = true;
 
             ///////////////////////////////////////////////////////////////////
-            // For debugging read a TMV file as input
+            // Read the TMV file we were pointed at
 
             FileInfo file = new FileInfo(MoviePath);
             Stream virtualStream = null;
@@ -93,32 +101,18 @@ namespace CTC
             else
                 virtualStream = fileStream;
 
-            // Add the initial state
-            TibiaMovieStream MovieStream = new TibiaMovieStream(virtualStream, file.Name);
-            ClientState State = new ClientState(MovieStream);
+            TibiaMovieRecording Recording = TibiaMovieRecording.Load(virtualStream, file.Name);
+            ClientState State = new ClientState(Recording);
 
-            MovieStream.PlaybackSpeed = 50;
-            State.ForwardTo(new TimeSpan(0, 30, 0));
+            // The tab wants a player name and the parser cannot read a creature
+            // before it has a Player, so always get as far as the login packet.
+            State.PrimeToLogin();
+            Desktop.AddClient(State);
 
-            // If fast-forwarded, client tab immediately,
-            // otherwise delay until we receive the login packet.
-            if (State.Viewport.Player == null)
-            {
-                State.Viewport.Login += delegate(ClientViewport Viewport)
-                {
-                    Desktop.AddClient(State);
-                };
-            }
-            else
-            {
-                Desktop.AddClient(State);
-            }
-
-            State.Update(new GameTime());
-            /*
-            while (MS.Elapsed.TotalMinutes < 0 || MS.Elapsed.Seconds < 0)
-                Protocol.parsePacket(InStream.Read());
-             */
+            State.Playback.Speed = StartSpeed;
+            State.Playback.Playing = true;
+            if (StartPosition > TimeSpan.Zero)
+                State.SeekTo(StartPosition);
         }
 
         /// <summary>
