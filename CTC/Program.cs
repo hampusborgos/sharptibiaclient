@@ -2,25 +2,43 @@ using System;
 
 namespace CTC
 {
-#if WINDOWS || XBOX
     static class Program
     {
         /// <summary>
         /// The main entry point for the application.
+        ///
+        /// Usage: CTC [path/to/recording.tmv]
+        /// With no argument, the first .tmv found next to the executable is played.
         /// </summary>
+        [STAThread]
         static void Main(string[] args)
         {
-            // Present the debug window
-            DebugWindow dbw = new DebugWindow();
-            dbw.Show();
+            // The old WinForms DebugWindow is gone; send the same log stream to stdout.
+            Log.Instance.OnLogMessage += WriteLogMessage;
 
-            // Then run the game
-            using (Game game = new Game())
+            try
             {
-                game.Run();
+                using (Game game = new Game(args))
+                {
+                    game.Run();
+                }
+            }
+            catch (System.IO.FileNotFoundException e)
+            {
+                // Missing Tibia.dat/Tibia.spr or recording: the message explains how to fix it.
+                Console.Error.WriteLine();
+                Console.Error.WriteLine(e.Message);
+                Console.Error.WriteLine();
+                Environment.Exit(1);
             }
         }
-    }
-#endif
-}
 
+        private static void WriteLogMessage(object sender, Log.Message message)
+        {
+            Console.WriteLine(
+                "[" + message.time.ToString("HH:mm:ss") + "] " +
+                message.level.ToString().ToUpperInvariant() + ": " +
+                message.text);
+        }
+    }
+}

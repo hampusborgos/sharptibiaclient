@@ -7,3 +7,13 @@ obj/x86/
 obj/
 bin/
 .DS_Store
+
+# Proprietary Tibia client data (extract from original/installers via innoextract)
+CTC/Data/
+# Original Tibia installers (not redistributable) - Tibia.dat/.spr are
+# extracted from original/installers/*.exe with innoextract
+original/
+original/installers/
+# Movie recordings - supply your own .tmv files
+recordings/
+*.tmv

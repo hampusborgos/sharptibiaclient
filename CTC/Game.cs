@@ -5,7 +5,6 @@ using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
@@ -22,8 +21,15 @@ namespace CTC
         GameDesktop Desktop;
         MouseState LastMouseState;
 
-        public Game()
+        /// <summary>
+        /// The .tmv recording to play back, resolved from the command line.
+        /// </summary>
+        private readonly String MoviePath;
+
+        public Game(String[] Args)
         {
+            MoviePath = AppPaths.ResolveRecording(Args);
+
             Graphics = new GraphicsDeviceManager(this);
             
 
@@ -44,7 +50,9 @@ namespace CTC
             base.Initialize();
 
             // Setup the window
-            IsFixedTimeStep = false;
+            // The original ran uncapped, which on modern hardware just pegs a GPU core.
+            IsFixedTimeStep = true;
+            TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 120.0);
             Graphics.SynchronizeWithVerticalRetrace = false;
             //graphics.GraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.One;
             //graphics.PreferWaitForVerticalTrace = false;
@@ -76,7 +84,7 @@ namespace CTC
             ///////////////////////////////////////////////////////////////////
             // For debugging read a TMV file as input
 
-            FileInfo file = new FileInfo("./Test.tmv");
+            FileInfo file = new FileInfo(MoviePath);
             Stream virtualStream = null;
 
             FileStream fileStream = file.OpenRead();

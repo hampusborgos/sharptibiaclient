@@ -22,8 +22,8 @@ namespace CTC
         public ClientState(PacketStream InStream)
         {
             this.InStream = InStream;
-            FileStream datFile = new FileStream("./Tibia.dat", FileMode.Open);
-            FileStream sprFile = new FileStream("./Tibia.spr", FileMode.Open);
+            FileStream datFile = new FileStream(AppPaths.GameDataFile("Tibia.dat"), FileMode.Open, FileAccess.Read);
+            FileStream sprFile = new FileStream(AppPaths.GameDataFile("Tibia.spr"), FileMode.Open, FileAccess.Read);
             GameData = new TibiaGameData(datFile, sprFile);
             Protocol = new TibiaGameProtocol(GameData);
             Viewport = new ClientViewport(GameData, Protocol);
@@ -62,7 +62,14 @@ namespace CTC
             TibiaMovieStream Movie = (TibiaMovieStream)InStream;
 
             while (Movie.Elapsed.TotalSeconds < Span.TotalSeconds)
-                Protocol.parsePacket(Movie.Read(null));
+            {
+                NetworkMessage nmsg = Movie.Read(null);
+                // Read returns null once the recording is exhausted; without this guard a
+                // movie shorter than Span walks off the end into a NullReferenceException.
+                if (nmsg == null)
+                    break;
+                Protocol.parsePacket(nmsg);
+            }
         }
 
         public void Update(GameTime Time)
