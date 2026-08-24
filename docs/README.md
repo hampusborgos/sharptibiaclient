@@ -7,6 +7,7 @@ need to know to build, run, test and change it today.
 | | |
 |---|---|
 | [building-and-running.md](building-and-running.md) | Toolchain, extracting the Tibia data files, running a recording |
+| [playback.md](playback.md) | How seeking a recording works, and what a snapshot has to copy |
 | [testing-interactions.md](testing-interactions.md) | Driving the interface from a script instead of the real mouse |
 | [ui-framework.md](ui-framework.md) | How the UI layer works, and the traps in it |
 | [port-notes.md](port-notes.md) | What changed moving off XNA, and why |
@@ -26,9 +27,10 @@ CTC/UI/         the widget framework and the panels built from it
 ```
 
 The split is worth preserving. `Protocol` and `Client` know nothing about
-drawing, which is what makes it possible to fast-forward a recording by
-feeding packets through without a renderer attached — `ClientState.ForwardTo`
-relies on exactly that.
+drawing, which is what makes it possible to reach any point in a recording by
+feeding packets through without a renderer attached — `ClientState.SeekTo` and
+the whole snapshot layer rely on exactly that, and `--verify-seek` exercises it
+with no graphics device at all. See [playback.md](playback.md).
 
 ## Conventions
 

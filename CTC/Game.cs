@@ -20,6 +20,7 @@ namespace CTC
 
         GameDesktop Desktop;
         MouseState LastMouseState;
+        KeyboardState LastKeyboardState;
 
         /// <summary>
         /// The .tmv recording to play back, resolved from the command line.
@@ -150,8 +151,16 @@ namespace CTC
             if (LastMouseState.X != mouse.X || LastMouseState.Y != mouse.Y)
                 Desktop.MouseMove(mouse);
 
+            // Then the keyboard, the same way: a key counts as pressed on the
+            // frame it first differs from the last poll.
+            KeyboardState keyboard = UIContext.Input.CurrentKeyboardState;
+            foreach (Keys key in keyboard.GetPressedKeys())
+                if (LastKeyboardState.IsKeyUp(key))
+                    Desktop.KeyPressed(key, keyboard);
+
             // Save the state for next frame so we can see what changed
             LastMouseState = mouse;
+            LastKeyboardState = keyboard;
 
             // Update the game state
             Desktop.Update(gameTime);

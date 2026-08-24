@@ -11,14 +11,18 @@ namespace CTC
     {
         public GameCanvas(ClientState State) : base(null, UIElementType.Window)
         {
+            this.State = State;
             Protocol = State.Protocol;
             Viewport = State.Viewport;
 
             RegisterEvents();
 
+            State.SeekCompleted += OnSeekCompleted;
+
             UpdateName();
         }
 
+        private ClientState State;
         private ClientViewport Viewport;
         private TibiaGameProtocol Protocol;
         private GameRenderer Renderer;
@@ -62,12 +66,20 @@ namespace CTC
         {
             base.Update(Time);
 
-            // TODO: cleanup animations outside view
-            foreach (TileAnimations Animations in PlayingAnimations.Values)
+            // Effects run on the playback clock, not the wall clock. They
+            // accumulate elapsed time, so left alone a spell at eight times speed
+            // would still take its full second to finish, and a paused client
+            // would go on animating.
+            GameTime EffectTime = ScaleToPlayback(Time);
+            if (EffectTime != null)
             {
-                foreach (GameEffect Effect in Animations.Effects)
-                    if (!Effect.Expired)
-                        Effect.Update(Time);
+                // TODO: cleanup animations outside view
+                foreach (TileAnimations Animations in PlayingAnimations.Values)
+                {
+                    foreach (GameEffect Effect in Animations.Effects)
+                        if (!Effect.Expired)
+                            Effect.Update(EffectTime);
+                }
             }
 
             LastCleanup += Time.ElapsedGameTime.TotalMilliseconds;
@@ -76,6 +88,34 @@ namespace CTC
                 Cleanup();
                 LastCleanup = 0;
             }
+        }
+
+        /// <summary>
+        /// Time as the recording sees it, or null when nothing should animate.
+        /// </summary>
+        private GameTime ScaleToPlayback(GameTime Time)
+        {
+            if (State.Playback == null)
+                return Time;
+
+            // Backwards, an effect has no meaning: it was cleared on the way in
+            // and would only be shown running the wrong way round.
+            if (!State.Playback.Playing || State.Playback.Direction < 0)
+                return null;
+
+            return new GameTime(
+                Time.TotalGameTime,
+                TimeSpan.FromTicks((long)(Time.ElapsedGameTime.Ticks * State.Playback.Speed)));
+        }
+
+        /// <summary>
+        /// Effects accumulate elapsed time from wherever they started, so there is
+        /// no meaningful way to move them to a new point on the timeline. They are
+        /// decoration; drop them and let the next packets put new ones up.
+        /// </summary>
+        private void OnSeekCompleted(ClientState State)
+        {
+            PlayingAnimations.Clear();
         }
 
         public void Cleanup()
@@ -198,6 +238,9 @@ namespace CTC
 
         private void OnShootEffect(Packet props)
         {
+            if (State.Seeking)
+                return;
+
             MapPosition FromPosition = (MapPosition)props["From"];
             MapPosition ToPosition = (MapPosition)props["To"];
             int Type = (int)props["Effect"];
@@ -218,6 +261,12 @@ namespace CTC
 
         private void OnMagicEffect(Packet props)
         {
+            // A seek rushes minutes of packets past in a few milliseconds. Left
+            // alone that would pile up every spell cast in between and play them
+            // all at once on arrival.
+            if (State.Seeking)
+                return;
+
             MapPosition Position = (MapPosition)props["Position"];
             MagicEffect Effect = new MagicEffect(Viewport.GameData, (int)props["Effect"]);
 
@@ -232,6 +281,9 @@ namespace CTC
 
         private void OnAnimatedText(Packet props)
         {
+            if (State.Seeking)
+                return;
+
             MapPosition Position = (MapPosition)props["Position"];
             String Text = (String)props["Text"];
             int Color = (int)props["Color"];

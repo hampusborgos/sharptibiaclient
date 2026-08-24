@@ -49,7 +49,8 @@ inside the parser rather than anything obvious. The csproj pins it:
 These were all latent in the original; the first is what actually stopped
 playback working.
 
-**Short reads on the gzip stream.** `TibiaMovieStream` ignored the return value
+**Short reads on the gzip stream.** `TibiaMovieStream` (since replaced by
+`TibiaMovieRecording`, which kept the fix) ignored the return value
 of every `Stream.Read`. A stream is only obliged to return *some* bytes, and
 `.tmv` files are read through a `GZipStream`, which returns short reads at its
 internal buffer boundaries. .NET Framework 4.0 happened to always fill the
@@ -93,12 +94,19 @@ readable outside the lit radius.
 
 ## Still outstanding
 
+- **The player has no name.** Nothing in the 7.4 protocol ever sends it for
+  your own character - the real client knew it from the login screen - so the
+  game tab reads `(Kolskagg.tmv)` with an empty name in front of it.
 - **The chat panel is dead.** `ActiveViewportChanged += Chat.OnNewState` is
   commented out in `GameDesktop.CreatePanels` — in the *original* source, not
   as a result of the port. It never receives a viewport, so it shows nothing.
-- Walking animation was never implemented (the original README says so).
-- Input is view-only: no keyboard handling at all, and the `send*` protocol
-  functions are unused.
+- Walking animation was never implemented (the original README says so). This
+  turns out to be load-bearing for backwards playback: with nothing tweened
+  between packets, applying reverse steps at 15Hz looks the same as applying
+  them every frame. See [playback.md](playback.md).
+- Input is view-only beyond the playback transport: the keyboard now reaches
+  `GameDesktop.KeyPressed`, but there is no focus system behind it, and the
+  `send*` protocol functions are still unused.
 - `MinimumChatHeight` is deliberately just the tab strip, because at wide short
   windows the 15x11 game view needs nearly all the height to reach the sidebar.
   Raising it reintroduces letterboxing at those window shapes.

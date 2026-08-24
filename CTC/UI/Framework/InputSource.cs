@@ -24,6 +24,8 @@ namespace CTC
 
         MouseState CurrentMouseState { get; }
 
+        KeyboardState CurrentKeyboardState { get; }
+
         /// <summary>
         /// Set by a script when it wants the frame just drawn saved to disk.
         /// The game clears it once the file has been written.
@@ -48,6 +50,11 @@ namespace CTC
             get { return Mouse.GetState(); }
         }
 
+        public KeyboardState CurrentKeyboardState
+        {
+            get { return Keyboard.GetState(); }
+        }
+
         public string PendingScreenshot { get; set; }
 
         public bool Finished
@@ -70,6 +77,9 @@ namespace CTC
     ///   down [right]    press the left, or right, button
     ///   up [right]      release it
     ///   click [right]   down then up, taking two frames
+    ///   keydown NAME    hold a key down, named as in Microsoft.Xna.Framework.Input.Keys
+    ///   keyup NAME      let it go
+    ///   key NAME        keydown then keyup, taking two frames
     ///   wait MS         hold still for MS milliseconds
     ///   shot PATH       save the next drawn frame as a png
     ///   quit            stop the game
@@ -88,6 +98,7 @@ namespace CTC
         private int Y;
         private ButtonState Left = ButtonState.Released;
         private ButtonState Right = ButtonState.Released;
+        private readonly List<Keys> Held = new List<Keys>();
 
         private double WaitRemaining;
 
@@ -117,6 +128,15 @@ namespace CTC
                     continue;
                 }
 
+                // Same for a key: the game only notices one that was up last frame
+                // and is down this one.
+                if (Next.Command == "key")
+                {
+                    Steps.Enqueue(new Step { Command = "keydown", Arguments = Next.Arguments });
+                    Steps.Enqueue(new Step { Command = "keyup", Arguments = Next.Arguments });
+                    continue;
+                }
+
                 Steps.Enqueue(Next);
             }
         }
@@ -130,6 +150,11 @@ namespace CTC
                     Left, ButtonState.Released, Right,
                     ButtonState.Released, ButtonState.Released);
             }
+        }
+
+        public KeyboardState CurrentKeyboardState
+        {
+            get { return new KeyboardState(Held.ToArray()); }
         }
 
         public void Update(GameTime Time)
@@ -172,6 +197,22 @@ namespace CTC
                         Left = ButtonState.Released;
                     break;
 
+                case "keydown":
+                    {
+                        Keys Key;
+                        if (ParseKey(Current.Arguments, out Key) && !Held.Contains(Key))
+                            Held.Add(Key);
+                    }
+                    break;
+
+                case "keyup":
+                    {
+                        Keys Key;
+                        if (ParseKey(Current.Arguments, out Key))
+                            Held.Remove(Key);
+                    }
+                    break;
+
                 case "wait":
                     WaitRemaining = ParseInt(Current.Arguments, 0);
                     break;
@@ -181,13 +222,33 @@ namespace CTC
                     break;
 
                 case "quit":
-                    Finished = true;
+                    // A screenshot is not written until the frame after the one
+                    // that asked for it, so quitting straight after a shot would
+                    // throw the file away. Wait a frame for it.
+                    if (PendingScreenshot != null)
+                        Steps.Enqueue(Current);
+                    else
+                        Finished = true;
                     break;
 
                 default:
                     Log.Warning("Unknown input script command: " + Current.Command, this);
                     break;
             }
+        }
+
+        private static bool ParseKey(string[] Arguments, out Keys Key)
+        {
+            Key = Keys.None;
+            if (Arguments.Length == 0)
+                return false;
+
+            if (!Enum.TryParse<Keys>(Arguments[0], true, out Key))
+            {
+                Log.Warning("Unknown key in input script: " + Arguments[0]);
+                return false;
+            }
+            return true;
         }
 
         private static bool IsRight(string[] Arguments)

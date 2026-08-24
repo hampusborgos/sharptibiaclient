@@ -62,19 +62,20 @@ With no argument it plays the first `.tmv` it finds next to the executable.
 Both missing-input cases fail with an actionable message rather than a stack
 trace.
 
+Playback starts at the beginning, at 1x. `--start MM:SS` and `--speed N` open
+somewhere else, which is mostly useful for getting a test to the same place
+twice. Everything they do is also on the transport under the game view, and in
+`docs/playback.md`.
+
+`--verify-seek` runs the snapshot machinery against a straight play-through and
+exits, without opening a window. Run it after changing anything in
+`CTC/Client/`.
+
 Paths resolve against `AppContext.BaseDirectory`, **not** the working
 directory. This matters: `dotnet run` sets the working directory to the
 *project* folder, and a macOS `.app` bundle gets `/`. The original code used
 `./Tibia.dat` and only worked because Visual Studio happened to launch from
 the output folder.
-
-## Startup is slow on purpose
-
-`Game.LoadContent` fast-forwards 30 minutes into the recording before the first
-frame is drawn (`Game.cs`, `State.ForwardTo`). That is several seconds of
-parsing with a blank window. It is not a hang. Drop it to `TimeSpan.Zero` while
-working on startup — that also exercises the deferred `Viewport.Login` path,
-which the 30 minute jump skips entirely.
 
 ## Content pipeline
 

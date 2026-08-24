@@ -19,12 +19,14 @@ One command per line, `#` for comments.
 | `move X Y` | Put the cursor at X Y, in **client** coordinates |
 | `down` / `up` | Press or release the left button (`down right` for the right) |
 | `click` | Expands to `down` then `up` on consecutive frames |
+| `keydown NAME` / `keyup NAME` | Hold or release a key, named as in XNA's `Keys` |
+| `key NAME` | Expands to `keydown` then `keyup`, for the same reason as `click` |
 | `wait MS` | Hold still for MS milliseconds |
 | `shot PATH` | Save the next drawn frame as a png |
 | `quit` | Stop the game |
 
 ```
-wait 1500            # let the 30 minute fast-forward finish
+wait 500
 move 953 10
 click
 wait 400
@@ -73,6 +75,7 @@ same reason, and a drag needs at least one `move` between `down` and `up`.
 ```csharp
 void Update(GameTime Time);
 MouseState CurrentMouseState { get; }
+KeyboardState CurrentKeyboardState { get; }
 string PendingScreenshot { get; set; }
 bool Finished { get; }
 ```
