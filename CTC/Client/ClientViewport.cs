@@ -53,6 +53,12 @@ namespace CTC
         public ClientMap Map = new ClientMap();
 
         /// <summary>
+        /// Ambient light for the whole scene, as sent by the server (0x82).
+        /// Level 255 is full daylight; the client ignores it underground.
+        /// </summary>
+        public LightSource WorldLight;
+
+        /// <summary>
         /// All open channels
         /// </summary>
         public Dictionary<UInt16, ClientChannel> Channels = new Dictionary<UInt16, ClientChannel>();
@@ -136,7 +142,8 @@ namespace CTC
             Protocol.CreatureShield.Add(OnCreatureShield);
             Protocol.CreatureSkull.Add(OnCreatureSkull);
             Protocol.CreatureHealth.Add(OnCreatureHealth);
-            Protocol.CreatureTurn.Add(OnCreatureLight);
+            Protocol.CreatureLight.Add(OnCreatureLight);
+            Protocol.WorldLight.Add(OnWorldLight);
 
             Protocol.CreatureSpeak.Add(OnCreatureSpeak);
             Protocol.OpenChannel.Add(OnOpenChannel);
@@ -333,6 +340,12 @@ namespace CTC
         {
             ClientCreature Creature = (ClientCreature)props["Creature"];
             Creature.Health = (int)props["Health"];
+        }
+
+        private void OnWorldLight(Packet props)
+        {
+            WorldLight.Level = (int)props["Level"];
+            WorldLight.Color = (int)props["Color"];
         }
 
         private void OnCreatureLight(Packet props)

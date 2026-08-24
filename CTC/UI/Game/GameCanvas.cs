@@ -25,6 +25,7 @@ namespace CTC
 
         private double LastCleanup = 0;
         private RenderTarget2D Backbuffer;
+        private RenderTarget2D Lightbuffer;
 
         private Dictionary<MapPosition, TileAnimations> PlayingAnimations = new Dictionary<MapPosition, TileAnimations>();
 
@@ -40,6 +41,13 @@ namespace CTC
                 Renderer = new GameRenderer(Viewport.GameData);
 
                 Backbuffer = new RenderTarget2D(
+                    UIContext.Graphics.GraphicsDevice,
+                    480, 352, false,
+                    SurfaceFormat.Color, DepthFormat.None, 0,
+                    RenderTargetUsage.PreserveContents
+                );
+
+                Lightbuffer = new RenderTarget2D(
                     UIContext.Graphics.GraphicsDevice,
                     480, 352, false,
                     SurfaceFormat.Color, DepthFormat.None, 0,
@@ -121,11 +129,27 @@ namespace CTC
             if (Batch == null)
                 Batch = new SpriteBatch(UIContext.Graphics.GraphicsDevice);
 
+            // Accumulate every light source into its own buffer, starting from
+            // the ambient level so unlit ground still gets the time-of-day tint.
+            UIContext.Graphics.GraphicsDevice.SetRenderTarget(Lightbuffer);
+            UIContext.Graphics.GraphicsDevice.Clear(
+                LightMap.Ambient(Viewport.WorldLight, Viewport.ViewPosition.Z));
+            Batch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
+            Renderer.DrawLights(Batch, Viewport);
+            Batch.End();
+
             // Draw the game to a backbuffer
             UIContext.Graphics.GraphicsDevice.SetRenderTarget(Backbuffer);
             Batch.Begin();
             Renderer.DrawScene(Batch, UIContext.GameTime, Viewport, PlayingAnimations);
             Batch.End();
+
+            // Multiply the light over the scene: unlit areas darken, lit areas
+            // keep their colour and pick up the light's tint.
+            Batch.Begin(SpriteSortMode.Deferred, LightMap.Multiply);
+            Batch.Draw(Lightbuffer, Vector2.Zero, Color.White);
+            Batch.End();
+
             UIContext.Graphics.GraphicsDevice.SetRenderTarget(null);
             
             // Then start the normal drawing cycle

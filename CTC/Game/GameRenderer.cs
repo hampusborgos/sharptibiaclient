@@ -427,6 +427,103 @@ namespace CTC
             }
         }
 
+        /// <summary>
+        /// Accumulates every light source on screen into the currently bound
+        /// render target. Walks the same floors and tiles as DrawScene so the
+        /// glows land exactly where the sprites that cast them were drawn.
+        ///
+        /// The caller is responsible for clearing the target to the ambient
+        /// colour first and for compositing the result over the scene.
+        /// </summary>
+        public void DrawLights(SpriteBatch Batch, ClientViewport Viewport)
+        {
+            MapPosition Center = Viewport.ViewPosition;
+
+            int StartZ = 7;
+            int EndZ = Center.Z;
+            if (Center.Z <= 7)
+            {
+                Center.Y -= (7 - Center.Z);
+                Center.X -= (7 - Center.Z);
+            }
+            else
+            {
+                StartZ = Math.Min(Center.Z + 2, 15);
+                EndZ = Center.Z;
+                Center.X -= 2;
+                Center.Y -= 2;
+            }
+
+            Vector2 TopLeft = new Vector2(
+                -(Center.X - 7) * 32,
+                -(Center.Y - 5) * 32
+            );
+
+            Texture2D Glow = LightMap.Glow(Batch.GraphicsDevice);
+
+            for (int Z = StartZ; Z >= EndZ; --Z)
+            {
+                // A tile's light can spill onto neighbours, so sweep a little
+                // wider than the visible area to avoid glows popping in at the
+                // screen edge.
+                for (int X = Center.X - 12; X <= Center.X + 13; ++X)
+                {
+                    for (int Y = Center.Y - 10; Y <= Center.Y + 11; ++Y)
+                    {
+                        ClientTile Tile = Viewport.Map[new MapPosition(X, Y, Z)];
+                        if (Tile == null)
+                            continue;
+
+                        Vector2 Position = new Vector2(32 * X + TopLeft.X, 32 * Y + TopLeft.Y);
+
+                        if (Tile.Ground != null && Tile.Ground.Type != null && Tile.Ground.Type.MakesLight)
+                            DrawLight(Batch, Glow, Position,
+                                Tile.Ground.Type.LightLevel, Tile.Ground.Type.LightColor);
+
+                        foreach (ClientThing Thing in Tile.ObjectsByDrawOrder)
+                        {
+                            if (Thing is ClientCreature)
+                            {
+                                ClientCreature Creature = (ClientCreature)Thing;
+                                DrawLight(Batch, Glow, Position,
+                                    Creature.Light.Level, Creature.Light.Color);
+                            }
+                            else
+                            {
+                                ClientItem Item = (ClientItem)Thing;
+                                if (Item.Type != null && Item.Type.MakesLight)
+                                    DrawLight(Batch, Glow, Position,
+                                        Item.Type.LightLevel, Item.Type.LightColor);
+                            }
+                        }
+                    }
+                }
+                TopLeft -= new Vector2(32, 32);
+            }
+        }
+
+        /// <summary>
+        /// Draws one radial glow. Level is a radius in tiles, Color an index
+        /// into the Tibia palette.
+        /// </summary>
+        private void DrawLight(SpriteBatch Batch, Texture2D Glow, Vector2 TilePosition, int Level, int Color)
+        {
+            if (Level <= 0)
+                return;
+
+            // Light is centred on the tile, not its top-left corner.
+            Vector2 Origin = TilePosition + new Vector2(16, 16);
+            float Radius = Level * 32.0f;
+
+            Rectangle Destination = new Rectangle(
+                (int)(Origin.X - Radius),
+                (int)(Origin.Y - Radius),
+                (int)(Radius * 2),
+                (int)(Radius * 2));
+
+            Batch.Draw(Glow, Destination, LightMap.FromEightBit(Color));
+        }
+
         #endregion
     }
 }
