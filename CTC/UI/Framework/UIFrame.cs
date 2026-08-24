@@ -90,6 +90,25 @@ namespace CTC
             return false;
         }
 
+        /// <summary>
+        /// Shifts the frame, and the anchor the drag is measured from, by the same
+        /// amount. Use this when reparenting a frame mid-drag: moving Bounds alone
+        /// would leave the drag anchor in the old parent's coordinates, and since
+        /// MouseMove recomputes Bounds from that anchor and then clamps against the
+        /// new parent, the frame could only ever be dragged away from where it
+        /// started, never back.
+        /// </summary>
+        public void OffsetWhileDragging(int dx, int dy)
+        {
+            Bounds.X += dx;
+            Bounds.Y += dy;
+
+            if (DraggedFromPosition != null)
+                DraggedFromPosition = new Vector2(
+                    DraggedFromPosition.Value.X + dx,
+                    DraggedFromPosition.Value.Y + dy);
+        }
+
         public override bool MouseMove(MouseState mouse)
         {
             if (BeingDraggedFrom != null)

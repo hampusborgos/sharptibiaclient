@@ -11,7 +11,14 @@ namespace CTC
     class GameSidebar : UIView
     {
         public UIStackView MenuView;
-        public UIStackView ContentView;
+
+        /// <summary>
+        /// One vertical stack per column. A window belongs to exactly one of
+        /// these, which is what lets it be dragged from one column to another:
+        /// with a single flowing stack, which column a window ended up in was
+        /// only ever a side effect of its position in the list.
+        /// </summary>
+        private List<UIStackView> ColumnViews = new List<UIStackView>();
 
         /// <summary>
         /// The current viewport that is displayed in the sidebar.
@@ -82,20 +89,84 @@ namespace CTC
             this.Viewport = Desktop.ActiveViewport;
             Desktop.ActiveViewportChanged += ViewportChanged;
             
-            ContentView = new UIStackView(UIStackDirection.Vertical, true);
-            ContentView.ZOrder = -1;
-
-            // The sidebar sizes the content view itself. Leaving this false would
-            // let UIStackView shrink Bounds.Height down to the content height once
-            // it has laid out, and since UIView.Update re-lays out any view with
-            // NeedsLayout set - without the sidebar getting a chance to restore the
-            // height first - the next pass would think it had only a couple of
-            // hundred pixels to work with and wrap into a new column immediately.
-            ContentView.Autoresizable = true;
-
             CreateMenu();
+        }
 
-            AddSubview(ContentView);
+        /// <summary>
+        /// Every window in the sidebar, left column first, top to bottom.
+        /// </summary>
+        public List<T> WindowsOfType<T>() where T : UIFrame
+        {
+            List<T> Found = new List<T>();
+            foreach (UIStackView Column in ColumnViews)
+                Found.AddRange(Column.SubviewsOfType<T>());
+            return Found;
+        }
+
+        private UIStackView NewColumn()
+        {
+            UIStackView Column = new UIStackView(UIStackDirection.Vertical);
+            Column.ZOrder = -1;
+
+            // The sidebar sizes its columns itself. Left false, UIStackView would
+            // shrink Bounds down to the content size once it had laid out, and
+            // since UIView.Update re-lays out any view with NeedsLayout set -
+            // without the sidebar getting a chance to restore the size first -
+            // the next pass would be working from the wrong bounds.
+            Column.Autoresizable = true;
+            return Column;
+        }
+
+        /// <summary>
+        /// Adds or drops column stacks to match the current width. Windows in a
+        /// column that no longer exists move to the last surviving one rather
+        /// than disappearing with it.
+        /// </summary>
+        private void EnsureColumns(int Wanted)
+        {
+            while (ColumnViews.Count > Wanted && ColumnViews.Count > 1)
+            {
+                UIStackView Dropped = ColumnViews[ColumnViews.Count - 1];
+                ColumnViews.RemoveAt(ColumnViews.Count - 1);
+
+                UIStackView Survivor = ColumnViews[ColumnViews.Count - 1];
+                foreach (UIFrame Window in Dropped.SubviewsOfType<UIFrame>())
+                {
+                    Dropped.RemoveSubview(Window);
+                    Survivor.AddSubview(Window);
+                }
+
+                RemoveSubview(Dropped);
+            }
+
+            while (ColumnViews.Count < Wanted)
+            {
+                UIStackView Column = NewColumn();
+                ColumnViews.Add(Column);
+                AddSubview(Column);
+            }
+        }
+
+        /// <summary>
+        /// The column a window currently lives in, or null if it is being dragged.
+        /// </summary>
+        private UIStackView ColumnOf(UIFrame Window)
+        {
+            foreach (UIStackView Column in ColumnViews)
+                if (Column.SubviewsOfType<UIFrame>().Contains(Window))
+                    return Column;
+            return null;
+        }
+
+        /// <summary>
+        /// Total height of the windows stacked in a column.
+        /// </summary>
+        private int ColumnContentHeight(UIStackView Column)
+        {
+            int Height = 0;
+            foreach (UIFrame Window in Column.SubviewsOfType<UIFrame>())
+                Height += Window.FullBounds.Height;
+            return Height;
         }
 
         protected void ViewportChanged(ClientViewport Viewport)
@@ -106,29 +177,44 @@ namespace CTC
         public void AddWindow(UIFrame Window)
         {
             Window.FrameStartedToMove += WindowStartedToMove;
-            Window.FrameMoved += WindowMoved;
             Window.FrameStoppedMoving += WindowStoppedMoving;
 
-            ContentView.AddSubview(Window);
+            EnsureColumns(Math.Max(1, Columns));
+
+            // Drop it into whichever column is currently the emptiest, so opening
+            // several windows spreads them out instead of piling up on the left.
+            UIStackView Target = ColumnViews[0];
+            foreach (UIStackView Column in ColumnViews)
+                if (ColumnContentHeight(Column) < ColumnContentHeight(Target))
+                    Target = Column;
+
+            Target.AddSubview(Window);
         }
+
+        /// <summary>
+        /// Where the column the drag started in sits, so the dragged window can be
+        /// kept under the cursor while it is parented to the sidebar instead.
+        /// </summary>
+        private Point DragOrigin = Point.Zero;
 
         private void WindowStartedToMove(UIFrame MovedFrame)
         {
-            // Remove it from content view and add it as a subview to this view
-            ContentView.RemoveSubview(MovedFrame);
-            ContentView.NeedsLayout = false;
+            // Take it out of its column and float it on the sidebar itself, so it
+            // draws above the other windows and is not laid out while dragging.
+            UIStackView Column = ColumnOf(MovedFrame);
+            if (Column != null)
+            {
+                DragOrigin = new Point(Column.Bounds.Left, Column.Bounds.Top);
+                Column.RemoveSubview(MovedFrame);
+                Column.NeedsLayout = false;
+            }
+
             AddSubview(MovedFrame);
             NeedsLayout = false;
 
-            // Offset it's position so it's still under the cursor
-            MovedFrame.Bounds.X += ContentView.Bounds.Left;
-            MovedFrame.Bounds.Y += ContentView.Bounds.Top;
-        }
-
-        private void WindowMoved(UIFrame MovedFrame)
-        {
-            // Offset it's position so it's still under the cursor
-            MovedFrame.Bounds.Y += ContentView.Bounds.Top;
+            // Move it into the sidebar's coordinates, drag anchor included, so it
+            // stays under the cursor and can be dragged freely in any direction.
+            MovedFrame.OffsetWhileDragging(DragOrigin.X, DragOrigin.Y);
         }
 
         private void WindowStoppedMoving(UIFrame MovedFrame)
@@ -136,11 +222,14 @@ namespace CTC
             // Put it back in this view
             RemoveSubview(MovedFrame);
 
+            EnsureColumns(Math.Max(1, Columns));
+            UIStackView Target = ColumnViews[ColumnIndexAt(MovedFrame)];
+
             UIFrame LastWindowAbove = null;
-            foreach (UIFrame Window in ContentView.SubviewsOfType<UIFrame>())
+            foreach (UIFrame Window in Target.SubviewsOfType<UIFrame>())
             {
                 // Check if dropped above another window
-                int TopOfWindow = ContentView.ClientBounds.Top + Window.Bounds.Y + Window.Bounds.Height / 2;
+                int TopOfWindow = Target.Bounds.Top + Window.Bounds.Y + Window.Bounds.Height / 2;
                 if (MovedFrame.Bounds.Y < TopOfWindow)
                 {
                     LastWindowAbove = Window;
@@ -148,11 +237,22 @@ namespace CTC
                 }
             }
 
-            // Add it to the content view again
+            // Add it back to the column it was dropped on
             if (LastWindowAbove != null)
-                ContentView.AddSubviewBefore(MovedFrame, LastWindowAbove);
+                Target.AddSubviewBefore(MovedFrame, LastWindowAbove);
             else
-                ContentView.AddSubview(MovedFrame);
+                Target.AddSubview(MovedFrame);
+        }
+
+        /// <summary>
+        /// Which column a dropped window landed on. Measured from the middle of
+        /// the window, so one straddling a boundary goes where most of it is.
+        /// </summary>
+        private int ColumnIndexAt(UIFrame MovedFrame)
+        {
+            int Middle = MovedFrame.Bounds.X + MovedFrame.Bounds.Width / 2 - ClientBounds.Left;
+            int Index = Middle / ColumnWidth;
+            return (int)MathHelper.Clamp(Index, 0, ColumnViews.Count - 1);
         }
 
         /// <summary>
@@ -249,13 +349,20 @@ namespace CTC
             MenuView.LayoutSubviews();
 
             int MenuHeight = MenuView.Bounds.Height;
-            ContentView.Bounds = new Rectangle
+
+            // Lay the columns out side by side under the menu. Each is exactly one
+            // window wide, which is what makes the drop target unambiguous.
+            EnsureColumns(Columns);
+            for (int i = 0; i < ColumnViews.Count; ++i)
             {
-                X = cb.Left,
-                Y = cb.Top + MenuHeight,
-                Width = cb.Width,
-                Height = cb.Height - MenuHeight
-            };
+                ColumnViews[i].Bounds = new Rectangle
+                {
+                    X = cb.Left + i * ColumnWidth,
+                    Y = cb.Top + MenuHeight,
+                    Width = ColumnWidth,
+                    Height = cb.Height - MenuHeight
+                };
+            }
 
             base.LayoutSubviews();
         }
