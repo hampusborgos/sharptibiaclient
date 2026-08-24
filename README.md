@@ -1,4 +1,8 @@
 #Sharp Tibia Client
+
+*Now builds and runs on macOS, Windows and Linux via .NET 10 and MonoGame.
+See [docs/](docs/) for building, testing and architecture notes.*
+
 This is a protocol 7.4 compatible Tibia client written entirely in C#. This is a mostly abandoned project I did for fun several years ago, as such it is not complete by any measure.
 
 #Feature support
