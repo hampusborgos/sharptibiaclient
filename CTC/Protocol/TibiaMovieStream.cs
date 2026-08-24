@@ -51,6 +51,36 @@ namespace CTC
         public double PlaybackSpeed = 1;
 
         /// <summary>
+        /// Set once the underlying stream has been exhausted.
+        /// </summary>
+        public Boolean AtEnd { get; private set; }
+
+        /// <summary>
+        /// Fills Buffer with exactly Count bytes, returning false if the stream ends first.
+        ///
+        /// Stream.Read is only ever obliged to return *some* bytes, and the movie files are
+        /// read through a GZipStream, which routinely returns short reads at its internal
+        /// buffer boundaries. The original code ignored the return value entirely, which
+        /// happened to work on .NET Framework 4.0 but silently corrupts the packet stream
+        /// on modern .NET.
+        /// </summary>
+        private Boolean ReadExact(byte[] Buffer, int Count)
+        {
+            int Offset = 0;
+            while (Offset < Count)
+            {
+                int Read = File.Read(Buffer, Offset, Count - Offset);
+                if (Read <= 0)
+                {
+                    AtEnd = true;
+                    return false;
+                }
+                Offset += Read;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Construct a TibiaMovieStream from a normal stream
         /// </summary>
         /// <param name="file">The stream to read from, this can be any type of stream. TibiaMovieStream assumes ownership of it.</param>
@@ -79,7 +109,8 @@ namespace CTC
 
             // Read duration
             byte[] bytesDuration = new byte[4];
-            File.Read(bytesDuration, 0, 4);
+            if (!ReadExact(bytesDuration, 4))
+                throw new EndOfStreamException("Truncated movie header in " + fileName);
             Duration = new TimeSpan(TimeSpan.TicksPerSecond * BitConverter.ToInt32(bytesDuration, 0));
 
             // File pointer is now where we want it, at the start of the stream
@@ -103,9 +134,19 @@ namespace CTC
             if (PendingPackets.Count > 0)
                 return PendingPackets.Dequeue();
 
+            if (AtEnd)
+                return null;
+
             while (true)
             {
                 int chunkType = File.ReadByte();
+
+                if (chunkType < 0)
+                {
+                    // End of the movie.
+                    AtEnd = true;
+                    return null;
+                }
 
                 if (chunkType == 1)
                 {
@@ -116,12 +157,14 @@ namespace CTC
                 {
                     // Read delay
                     byte[] bytesDelay = new byte[4];
-                    File.Read(bytesDelay, 0, 4);
+                    if (!ReadExact(bytesDelay, 4))
+                        return null;
                     int delay = System.BitConverter.ToInt32(bytesDelay, 0);
                     Elapsed = new TimeSpan(Elapsed.Ticks + delay * TimeSpan.TicksPerMillisecond);
 
                     byte[] bytesChunkLength = new byte[2];
-                    File.Read(bytesChunkLength, 0, 2);
+                    if (!ReadExact(bytesChunkLength, 2))
+                        return null;
                     int chunkLength = System.BitConverter.ToUInt16(bytesChunkLength, 0);
 
                     int bytesRead = 0;
@@ -129,13 +172,18 @@ namespace CTC
                     {
                         // Data chunk
                         byte[] bytesPacketLength = new byte[2];
-                        File.Read(bytesPacketLength, 0, 2);
+                        if (!ReadExact(bytesPacketLength, 2))
+                            return null;
                         int packetLength = BitConverter.ToUInt16(bytesPacketLength, 0);
                         bytesRead += 2;
 
+                        byte[] bytesPacket = new byte[packetLength];
+                        if (!ReadExact(bytesPacket, packetLength))
+                            return null;
+
                         NetworkMessage msg = new NetworkMessage(true);
                         for (int i = 0; i < packetLength; ++i)
-                            msg.AddByte(File.ReadByte());
+                            msg.AddByte(bytesPacket[i]);
                         bytesRead += packetLength;
 
                         PendingPackets.Enqueue(msg);

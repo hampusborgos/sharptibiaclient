@@ -678,7 +678,9 @@ namespace CTC
                                 break;
                             }
                         default:
-                            Log.Warning("Unknown speak class " + (int)props["MessageType"], this);
+                            // props["MessageType"] is never assigned in this parser; reading it
+                            // back unboxed a null and turned an unknown speak class into a crash.
+                            Log.Warning("Unknown speak class " + (int)Message.Type, this);
                             return null;
                     }
                     props["Message"] = Message;

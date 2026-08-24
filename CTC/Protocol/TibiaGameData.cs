@@ -10,6 +10,7 @@ namespace CTC
     {
         public readonly int Version = 740;
         UInt32 DatVersion, SprVersion;
+        UInt16 SpriteCount;
         UInt16 EffectCount, DistanceCount, CreatureCount, ItemCount;
         Dictionary<int, GameImage> Images = new Dictionary<int, GameImage>();
         Dictionary<int, GameSprite> Sprites = new Dictionary<int, GameSprite>();
@@ -19,14 +20,14 @@ namespace CTC
         private UInt32 ReadU32(Stream file)
         {
             byte[] u32 = new byte[4];
-            file.Read(u32, 0, 4);
+            file.ReadExactly(u32, 0, 4);
             return BitConverter.ToUInt32(u32, 0);
         }
 
         private UInt16 ReadU16(Stream file)
         {
             byte[] u16 = new byte[2];
-            file.Read(u16, 0, 2);
+            file.ReadExactly(u16, 0, 2);
             return BitConverter.ToUInt16(u16, 0);
         }
 
@@ -35,6 +36,7 @@ namespace CTC
             this.SpriteFile = SpriteFile;
 
             SprVersion = ReadU32(SpriteFile);
+            SpriteCount = ReadU16(SpriteFile);
             DatVersion = ReadU32(DatFile);
 
 	        //get max id
@@ -278,13 +280,32 @@ namespace CTC
         }
 
 
+        /// <summary>
+        /// An empty dump, meaning a fully transparent sprite. LoadRGBA turns a zero-length
+        /// dump into a blank 32x32 tile, which is what an absent sprite should look like.
+        /// </summary>
+        private static readonly Byte[] EmptySpriteDump = new Byte[0];
+
         public Byte[] LoadSpriteDump(int id)
         {
+            // Sprite ids are 1-based and the offset table only covers SpriteCount entries.
+            // Out-of-range ids would seek into the middle of the sprite data and read a
+            // nonsense length; empty sprites legitimately carry an offset of 0.
+            if (id < 1 || id > SpriteCount)
+                return EmptySpriteDump;
+
             SpriteFile.Seek(2 + id * 4, SeekOrigin.Begin);
             UInt32 target = ReadU32(SpriteFile);
+            if (target == 0 || target + 5 > SpriteFile.Length)
+                return EmptySpriteDump;
+
             SpriteFile.Seek(target + 3, SeekOrigin.Begin);
-            Byte[] buffer = new Byte[ReadU16(SpriteFile)];
-            SpriteFile.Read(buffer, 0, buffer.Length);
+            int length = ReadU16(SpriteFile);
+            if (length == 0 || SpriteFile.Position + length > SpriteFile.Length)
+                return EmptySpriteDump;
+
+            Byte[] buffer = new Byte[length];
+            SpriteFile.ReadExactly(buffer, 0, buffer.Length);
             return buffer;
         }
     }
