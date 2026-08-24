@@ -110,8 +110,13 @@ namespace CTC
 
             if (!Autoresizable)
             {
-                Bounds.Width = RowLeft;
                 Bounds.Height = RowTop + HighestThisRow;
+
+                // Width is what decides where rows wrap. Overwriting it with the
+                // content width would make the next layout pass see a narrower
+                // view and wrap earlier, a row at a time, until it collapsed.
+                if (!Overflow)
+                    Bounds.Width = RowLeft;
             }
         }
 
@@ -157,7 +162,11 @@ namespace CTC
             if (!Autoresizable)
             {
                 Bounds.Width = ColumnLeft + WidestThisColumn;
-                Bounds.Height = ColumnTop;
+
+                // Likewise, height is the constraint that decides where columns
+                // wrap, so an overflowing stack must not shrink it to content.
+                if (!Overflow)
+                    Bounds.Height = ColumnTop;
             }
         }
     }

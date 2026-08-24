@@ -35,6 +35,14 @@ namespace CTC
         ChatPanel Chat;
         GameFrame Frame;
 
+        /// <summary>
+        /// The chat never gets squeezed below this, however wide the window is.
+        /// Deliberately just its tab strip: the game view reaching the sidebar
+        /// takes priority, and at wide, short window shapes the 15x11 view needs
+        /// nearly all the height to get there.
+        /// </summary>
+        private const int MinimumChatHeight = 40;
+
         SpriteBatch ForegroundBatch;
 
         protected ClientState ActiveClient
@@ -159,6 +167,10 @@ namespace CTC
             Bounds.Width = UIContext.GameWindowSize.Width;
             Bounds.Height = UIContext.GameWindowSize.Height;
 
+            // Settle the sidebar width first: it is user draggable, and both the
+            // game view and the chat get whatever is left over.
+            Sidebar.ResolveWidth(ClientBounds.Width);
+
             // Resize the sidebar to fit
             Sidebar.Bounds = new Rectangle
             {
@@ -168,20 +180,29 @@ namespace CTC
                 Width = Sidebar.FullBounds.Width
             }.Subtract(Sidebar.Margin);
 
+            int RemainingWidth = ClientBounds.Width - Sidebar.FullBounds.Width;
+
+            // Give the game view exactly the height it needs to span that width,
+            // so it reaches the sidebar instead of being letterboxed, and let the
+            // chat have the rest. The chat keeps a usable minimum either way.
+            int FrameHeight = Frame.PreferredHeightForWidth(RemainingWidth);
+            FrameHeight = (int)MathHelper.Clamp(
+                FrameHeight, 0, Math.Max(0, ClientBounds.Height - MinimumChatHeight));
+
             Chat.Bounds = new Rectangle
             {
                 X = ClientBounds.Top,
-                Y = ClientBounds.Height - Chat.FullBounds.Height,
-                Width = ClientBounds.Width - Sidebar.FullBounds.Width,
-                Height = Chat.Bounds.Height
+                Y = ClientBounds.Top + FrameHeight,
+                Width = RemainingWidth,
+                Height = ClientBounds.Height - FrameHeight
             }.Subtract(Chat.Margin);
 
             Frame.Bounds = new Rectangle
             {
                 X = ClientBounds.Top,
                 Y = ClientBounds.Left,
-                Width = ClientBounds.Width - Sidebar.FullBounds.Width,
-                Height = ClientBounds.Height - Chat.Bounds.Height
+                Width = RemainingWidth,
+                Height = FrameHeight
             }.Subtract(Frame.Margin);
 
             base.LayoutSubviews();

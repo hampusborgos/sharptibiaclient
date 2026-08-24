@@ -34,9 +34,40 @@ namespace CTC
         InventoryPanel InventoryView;
 
         /// <summary>
-        /// How many columns are in this sidebar
+        /// Width of a single window column. Every panel in the sidebar is built
+        /// to this width, so it is also the smallest the sidebar can be dragged.
         /// </summary>
-        public int Columns = 2;
+        public const int ColumnWidth = 176;
+
+        /// <summary>
+        /// How wide the grab strip along the left edge is.
+        /// </summary>
+        private const int ResizeHandleWidth = 6;
+
+        /// <summary>
+        /// How many columns of windows currently fit. Derived from the width.
+        /// </summary>
+        public int Columns { get; private set; }
+
+        /// <summary>
+        /// The width the user has dragged the sidebar to. The actual width snaps
+        /// to a whole number of columns, so windows never leave a dead strip.
+        /// </summary>
+        private int RequestedWidth = ColumnWidth * 2;
+
+        /// <summary>
+        /// Where the drag started, while the left edge is being dragged.
+        /// </summary>
+        private Vector2? ResizingFrom = null;
+        private int ResizeStartWidth = 0;
+
+        /// <summary>
+        /// The sidebar always keeps room for at least one column of windows.
+        /// </summary>
+        public int MinimumWidth
+        {
+            get { return ColumnWidth + SkinPadding.TotalWidth; }
+        }
 
         /// <summary>
         /// Need a reference to be able to unsubscribe to state change events.
@@ -51,8 +82,16 @@ namespace CTC
             this.Viewport = Desktop.ActiveViewport;
             Desktop.ActiveViewportChanged += ViewportChanged;
             
-            ContentView = new UIStackView(UIStackDirection.Vertical);
+            ContentView = new UIStackView(UIStackDirection.Vertical, true);
             ContentView.ZOrder = -1;
+
+            // The sidebar sizes the content view itself. Leaving this false would
+            // let UIStackView shrink Bounds.Height down to the content height once
+            // it has laid out, and since UIView.Update re-lays out any view with
+            // NeedsLayout set - without the sidebar getting a chance to restore the
+            // height first - the next pass would think it had only a couple of
+            // hundred pixels to work with and wrap into a new column immediately.
+            ContentView.Autoresizable = true;
 
             CreateMenu();
 
@@ -116,9 +155,83 @@ namespace CTC
                 ContentView.AddSubview(MovedFrame);
         }
 
+        /// <summary>
+        /// Settles how wide the sidebar is, snapped to a whole number of columns
+        /// and never wider than half the space it has been given.
+        ///
+        /// The desktop calls this before laying out, because it needs the final
+        /// width to know how much room is left for the game view.
+        /// </summary>
+        public void ResolveWidth(int AvailableWidth)
+        {
+            int MaxColumns = Math.Max(1, (AvailableWidth / 2) / ColumnWidth);
+
+            int DesiredClientWidth = RequestedWidth - SkinPadding.TotalWidth;
+            int WantedColumns = (DesiredClientWidth + ColumnWidth / 2) / ColumnWidth;
+
+            Columns = (int)MathHelper.Clamp(WantedColumns, 1, MaxColumns);
+            Bounds.Width = ColumnWidth * Columns + SkinPadding.TotalWidth;
+        }
+
+        /// <summary>
+        /// True if the given screen coordinate is on the drag strip.
+        /// </summary>
+        private bool OverResizeHandle(MouseState mouse)
+        {
+            Rectangle Screen = ScreenBounds;
+            return mouse.X >= Screen.Left
+                && mouse.X < Screen.Left + ResizeHandleWidth
+                && mouse.Y >= Screen.Top
+                && mouse.Y < Screen.Bottom;
+        }
+
+        public override bool MouseLeftClick(MouseState mouse)
+        {
+            if (mouse.LeftButton == ButtonState.Pressed)
+            {
+                if (ResizingFrom == null && OverResizeHandle(mouse) && CaptureMouse())
+                {
+                    ResizingFrom = new Vector2(mouse.X, mouse.Y);
+                    ResizeStartWidth = Bounds.Width;
+                    return true;
+                }
+            }
+            else if (ResizingFrom != null)
+            {
+                ResizingFrom = null;
+                ReleaseMouse();
+                return true;
+            }
+
+            return base.MouseLeftClick(mouse);
+        }
+
+        public override bool MouseMove(MouseState mouse)
+        {
+            if (ResizingFrom != null)
+            {
+                // The sidebar is anchored to the right, so dragging the left
+                // edge further left makes it wider.
+                int Delta = (int)(ResizingFrom.Value.X - mouse.X);
+                RequestedWidth = Math.Max(MinimumWidth, ResizeStartWidth + Delta);
+
+                // The game view has to give up the space, so relayout from the top.
+                Desktop.NeedsLayout = true;
+                return true;
+            }
+
+            return base.MouseMove(mouse);
+        }
+
+        public override bool MouseLost()
+        {
+            ResizingFrom = null;
+            return base.MouseLost();
+        }
+
         public override void LayoutSubviews()
         {
-            Bounds.Width = 176 * Columns + SkinPadding.TotalWidth;
+            ResolveWidth(Parent != null ? Parent.ClientBounds.Width : Bounds.Width * 2);
 
             Rectangle cb = ClientBounds;
             MenuView.Bounds = new Rectangle
@@ -126,14 +239,22 @@ namespace CTC
                 X = cb.Left,
                 Y = cb.Top,
                 Width = cb.Width,
-                Height = 15
+                Height = MenuView.Bounds.Height
             };
+
+            // The menu is a wrapping horizontal stack, so at narrow widths the
+            // toggles spill onto extra rows. Lay it out now and read back the
+            // height it actually needs, otherwise the windows below would be
+            // tucked underneath the second row of buttons.
+            MenuView.LayoutSubviews();
+
+            int MenuHeight = MenuView.Bounds.Height;
             ContentView.Bounds = new Rectangle
             {
                 X = cb.Left,
-                Y = cb.Top + MenuView.Bounds.Height,
+                Y = cb.Top + MenuHeight,
                 Width = cb.Width,
-                Height = cb.Height - MenuView.Bounds.Height
+                Height = cb.Height - MenuHeight
             };
 
             base.LayoutSubviews();

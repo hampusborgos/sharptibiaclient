@@ -27,14 +27,31 @@ namespace CTC
             InsertTab(Tabs.Count - 1, State.Viewport.Player.Name + "(" + State.HostName + ")");
         }
 
+        /// <summary>
+        /// The game view is a fixed 480x352 window onto the map, so the height
+        /// the frame wants is dictated by how wide it is allowed to be. The
+        /// desktop uses this to hand the frame exactly enough room for the view
+        /// to reach the sidebar without leaving bars down either side.
+        /// </summary>
+        public int PreferredHeightForWidth(int Width)
+        {
+            // Whatever the skin and tab bar take off the top and sides.
+            int ChromeWidth = Bounds.Width - ClientBounds.Width;
+            int ChromeHeight = Bounds.Height - ClientBounds.Height;
+
+            int CanvasWidth = Math.Max(1, Width - ChromeWidth);
+            return (int)Math.Ceiling(CanvasWidth * 352.0 / 480.0) + ChromeHeight;
+        }
+
         public override void LayoutSubviews()
         {
             if (ActiveCanvas != null)
             {
-                double Scale;
-                if (ClientBounds.Width * 3 < ClientBounds.Height * 4)
-                    Scale = ClientBounds.Width / 480f;
-                else
+                // Fill the width, so the view runs right up to the sidebar.
+                // Only fall back to fitting the height if the frame is too
+                // short to show the whole view at that scale.
+                double Scale = ClientBounds.Width / 480f;
+                if (352 * Scale > ClientBounds.Height)
                     Scale = ClientBounds.Height / 352f;
 
                 ActiveCanvas.Bounds = new Rectangle
@@ -42,7 +59,8 @@ namespace CTC
                     Width = (int)(480 * Scale),
                     Height = (int)(352 * Scale)
                 };
-                ActiveCanvas.Bounds.X = (ClientBounds.Width - ActiveCanvas.Bounds.Width) / 2;
+                ActiveCanvas.Bounds.X = ClientBounds.Left
+                    + (ClientBounds.Width - ActiveCanvas.Bounds.Width) / 2;
                 ActiveCanvas.Bounds.Y = ClientBounds.Top;
             }
             base.LayoutSubviews();
