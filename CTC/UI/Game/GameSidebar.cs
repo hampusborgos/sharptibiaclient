@@ -177,6 +177,7 @@ namespace CTC
         public void AddWindow(UIFrame Window)
         {
             Window.FrameStartedToMove += WindowStartedToMove;
+            Window.FrameMoved += WindowMoved;
             Window.FrameStoppedMoving += WindowStoppedMoving;
 
             EnsureColumns(Math.Max(1, Columns));
@@ -197,6 +198,11 @@ namespace CTC
         /// </summary>
         private Point DragOrigin = Point.Zero;
 
+        /// <summary>
+        /// Translucent stand-in showing where the dragged window will land.
+        /// </summary>
+        private UIDropPlaceholder Placeholder = null;
+
         private void WindowStartedToMove(UIFrame MovedFrame)
         {
             // Take it out of its column and float it on the sidebar itself, so it
@@ -205,8 +211,14 @@ namespace CTC
             if (Column != null)
             {
                 DragOrigin = new Point(Column.Bounds.Left, Column.Bounds.Top);
+
+                // Swap the window for a ghost of it in the very same slot, so
+                // nothing moves until the drag actually reaches somewhere else.
+                int Slot = Column.Subviews.IndexOf(MovedFrame);
+                Placeholder = new UIDropPlaceholder(MovedFrame);
+
                 Column.RemoveSubview(MovedFrame);
-                Column.NeedsLayout = false;
+                InsertAt(Column, Placeholder, Slot);
             }
 
             AddSubview(MovedFrame);
@@ -217,31 +229,73 @@ namespace CTC
             MovedFrame.OffsetWhileDragging(DragOrigin.X, DragOrigin.Y);
         }
 
+        private void WindowMoved(UIFrame MovedFrame)
+        {
+            MovePlaceholderUnder(MovedFrame);
+        }
+
         private void WindowStoppedMoving(UIFrame MovedFrame)
         {
+            // UIFrame raises this from MouseLost, which also fires when focus is
+            // simply taken by another view, so there is not always a drag to end.
+            if (Placeholder == null)
+                return;
+
             // Put it back in this view
             RemoveSubview(MovedFrame);
+
+            MovePlaceholderUnder(MovedFrame);
+
+            // Drop it exactly where the ghost has been showing it would go.
+            UIStackView Target = (UIStackView)Placeholder.Parent;
+            int Slot = Target.Subviews.IndexOf(Placeholder);
+
+            Target.RemoveSubview(Placeholder);
+            Placeholder = null;
+
+            InsertAt(Target, MovedFrame, Slot);
+        }
+
+        /// <summary>
+        /// Puts the ghost in the slot the window would drop into right now. The
+        /// column comes from the middle of the dragged window, the position
+        /// within it from comparing against the midpoint of each window there.
+        /// </summary>
+        private void MovePlaceholderUnder(UIFrame MovedFrame)
+        {
+            if (Placeholder == null)
+                return;
 
             EnsureColumns(Math.Max(1, Columns));
             UIStackView Target = ColumnViews[ColumnIndexAt(MovedFrame)];
 
-            UIFrame LastWindowAbove = null;
-            foreach (UIFrame Window in Target.SubviewsOfType<UIFrame>())
+            // Take the ghost out first, so the slots counted below are the ones
+            // the remaining windows actually occupy.
+            if (Placeholder.Parent != null)
+                Placeholder.Parent.RemoveSubview(Placeholder);
+
+            int Slot = 0;
+            foreach (UIView Window in Target.Subviews)
             {
-                // Check if dropped above another window
-                int TopOfWindow = Target.Bounds.Top + Window.Bounds.Y + Window.Bounds.Height / 2;
-                if (MovedFrame.Bounds.Y < TopOfWindow)
-                {
-                    LastWindowAbove = Window;
+                int MiddleOfWindow = Target.Bounds.Top + Window.Bounds.Y + Window.Bounds.Height / 2;
+                if (MovedFrame.Bounds.Y < MiddleOfWindow)
                     break;
-                }
+                ++Slot;
             }
 
-            // Add it back to the column it was dropped on
-            if (LastWindowAbove != null)
-                Target.AddSubviewBefore(MovedFrame, LastWindowAbove);
+            InsertAt(Target, Placeholder, Slot);
+        }
+
+        /// <summary>
+        /// Adds a view to a column at a given position in the stack.
+        /// </summary>
+        private void InsertAt(UIView Column, UIView View, int Slot)
+        {
+            List<UIView> Order = Column.Subviews;
+            if (Slot >= 0 && Slot < Order.Count)
+                Column.AddSubviewBefore(View, Order[Slot]);
             else
-                Target.AddSubview(MovedFrame);
+                Column.AddSubview(View);
         }
 
         /// <summary>
