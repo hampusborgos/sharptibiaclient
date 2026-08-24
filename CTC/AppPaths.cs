@@ -49,15 +49,37 @@ namespace CTC
         }
 
         /// <summary>
+        /// The first bare argument, skipping any --flag together with its value.
+        /// </summary>
+        private static string FirstNonFlag(string[] Args)
+        {
+            if (Args == null)
+                return null;
+
+            for (int i = 0; i < Args.Length; ++i)
+            {
+                if (Args[i].StartsWith("--"))
+                {
+                    // Every flag the client takes also has a value after it.
+                    ++i;
+                    continue;
+                }
+                return Args[i];
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Picks the recording to play: the first command line argument if given (resolved
         /// against the shell's working directory, so tab completion works), otherwise the
         /// first .tmv found next to the executable.
         /// </summary>
         public static string ResolveRecording(string[] Args)
         {
-            if (Args != null && Args.Length > 0)
+            string Given = FirstNonFlag(Args);
+            if (Given != null)
             {
-                string Requested = Path.GetFullPath(Args[0]);
+                string Requested = Path.GetFullPath(Given);
                 if (!File.Exists(Requested))
                     throw new FileNotFoundException("No such recording: " + Requested, Requested);
                 return Requested;

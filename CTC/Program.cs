@@ -16,6 +16,17 @@ namespace CTC
             // The old WinForms DebugWindow is gone; send the same log stream to stdout.
             Log.Instance.OnLogMessage += WriteLogMessage;
 
+            // --input-script <file> drives the interface from a script instead of
+            // the real mouse, so interaction tests do not move the user's cursor.
+            for (int i = 0; i < args.Length - 1; ++i)
+            {
+                if (args[i] == "--input-script")
+                {
+                    UIContext.Input = new ScriptedInputSource(args[i + 1]);
+                    break;
+                }
+            }
+
             try
             {
                 using (Game game = new Game(args))

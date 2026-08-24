@@ -35,6 +35,12 @@ namespace CTC
 
         public static UIView MouseFocusedPanel;
 
+        /// <summary>
+        /// Where mouse state comes from. Swapped for a scripted source when the
+        /// interface is being driven by a test.
+        /// </summary>
+        public static IInputSource Input = new SystemInputSource();
+
         public static Boolean SkinChanged;
         public static UISkin Skin;
         public static SpriteFont StandardFont;

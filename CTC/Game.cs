@@ -137,7 +137,11 @@ namespace CTC
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            MouseState mouse = Mouse.GetState();
+            UIContext.Input.Update(gameTime);
+            MouseState mouse = UIContext.Input.CurrentMouseState;
+
+            if (UIContext.Input.Finished)
+                Exit();
 
             // Do input handling
 
@@ -179,6 +183,36 @@ namespace CTC
             }
 
             base.Draw(gameTime);
+
+            SaveScreenshotIfRequested();
+        }
+
+        /// <summary>
+        /// Writes the frame that was just drawn to disk, when a script asked for
+        /// it. Reading the back buffer here means a test gets exactly what the
+        /// user would see, without going anywhere near the window server.
+        /// </summary>
+        private void SaveScreenshotIfRequested()
+        {
+            string Path = UIContext.Input.PendingScreenshot;
+            if (Path == null)
+                return;
+            UIContext.Input.PendingScreenshot = null;
+
+            int Width = GraphicsDevice.PresentationParameters.BackBufferWidth;
+            int Height = GraphicsDevice.PresentationParameters.BackBufferHeight;
+
+            Color[] Pixels = new Color[Width * Height];
+            GraphicsDevice.GetBackBufferData(Pixels);
+
+            using (Texture2D Frame = new Texture2D(GraphicsDevice, Width, Height))
+            {
+                Frame.SetData(Pixels);
+                using (Stream Output = File.Create(Path))
+                    Frame.SaveAsPng(Output, Width, Height);
+            }
+
+            Log.Notice("Saved screenshot to " + Path, this);
         }
 
         protected void PrepareDevice(object sender, PreparingDeviceSettingsEventArgs e)
