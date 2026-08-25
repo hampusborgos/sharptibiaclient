@@ -54,6 +54,42 @@ namespace CTC
             Batch.Draw(Image.Texture, dest, clr);
         }
 
+        /// <summary>
+        /// Colourised creature images, keyed by the two sprites they were built
+        /// from and the four colour indices. An outfit is worn by everyone wearing
+        /// it, so the cache holds one texture per distinct look rather than per
+        /// creature, and a recording only ever shows a handful of them.
+        /// </summary>
+        private readonly Dictionary<UInt64, Texture2D> ColorizedImages = new Dictionary<UInt64, Texture2D>();
+
+        /// <summary>
+        /// Draws a creature image dyed by its outfit.
+        ///
+        /// The sprite itself is painted in greys; the colours live in a second
+        /// layer that masks it in pure yellow, red, green and blue for head, body,
+        /// legs and feet. Multiplying the grey through the masked colour is what
+        /// turns one sprite sheet into every outfit in the game.
+        /// </summary>
+        private void DrawImage(SpriteBatch Batch, GameImage Image, GameImage Template, ClientOutfit Outfit, Rectangle dest, Color clr)
+        {
+            UInt64 Key = ((UInt64)(UInt16)Image.ID << 48)
+                       | ((UInt64)(UInt16)Template.ID << 32)
+                       | ((UInt64)(Byte)Outfit.LookHead << 24)
+                       | ((UInt64)(Byte)Outfit.LookBody << 16)
+                       | ((UInt64)(Byte)Outfit.LookLegs << 8)
+                       | ((UInt64)(Byte)Outfit.LookFeet);
+
+            Texture2D Texture;
+            if (!ColorizedImages.TryGetValue(Key, out Texture))
+            {
+                Texture = new Texture2D(Device, 32, 32, false, SurfaceFormat.Color);
+                Texture.SetData<Byte>(OutfitColors.Dye(Image.LoadRGBA(), Template.LoadRGBA(), Outfit));
+                ColorizedImages[Key] = Texture;
+            }
+
+            Batch.Draw(Texture, dest, clr);
+        }
+
         public void DrawSprite(SpriteBatch Batch, GameTime Time, ClientTile Tile, GameSprite Sprite, int SubType, int Frame, Vector2 Position, Color clr)
         {
             Vector2 tmp = Position;
@@ -185,14 +221,13 @@ namespace CTC
                     {
                         for (int cy = 0; cy != Sprite.Height; ++cy)
                         {
-                            GameImage Image = Sprite.GetImage(
-                                cx, cy,
-                                Creature.Direction, Creature.Outfit,
-                                (int)(Time.TotalGameTime.TotalMilliseconds / Sprite.AnimationSpeed)
-                            );
-
+                            GameImage Image = Sprite.GetImage(cx, cy, Creature.Direction, 0);
                             Rectangle rect = new Rectangle((int)Offset.X - 32 * cx, (int)Offset.Y - 32 * cy, 32, 32);
-                            DrawImage(Batch, Image, rect, clr);
+
+                            if (Sprite.HasColorTemplate)
+                                DrawImage(Batch, Image, Sprite.GetImage(cx, cy, Creature.Direction, 1), Creature.Outfit, rect, clr);
+                            else
+                                DrawImage(Batch, Image, rect, clr);
                         }
                     }
                 }

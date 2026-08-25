@@ -92,6 +92,40 @@ How it renders:
 Creature names and health bars are drawn in the foreground pass, so they stay
 readable outside the lit radius.
 
+## Outfit colours
+
+Added in `OutfitColors.cs` + `GameRenderer.DrawImage`. Like lighting, this
+needed no reverse engineering — everything it uses was already parsed and then
+dropped on the floor.
+
+A player sprite in `Tibia.spr` is painted in greys and comes with a second
+layer masked in pure yellow, red, green and blue for head, body, legs and feet.
+`Tibia.dat` attribute `0x14` is what marks a creature as having one, and it was
+already being read (as `GameSprite.ColorTemplate`), and `LookHead`/`LookBody`/
+`LookLegs`/`LookFeet` were already being parsed off the wire. `GetImage` picked
+layer 0 and ignored the rest, with the template lookup left behind as a
+commented-out stub from the C++ client it was ported from. So every player
+rendered in the greys of the underlying sprite.
+
+Dyeing is a multiply: each masked pixel becomes the grey times the colour the
+mask names. One sprite sheet, every outfit in the game.
+
+The four `Look*` fields are indices into a 133-colour table, not colours. That
+table is in neither data file — the client generates it, as nineteen hues at
+seven saturation/intensity pairs, with the first column of each pair replaced by
+a step down a grey ramp. That is why index 0 is white and 19, 38, 57 ... are
+progressively darker greys rather than continuing the hue wheel.
+
+Two details worth keeping:
+
+- **Compositing happens on the CPU, in `OutfitColors.Dye`, which never touches a
+  graphics device.** `GameRenderer` only turns the result into a `Texture2D`.
+  That keeps the invariant `--verify-seek` relies on, and it means the dye can
+  be checked headlessly.
+- **Dyed sprites are cached per look, not per creature**, keyed by the two
+  sprite ids and the four colour indices. An outfit is worn by everyone wearing
+  it, and a recording only ever shows a handful.
+
 ## Still outstanding
 
 - **The player has no name.** Nothing in the 7.4 protocol ever sends it for

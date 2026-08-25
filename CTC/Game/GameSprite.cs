@@ -67,10 +67,25 @@ namespace CTC
             return this.Images[v];
         }
 
-        public GameImage GetImage(int X, int Y, Direction Direction, ClientOutfit Outfit, int Time)
+        /// <summary>
+        /// True when the second sprite layer is an outfit colour mask rather than
+        /// another blend frame, which is what makes DrawCreature dye the sprite.
+        /// </summary>
+        public Boolean HasColorTemplate
         {
-            int v;
-            v = (((((int)Direction) * this.BlendFrames) * this.Height + Y) * this.Width + X);
+            get { return ColorTemplate && BlendFrames > 1; }
+        }
+
+        /// <summary>
+        /// A creature image. Direction picks the column of the sheet, Layer picks
+        /// 0 for the sprite itself and 1 for its colour mask.
+        ///
+        /// The animation frame is always the first one: the client never walks a
+        /// creature between packets, so an idle pose is the only one it could show.
+        /// </summary>
+        public GameImage GetImage(int X, int Y, Direction Direction, int Layer)
+        {
+            int v = ((((int)Direction) * this.BlendFrames + Layer) * this.Height + Y) * this.Width + X;
             if(v >= this.Images.Count)
             {
                 if(this.Images.Count == 1)
@@ -78,14 +93,6 @@ namespace CTC
                 else
                     v %= this.Images.Count;
             }
-
-            /*
-            if(frames > 1)
-            { // Template
-                TemplateImage* img = getTemplateImage(v, _outfit);
-                return img->getHardwareID();
-            }
-             * */
             return this.Images[v];
         }
     }
