@@ -33,6 +33,14 @@ namespace CTC
 
         private Dictionary<MapPosition, TileAnimations> PlayingAnimations = new Dictionary<MapPosition, TileAnimations>();
 
+        /// <summary>
+        /// What is currently being said over the map, oldest first. Not per tile
+        /// like the other effects: several people can talk from one tile, a
+        /// message about the player follows the player, and a monster yelling
+        /// from off screen has no tile on screen at all.
+        /// </summary>
+        private List<SpokenText> Speech = new List<SpokenText>();
+
 
         #region Logic Code
 
@@ -80,6 +88,10 @@ namespace CTC
                         if (!Effect.Expired)
                             Effect.Update(EffectTime);
                 }
+
+                foreach (SpokenText Text in Speech)
+                    if (!Text.Expired)
+                        Text.Update(EffectTime);
             }
 
             LastCleanup += Time.ElapsedGameTime.TotalMilliseconds;
@@ -116,6 +128,7 @@ namespace CTC
         private void OnSeekCompleted(ClientState State)
         {
             PlayingAnimations.Clear();
+            Speech.Clear();
         }
 
         public void Cleanup()
@@ -141,6 +154,10 @@ namespace CTC
 
             foreach (MapPosition Position in ToRemoveAnims)
                 PlayingAnimations.Remove(Position);
+
+            for (int i = Speech.Count - 1; i >= 0; --i)
+                if (Speech[i].Expired)
+                    Speech.RemoveAt(i);
         }
 
         private void UpdateName()
@@ -204,6 +221,7 @@ namespace CTC
                 Bounds.Height / 352f
             );
             Renderer.DrawSceneForeground(Batch, Offset, Scale, UIContext.GameTime, Viewport, PlayingAnimations);
+            Renderer.DrawSpeech(Batch, ScreenClientBounds, Scale, Viewport, Speech);
 
             DrawBorder(Batch);
             EndDraw();
@@ -220,6 +238,8 @@ namespace CTC
             Protocol.Effect.Add(OnMagicEffect);
             Protocol.ShootEffect.Add(OnShootEffect);
             Protocol.AnimatedText.Add(OnAnimatedText);
+            Protocol.CreatureSpeak.Add(OnCreatureSpeak);
+            Protocol.TextMessage.Add(OnTextMessage);
         }
 
         private void OnPlayerLogin(Packet props)
@@ -295,6 +315,72 @@ namespace CTC
                 PlayingAnimations.Add(Position, Animations);
             }
             Animations.Effects.Add(new AnimatedText(Text, Color));
+        }
+
+        /// <summary>
+        /// Talk that happened somewhere on the map. Channel and private talk
+        /// carries no position - it is the chat panel's business, not the map's.
+        /// </summary>
+        private void OnCreatureSpeak(Packet props)
+        {
+            if (State.Seeking)
+                return;
+
+            if (!props.Has("Position"))
+                return;
+
+            ClientMessage Message = (ClientMessage)props["Message"];
+
+            int Color;
+            switch (Message.Type)
+            {
+                case MessageType.Say:
+                case MessageType.Whisper:
+                case MessageType.Yell:
+                case MessageType.PrivateNPCToPlayer:
+                case MessageType.PrivatePlayerToNPC:
+                    Color = SpokenText.Yellow;
+                    break;
+                case MessageType.MonsterSay:
+                case MessageType.MonsterYell:
+                    Color = SpokenText.Red;
+                    break;
+                default:
+                    return;
+            }
+
+            Speech.Add(new SpokenText(Message.Text, Color, (MapPosition)props["Position"]));
+        }
+
+        /// <summary>
+        /// Messages the server sends about you. Only the three the original
+        /// client showed in the game window belong over the map - looking at
+        /// something, advancing, and a warning. The rest are console lines.
+        /// </summary>
+        private void OnTextMessage(Packet props)
+        {
+            if (State.Seeking)
+                return;
+
+            ClientMessage Message = (ClientMessage)props["Message"];
+
+            int Color;
+            switch (Message.Type)
+            {
+                case MessageType.Description:
+                    Color = SpokenText.Green;
+                    break;
+                case MessageType.Advance:
+                    Color = SpokenText.White;
+                    break;
+                case MessageType.Warning:
+                    Color = SpokenText.Red;
+                    break;
+                default:
+                    return;
+            }
+
+            Speech.Add(new SpokenText(Message.Text, Color));
         }
 
         #endregion

@@ -33,13 +33,21 @@ namespace CTC
 
         #region Drawing Code
 
-        public Color MakeColor(int id)
-        {	    
-            Color c = new Color();
-            c.B = (byte)((id % 6) / 5f * 255);
-            c.G = (byte)(((id / 6) % 6) / 5f * 255);
-            c.R = (byte)((id / 36f) / 6f * 255);
-            return c;
+        /// <summary>
+        /// Tibia's 216 colour palette: six steps of 51 per channel, red counting
+        /// slowest. Animated text arrives as an index into it, and the message
+        /// colours in SpokenText are the classic entries of the same table.
+        ///
+        /// The red channel used to divide by six rather than five and never
+        /// reached zero, which tinted every colour - pure green came out
+        /// (35, 255, 0).
+        /// </summary>
+        public static Color MakeColor(int id)
+        {
+            return new Color(
+                (byte)(((id / 36) % 6) * 51),
+                (byte)(((id / 6) % 6) * 51),
+                (byte)((id % 6) * 51));
         }
 
         private void DrawImage(SpriteBatch Batch, GameImage Image, Rectangle dest, Color clr)
@@ -377,42 +385,97 @@ namespace CTC
             }
         }
 
-        public void DrawSceneForeground(SpriteBatch Batch, Vector2 ScreenOffset, Vector2 Scale, GameTime Time, ClientViewport Viewport, Dictionary<MapPosition, TileAnimations> PlayingAnimations = null)
+        /// <summary>
+        /// Where the top left corner of a map position lands on the screen. The
+        /// scene is drawn around Viewport.ViewPosition, which sits seven tiles in
+        /// and five down.
+        ///
+        /// Positions on another floor are projected as if they were on this one.
+        /// The only thing that reaches this from another floor is a yell, and a
+        /// yell from a floor away is clamped to the edge of the view regardless.
+        /// </summary>
+        public static Vector2 ScreenPositionOf(ClientViewport Viewport, Vector2 ScreenOffset, Vector2 Scale, MapPosition Position)
         {
             MapPosition Center = Viewport.ViewPosition;
 
-
-            Vector2 TopLeft = new Vector2(
-                -(Center.X - 7) * 32,
-                -(Center.Y - 5) * 32
+            return new Vector2(
+                ScreenOffset.X + (32 * (Position.X - Center.X + 7)) * Scale.X,
+                ScreenOffset.Y + (32 * (Position.Y - Center.Y + 5)) * Scale.Y
             );
+        }
 
-            int StartZ = 7;
-            int EndZ = Center.Z;
+        /// <summary>
+        /// Draws what is being said over the map. Text is screen space, like the
+        /// names and health bars, so it stays crisp at any window size.
+        /// </summary>
+        public void DrawSpeech(SpriteBatch Batch, Rectangle View, Vector2 Scale, ClientViewport Viewport, List<SpokenText> Speech)
+        {
+            float LineHeight = UIContext.StandardFont.LineSpacing;
+
+            // How much is already stacked over each tile. Newest first, so the
+            // last thing said sits closest to the head and pushes older lines up.
+            Dictionary<MapPosition, float> Stacked = new Dictionary<MapPosition, float>();
+
+            for (int i = Speech.Count - 1; i >= 0; --i)
+            {
+                SpokenText Text = Speech[i];
+                if (Text.Expired)
+                    continue;
+
+                MapPosition Anchor = Text.FollowsPlayer ? Viewport.ViewPosition : Text.Position;
+                Vector2 Origin = ScreenPositionOf(Viewport, new Vector2(View.X, View.Y), Scale, Anchor);
+
+                float Height = Text.Lines.Count * LineHeight;
+                float Used;
+                Stacked.TryGetValue(Anchor, out Used);
+                Stacked[Anchor] = Used + Height;
+
+                // Clear of the name and health bar, which take the 32 pixels
+                // above the tile, with a line's worth of air under the text.
+                Vector2 At = new Vector2(
+                    Origin.X + 16 * Scale.X,
+                    Origin.Y - 40 - Height - Used
+                );
+
+                // A creature can talk from outside the view - a monster yelling
+                // a screen away - so the text is pinned to the edge it would
+                // otherwise go past, pointing at where the shouting came from.
+                At.X = MathHelper.Clamp(At.X, View.Left + Text.Width / 2 + 2, View.Right - Text.Width / 2 - 2);
+                At.Y = MathHelper.Clamp(At.Y, View.Top + 2, View.Bottom - Height - 2);
+
+                Color Tint = MakeColor(Text.Color);
+                foreach (String Line in Text.Lines)
+                {
+                    DrawBoldedText(Batch, Line, At, true, Tint);
+                    At.Y += LineHeight;
+                }
+            }
+        }
+
+        public void DrawSceneForeground(SpriteBatch Batch, Vector2 ScreenOffset, Vector2 Scale, GameTime Time, ClientViewport Viewport, Dictionary<MapPosition, TileAnimations> PlayingAnimations = null)
+        {
+            // Which tiles are on screen. Above ground the window shifts with the
+            // floor; where they draw is ScreenPositionOf's business.
+            MapPosition Center = Viewport.ViewPosition;
+
             if (Center.Z <= 7)
             {
                 Center.Y -= (7 - Center.Z);
                 Center.X -= (7 - Center.Z);
-            }
-            else
-            {
-                StartZ = Math.Min(Center.Z + 2, 15);
-                EndZ = Center.Z;
             }
 
             for (int X = Center.X - 8; X <= Center.X + 8; ++X)
             {
                 for (int Y = Center.Y - 6; Y <= Center.Y + 6; ++Y)
                 {
-                    ClientTile Tile = Viewport.Map[new MapPosition(X, Y, Center.Z)];
-
-                    Vector2 DrawOffset = new Vector2(32 * X + TopLeft.X, 32 * Y + TopLeft.Y);
-                    DrawOffset *= Scale;
+                    MapPosition Position = new MapPosition(X, Y, Center.Z);
+                    ClientTile Tile = Viewport.Map[Position];
 
                     TileAnimations Animations = null;
                     if (PlayingAnimations != null && Tile != null)
                         PlayingAnimations.TryGetValue(Tile.Position, out Animations);
-                    DrawTileForeground(Batch, Time, ScreenOffset + DrawOffset, Tile, Animations);
+                    DrawTileForeground(Batch, Time,
+                        ScreenPositionOf(Viewport, ScreenOffset, Scale, Position), Tile, Animations);
                 }
             }
         }

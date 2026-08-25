@@ -126,6 +126,40 @@ Two details worth keeping:
   sprite ids and the four colour indices. An outfit is worn by everyone wearing
   it, and a recording only ever shows a handful.
 
+## Messages on the map
+
+Added in `SpokenText.cs` + `GameRenderer.DrawSpeech`. Speech stands over the
+speaker in yellow, monsters talk in red, and the messages the server sends
+about you - what you looked at, what you advanced to, what you were warned
+about - stand over your own character in green, white and red.
+
+Which messages belong on the map and which are console lines is decided by
+`MessageType`, and the enum already carried the answer in its comments:
+`Description` is "green message in game window", `ConsoleBlue` is "blue message
+in the console". Channel and private talk carries no position at all, which is
+its own answer.
+
+Two things this does not do the way the tile effects do:
+
+- **Text is not held per tile.** Several people can talk from one tile, a
+  message about you follows the view rather than a tile, and a monster yelling
+  from off screen has no tile on screen to hang from. So it is one list, and
+  `DrawSpeech` stacks whatever shares an anchor with the newest line closest to
+  the head.
+- **Off-screen speakers are clamped to the edge** of the view rather than
+  dropped, which is how you notice the yelling in the first place.
+
+The 7.4 speak packet carries the speaker's *name* and a position, but no
+creature id - the field the parser reads first in later versions simply is not
+there. So there is nothing to attach the text to, and it stays on the tile it
+was said from rather than following a walking speaker. Over the few seconds a
+line is up, that is where the speaker still is.
+
+Along the way, `MakeColor` was wrong. Tibia's 216-colour palette is six steps of
+51 per channel, but the red channel divided by six rather than five and so never
+reached zero: pure green came out as `(35, 255, 0)`. Only animated damage text
+used it before now.
+
 ## Still outstanding
 
 - **The player has no name.** Nothing in the 7.4 protocol ever sends it for
