@@ -70,6 +70,64 @@ the effects, so creatures stand on their tiles the whole way back. Between two
 applications of state there is nothing left to move, and a reverse step at 120Hz
 would produce the same picture as one at 15Hz, eight times over.
 
+## Dragging the playhead
+
+The transport reads `◀◀ ❚❚ ▶▶  1x`: the outer buttons choose a direction, the
+middle one starts and stops, so pausing never costs you the direction you were
+going in. When it is stopped the middle button shows the way it will resume.
+
+An arrow lights when it is doing something plain playback is not. Forward at 1x
+is plain playback and the middle button already says so, so `▶▶` lights only
+above or below it; `◀◀` lights whenever it is running backwards, because nothing
+else on the bar shows the direction while it runs - the middle button reads as a
+pause either way.
+
+**Tapping a direction it is already going speeds it up**, which is what the two
+stepper buttons used to be for. A transport where the same button starts and
+stops cannot be tapped up to speed, which is the whole reason stopping is a
+button of its own. Turning round starts again at 1x - whatever speed suited
+watching one way is a fresh decision the other - and the readout carries the
+sign, so running backwards at four reads `-4x`. The arrow keys still step
+through the slower speeds, down to a quarter.
+
+A drag can start anywhere on the track: pressing the bar picks the thumb up
+where you pressed and carries on from there, and letting go without moving is
+just a jump. The press lands on the bar but the drag belongs to the thumb, which
+is what takes the mouse capture - move events only ever reach whoever holds
+that.
+
+Dragging is a seek per frame, which sounds expensive and mostly is
+not. At drag granularity the playhead has barely moved and the snapshot to
+restore from is right there, so a step costs about a millisecond forward and
+two to four backward. The tail is what bites: a step that lands across a
+snapshot boundary can cost 120ms, and throwing the thumb across a two hour
+recording can cost 170ms.
+
+So the rate is not fixed. Each drag seek is timed and the next one waits out
+twice what the last one cost, capped at half a second. Cheap steps happen every
+frame and the picture tracks the thumb exactly; expensive ones back off on their
+own rather than stalling every frame behind the last.
+
+It used to be a flat fifteen a second, a rate picked for the worst case, which
+left the common one lagging: dragging across Kolskagg put the client 77 pixels
+of a 900 pixel bar behind the thumb, about three minutes of recording. It now
+stays within a pixel of it, at the same 114-121fps either way.
+
+## The end of the recording
+
+A recording that has run out looks exactly like one that is paused, so it says
+which it is: the picture washes towards grey and `The end` stands in the middle
+of it, over a `Replay?` button that seeks back to the start and sets off again.
+
+It is a wash rather than a real desaturation because a real one wants a shader
+and this client has none - the whole of it is `SpriteBatch`. Pulling everything
+45% of the way towards a flat grey takes the colour out much the same way, at
+the cost of some contrast: deep water at `(8, 4, 166)` comes out `(54, 53, 135)`.
+
+`GameCanvas` draws itself rather than going through `UIView.Draw`, so its one
+child has to be asked for explicitly - `DrawForegroundChildren` after the border.
+Mouse events find the button on their own; that walk is not part of drawing.
+
 ## What has to be copied, and what must not be
 
 The client state is not a tree. The same `ClientCreature` is reached from the

@@ -145,7 +145,10 @@ Hei hei!
 ```
 
 — monsters talk in red and are given no such line, since a goblin announcing
-itself by name reads as a second name tag. The messages the server sends about
+itself by name reads as a second name tag. Someone who says three things in a
+row is named once, on the topmost: the stack grows upward, so what is above a
+message is what was said before it, and only the oldest of a run carries the
+name. Half a line of air sits between one message and the next. The messages the server sends about
 you - what you looked at, what you advanced to, what you were warned about -
 stand over your own character in green, white and red.
 

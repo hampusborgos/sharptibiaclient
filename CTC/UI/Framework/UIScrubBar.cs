@@ -98,8 +98,14 @@ namespace CTC
         }
 
         /// <summary>
-        /// A click on the track jumps there. The thumb gets first refusal, since
-        /// it is a child and base walks the children first.
+        /// Pressing the track picks the thumb up where you pressed, and carries
+        /// on as a drag from there - so a scrub does not have to start on the
+        /// thumb, and letting go without moving is just a jump.
+        ///
+        /// The press lands on the bar, but the drag belongs to the thumb: it is
+        /// the thumb that takes the capture, and move events only ever reach
+        /// whoever holds that. The thumb gets first refusal on the press anyway,
+        /// since it is a child and base walks the children first.
         /// </summary>
         public override bool MouseLeftClick(MouseState mouse)
         {
@@ -110,8 +116,20 @@ namespace CTC
                 return false;
 
             MoveTo(mouse.X);
-            if (ScrubReleased != null)
+
+            if (GemButton.CaptureMouse())
+            {
+                // UIButton sets this itself when it is pressed directly, and its
+                // release path does nothing without it.
+                GemButton.Highlighted = true;
+                _Dragging = true;
+            }
+            else if (ScrubReleased != null)
+            {
+                // Nobody would give the capture up, so it stays a plain jump.
                 ScrubReleased(this);
+            }
+
             return true;
         }
 

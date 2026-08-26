@@ -12,6 +12,8 @@ namespace CTC
         Play,
         Pause,
         Reverse,
+        FastForward,
+        Rewind,
         Start,
         End
     };
@@ -30,6 +32,41 @@ namespace CTC
     {
         public PlaybackGlyph Glyph;
 
+        /// <summary>
+        /// Whether this is the direction currently running. It draws as though
+        /// held down, which is what it amounts to: the button whose state the
+        /// client is in.
+        /// </summary>
+        public Boolean Active
+        {
+            get { return _Active; }
+            set
+            {
+                _Active = value;
+                ShowState();
+            }
+        }
+        private Boolean _Active = false;
+
+        /// <summary>
+        /// A press wins over being active, so a button already lit still reacts
+        /// to being clicked.
+        /// </summary>
+        public override bool Highlighted
+        {
+            get { return base.Highlighted; }
+            set
+            {
+                base.Highlighted = value;
+                ShowState();
+            }
+        }
+
+        private void ShowState()
+        {
+            ElementType = base.Highlighted || _Active ? HighlightType : NormalType;
+        }
+
         public PlaybackButton(PlaybackGlyph Glyph)
             : base(null)
         {
@@ -40,7 +77,7 @@ namespace CTC
 
         protected override void DrawContent(SpriteBatch CurrentBatch)
         {
-            Color Ink = Highlighted ? Color.White : Color.LightGray;
+            Color Ink = Highlighted || Active ? Color.White : Color.LightGray;
 
             // A square box in the middle of the button, so every glyph is the
             // same size whatever the button is.
@@ -59,6 +96,16 @@ namespace CTC
 
                 case PlaybackGlyph.Reverse:
                     DrawTriangle(CurrentBatch, Left, Top, Size, -1, Ink);
+                    break;
+
+                case PlaybackGlyph.FastForward:
+                case PlaybackGlyph.Rewind:
+                    // Two arrows, each half as wide and just as tall, with a
+                    // pixel of daylight between them.
+                    int Facing = Glyph == PlaybackGlyph.FastForward ? 1 : -1;
+                    int Wing = (Size - 1) / 2;
+                    DrawTriangle(CurrentBatch, Left, Top, Wing, Size, Facing, Ink);
+                    DrawTriangle(CurrentBatch, Left + Size - Wing, Top, Wing, Size, Facing, Ink);
                     break;
 
                 case PlaybackGlyph.Pause:
@@ -85,12 +132,21 @@ namespace CTC
         /// </summary>
         private void DrawTriangle(SpriteBatch CurrentBatch, int Left, int Top, int Size, int Facing, Color Ink)
         {
-            int Half = Size / 2;
-            for (int Row = 0; Row < Size; ++Row)
+            DrawTriangle(CurrentBatch, Left, Top, Size, Size, Facing, Ink);
+        }
+
+        /// <summary>
+        /// The same, for a triangle that is not as wide as it is tall - which is
+        /// what a pair of them needs to be to fit in the same box as one.
+        /// </summary>
+        private void DrawTriangle(SpriteBatch CurrentBatch, int Left, int Top, int Wide, int Tall, int Facing, Color Ink)
+        {
+            int Half = Math.Max(1, Tall / 2);
+            for (int Row = 0; Row < Tall; ++Row)
             {
                 // Full width across the middle, tapering to a point at both ends.
-                int Width = Math.Max(1, Size - Math.Abs(Row - Half) * 2);
-                int X = Facing > 0 ? Left : Left + Size - Width;
+                int Width = Math.Max(1, Wide - Math.Abs(Row - Half) * Wide / Half);
+                int X = Facing > 0 ? Left : Left + Wide - Width;
 
                 Fill(CurrentBatch, X, Top + Row, Width, 1, Ink);
             }

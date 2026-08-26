@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace CTC
 {
@@ -16,6 +17,17 @@ namespace CTC
             Viewport = State.Viewport;
 
             RegisterEvents();
+
+            ReplayButton = new UIButton("Replay?");
+            ReplayButton.Autoresizable = false;
+            ReplayButton.Bounds = new Rectangle(0, 0, 90, 22);
+            ReplayButton.ZOrder = 1;
+            ReplayButton.Visible = false;
+            ReplayButton.ButtonReleasedInside += delegate(UIButton Button, MouseState mouse)
+            {
+                Replay();
+            };
+            AddSubview(ReplayButton);
 
             State.SeekCompleted += OnSeekCompleted;
 
@@ -46,6 +58,21 @@ namespace CTC
         /// </summary>
         private CreatureWalks Walks = new CreatureWalks();
 
+        /// <summary>
+        /// Offered when the recording runs out. A recording that has ended looks
+        /// exactly like one that is paused, so it says which it is.
+        /// </summary>
+        private UIButton ReplayButton;
+
+        private Boolean Ended
+        {
+            get
+            {
+                return State.Playback != null
+                    && State.Playback.Position >= State.Playback.Duration;
+            }
+        }
+
 
         #region Logic Code
 
@@ -73,6 +100,9 @@ namespace CTC
             }
 
             // Bounds = new Rectangle(0, 0, 883, 883 / 4 * 3);
+
+            ReplayButton.Bounds.X = ClientBounds.Left + (ClientBounds.Width - ReplayButton.Bounds.Width) / 2;
+            ReplayButton.Bounds.Y = ClientBounds.Top + ClientBounds.Height / 2 + 12;
         }
 
         public override void Update(GameTime Time)
@@ -100,6 +130,8 @@ namespace CTC
 
                 Walks.Update(EffectTime);
             }
+
+            ReplayButton.Visible = Ended;
 
             LastCleanup += Time.ElapsedGameTime.TotalMilliseconds;
             if (LastCleanup > 1000)
@@ -233,8 +265,45 @@ namespace CTC
             Renderer.DrawSceneForeground(Batch, Offset, Scale, UIContext.GameTime, Viewport, PlayingAnimations);
             Renderer.DrawSpeech(Batch, ScreenClientBounds, Scale, Viewport, Speech);
 
+            if (Ended)
+                DrawEnd();
+
             DrawBorder(Batch);
             EndDraw();
+
+            // GameCanvas draws itself rather than going through UIView.Draw, so
+            // its one child has to be asked for explicitly.
+            DrawForegroundChildren(Batch, BoundingBox);
+        }
+
+        /// <summary>
+        /// The end of the recording: the picture washed towards grey, and what
+        /// happened said in the middle of it.
+        ///
+        /// Washing rather than desaturating properly, because a real desaturation
+        /// wants a shader and this client has none - the whole of it is
+        /// SpriteBatch. Pulling everything a little way towards a flat grey takes
+        /// the colour out of it much the same way, at the cost of some contrast.
+        /// </summary>
+        private void DrawEnd()
+        {
+            Rectangle View = ScreenClientBounds;
+
+            UIContext.Skin.DrawRectangle(Batch, View, new Color(118, 118, 118) * 0.45f);
+
+            Renderer.DrawBoldedText(Batch, "The end",
+                new Vector2(View.Center.X, View.Center.Y - 28), true, Color.White, 2.0f);
+        }
+
+        /// <summary>
+        /// Back to the beginning, running.
+        /// </summary>
+        private void Replay()
+        {
+            State.SeekTo(State.SeekableStart);
+            State.Playback.Direction = 1;
+            State.Playback.Speed = 1;
+            State.Playback.Playing = true;
         }
 
         #endregion

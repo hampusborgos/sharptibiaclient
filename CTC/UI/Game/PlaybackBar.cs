@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
@@ -13,10 +14,10 @@ namespace CTC
     /// controls centred underneath it with the timecode either side.
     ///
     /// Everything it drives lives on ClientState.Playback; this only decides when
-    /// to ask for a seek. Dragging is rate limited to the same fifteen a second
-    /// that backwards playback uses, because each one is a snapshot restore and a
-    /// replay, and a drag across the whole bar at 120fps would ask for a hundred
-    /// and twenty of them a second.
+    /// to ask for a seek. Dragging pays for itself as it goes: a seek is a
+    /// snapshot restore and a replay, and how long that takes depends entirely on
+    /// where the thumb has got to, so each one is timed and the next waits out
+    /// twice what the last one cost.
     /// </summary>
     public class PlaybackBar : UIView
     {
@@ -24,9 +25,8 @@ namespace CTC
 
         private UIScrubBar Scrub;
         private PlaybackButton ReverseButton;
-        private PlaybackButton PlayButton;
-        private UIButton SlowerButton;
-        private UIButton FasterButton;
+        private PlaybackButton PauseButton;
+        private PlaybackButton ForwardButton;
         private UILabel SpeedLabel;
         private UILabel ElapsedLabel;
         private UILabel TotalLabel;
@@ -36,8 +36,30 @@ namespace CTC
         /// </summary>
         private static readonly double[] Speeds = { 0.25, 0.5, 1, 2, 4, 8 };
 
-        private static readonly TimeSpan ScrubInterval = TimeSpan.FromSeconds(1.0 / 15.0);
+        /// <summary>
+        /// The share of its time the client is willing to spend seeking while the
+        /// thumb is being dragged. A third leaves the drag itself smooth: the seek
+        /// that costs a millisecond happens again on the next frame, and the one
+        /// that costs eighty waits out its own cost twice over rather than
+        /// stalling every frame behind it.
+        /// </summary>
+        private const double ScrubDutyCost = 2.0;
+
+        /// <summary>
+        /// Never wait longer than this between drag seeks, however dear the last
+        /// one was, or a drag through an expensive stretch would stop showing
+        /// anything at all.
+        /// </summary>
+        private static readonly TimeSpan MaximumScrubInterval = TimeSpan.FromSeconds(0.5);
+
         private TimeSpan ScrubAccumulated = TimeSpan.Zero;
+        private TimeSpan ScrubInterval = TimeSpan.Zero;
+
+        /// <summary>
+        /// Where the last drag seek went, so a thumb that has not moved since is
+        /// not sought to again.
+        /// </summary>
+        private TimeSpan ScrubbedTo = TimeSpan.MinValue;
 
         /// <summary>
         /// How far a Left or Right press moves the playhead, and how far it moves
@@ -59,43 +81,37 @@ namespace CTC
             Scrub.ScrubReleased += OnScrubReleased;
             AddSubview(Scrub);
 
-            ReverseButton = new PlaybackButton(PlaybackGlyph.Reverse);
+            // Which way, and whether at all: the two outer buttons choose a
+            // direction and the middle one starts and stops, so pausing never
+            // costs you the direction you were going in.
+            ReverseButton = new PlaybackButton(PlaybackGlyph.Rewind);
             ReverseButton.ButtonReleasedInside += delegate(UIButton Button, MouseState mouse)
             {
                 PlayBackwards();
             };
             AddSubview(ReverseButton);
 
-            PlayButton = new PlaybackButton(PlaybackGlyph.Play);
-            PlayButton.ButtonReleasedInside += delegate(UIButton Button, MouseState mouse)
+            PauseButton = new PlaybackButton(PlaybackGlyph.Play);
+            PauseButton.ButtonReleasedInside += delegate(UIButton Button, MouseState mouse)
             {
-                TogglePlaying();
+                TogglePaused();
             };
-            AddSubview(PlayButton);
+            AddSubview(PauseButton);
 
-            SlowerButton = new UIButton("-");
-            SlowerButton.Autoresizable = false;
-            SlowerButton.Bounds = new Rectangle(0, 0, 18, 18);
-            SlowerButton.ButtonReleasedInside += delegate(UIButton Button, MouseState mouse)
+            ForwardButton = new PlaybackButton(PlaybackGlyph.FastForward);
+            ForwardButton.ButtonReleasedInside += delegate(UIButton Button, MouseState mouse)
             {
-                StepSpeed(-1);
+                PlayForwards();
             };
-            AddSubview(SlowerButton);
+            AddSubview(ForwardButton);
 
+            // No stepper buttons: the direction buttons speed themselves up, and
+            // the readout carries the sign, so this is a readout and nothing more.
             SpeedLabel = new UILabel("1x");
             SpeedLabel.Autoresizable = false;
             SpeedLabel.TextAlignment = UITextAlignment.Center;
-            SpeedLabel.Bounds = new Rectangle(0, 0, 44, 18);
+            SpeedLabel.Bounds = new Rectangle(0, 0, 52, 18);
             AddSubview(SpeedLabel);
-
-            FasterButton = new UIButton("+");
-            FasterButton.Autoresizable = false;
-            FasterButton.Bounds = new Rectangle(0, 0, 18, 18);
-            FasterButton.ButtonReleasedInside += delegate(UIButton Button, MouseState mouse)
-            {
-                StepSpeed(1);
-            };
-            AddSubview(FasterButton);
 
             ElapsedLabel = new UILabel("0:00");
             ElapsedLabel.Autoresizable = false;
@@ -138,49 +154,55 @@ namespace CTC
                 return;
             }
 
-            if (State.Playback.Direction < 0)
-                PlayBackwards();
-            else
-                TogglePlaying();
-        }
-
-        /// <summary>
-        /// What the play button does: run forwards, or stop if that is already
-        /// what is happening.
-        /// </summary>
-        public void TogglePlaying()
-        {
-            if (State == null)
-                return;
-
-            MoviePlayback Playback = State.Playback;
-            if (Playback.Playing && Playback.Direction > 0)
-            {
-                Playback.Playing = false;
-                return;
-            }
-
             // Starting again from the very end would sit there doing nothing.
-            if (Playback.Position >= Playback.Duration)
+            if (State.Playback.Direction > 0 && State.Playback.Position >= State.Playback.Duration)
                 State.SeekTo(State.SeekableStart);
 
-            Playback.Direction = 1;
-            Playback.Playing = true;
+            State.Playback.Playing = true;
+        }
+
+        public void PlayForwards()
+        {
+            Play(1);
         }
 
         public void PlayBackwards()
         {
+            Play(-1);
+        }
+
+        /// <summary>
+        /// What the outer buttons do: set off that way, and once already going
+        /// that way, go faster. Tapping never stops playback - stopping is the
+        /// middle button's job, and a transport where the same button starts and
+        /// stops cannot be tapped up to speed.
+        ///
+        /// Turning round starts again at 1x. Whatever speed suited watching one
+        /// way is a fresh decision the other.
+        /// </summary>
+        private void Play(int Direction)
+        {
             if (State == null)
                 return;
 
             MoviePlayback Playback = State.Playback;
-            if (Playback.Playing && Playback.Direction < 0)
+
+            if (Math.Sign(Playback.Direction) == Direction)
             {
-                Playback.Playing = false;
+                if (Playback.Playing)
+                    StepSpeed(1);
+                else
+                    Playback.Playing = true;
                 return;
             }
 
-            Playback.Direction = -1;
+            // Starting forwards from the very end, or backwards from the start,
+            // would sit there doing nothing.
+            if (Direction > 0 && Playback.Position >= Playback.Duration)
+                State.SeekTo(State.SeekableStart);
+
+            Playback.Direction = Direction;
+            Playback.Speed = 1;
             Playback.Playing = true;
         }
 
@@ -272,6 +294,11 @@ namespace CTC
             // Rate limited in Update; this only records where the user wants to be.
         }
 
+        private static TimeSpan Shorter(TimeSpan One, TimeSpan Other)
+        {
+            return One < Other ? One : Other;
+        }
+
         private void OnScrubReleased(UIScrubBar Bar)
         {
             if (State != null)
@@ -294,30 +321,50 @@ namespace CTC
 
             if (Scrub.Dragging)
             {
-                // Follow the thumb, but only as fast as a seek can keep up with.
+                // Follow the thumb as closely as the seeking can be afforded.
                 ScrubAccumulated += Time.ElapsedGameTime;
-                if (ScrubAccumulated >= ScrubInterval)
+
+                TimeSpan Target = PositionOf(Scrub);
+                if (ScrubAccumulated >= ScrubInterval && Target != ScrubbedTo)
                 {
                     ScrubAccumulated = TimeSpan.Zero;
-                    State.SeekTo(PositionOf(Scrub));
+                    ScrubbedTo = Target;
+
+                    Stopwatch Watch = Stopwatch.StartNew();
+                    State.SeekTo(Target);
+                    ScrubInterval = Shorter(
+                        TimeSpan.FromTicks((long)(Watch.Elapsed.Ticks * ScrubDutyCost)),
+                        MaximumScrubInterval);
                 }
             }
             else
             {
                 ScrubAccumulated = TimeSpan.Zero;
+                ScrubInterval = TimeSpan.Zero;
+                ScrubbedTo = TimeSpan.MinValue;
                 Scrub.Position = Fraction(Playback.Position, Playback.Duration);
             }
 
             Scrub.Played = Fraction(Playback.Position, Playback.Duration);
 
-            PlayButton.Glyph = Playback.Playing && Playback.Direction > 0
-                ? PlaybackGlyph.Pause
-                : PlaybackGlyph.Play;
-            ReverseButton.Glyph = Playback.Playing && Playback.Direction < 0
-                ? PlaybackGlyph.Pause
-                : PlaybackGlyph.Reverse;
+            // The middle button says what pressing it will do: stop what is
+            // running, or start again the way it was last going.
+            if (Playback.Playing)
+                PauseButton.Glyph = PlaybackGlyph.Pause;
+            else
+                PauseButton.Glyph = Playback.Direction < 0
+                    ? PlaybackGlyph.Reverse
+                    : PlaybackGlyph.Play;
 
-            SpeedLabel.Text = FormatSpeed(Playback.Speed);
+            // The arrows light when they are doing something plain play is not.
+            // Forward at 1x is plain play, and the middle button already says so;
+            // any other speed is the fast forward's doing. Backwards is lit
+            // whatever the speed, because nothing else on the bar shows the
+            // direction while it is running - the middle button reads as a pause.
+            ForwardButton.Active = Playback.Playing && Playback.Direction > 0 && Playback.Speed != 1;
+            ReverseButton.Active = Playback.Playing && Playback.Direction < 0;
+
+            SpeedLabel.Text = FormatSpeed(Playback.Speed * Math.Sign(Playback.Direction));
             ElapsedLabel.Text = FormatTime(Playback.Position);
             TotalLabel.Text = FormatTime(Playback.Duration);
         }
@@ -339,12 +386,20 @@ namespace CTC
             return ((int)At.TotalMinutes) + ":" + At.Seconds.ToString("00");
         }
 
+        /// <summary>
+        /// The speed, signed: running backwards reads -2x, which is the only
+        /// place the direction is written down now that the stepper buttons are
+        /// gone.
+        /// </summary>
         private static String FormatSpeed(double Speed)
         {
-            if (Speed < 1)
-                return Speed.ToString("0.##",
+            String Sign = Speed < 0 ? "-" : "";
+            double Magnitude = Math.Abs(Speed);
+
+            if (Magnitude < 1)
+                return Sign + Magnitude.ToString("0.##",
                     System.Globalization.CultureInfo.InvariantCulture) + "x";
-            return ((int)Speed) + "x";
+            return Sign + ((int)Magnitude) + "x";
         }
 
         public override void LayoutSubviews()
@@ -362,10 +417,9 @@ namespace CTC
             const int Gap = 4;
             int GroupWidth =
                 ReverseButton.Bounds.Width + Gap +
-                PlayButton.Bounds.Width + Gap * 4 +
-                SlowerButton.Bounds.Width + Gap +
-                SpeedLabel.Bounds.Width + Gap +
-                FasterButton.Bounds.Width;
+                PauseButton.Bounds.Width + Gap +
+                ForwardButton.Bounds.Width + Gap * 4 +
+                SpeedLabel.Bounds.Width;
 
             int At = Client.Left + (Client.Width - GroupWidth) / 2;
 
@@ -373,20 +427,16 @@ namespace CTC
             ReverseButton.Bounds.Y = Row;
             At += ReverseButton.Bounds.Width + Gap;
 
-            PlayButton.Bounds.X = At;
-            PlayButton.Bounds.Y = Row;
-            At += PlayButton.Bounds.Width + Gap * 4;
+            PauseButton.Bounds.X = At;
+            PauseButton.Bounds.Y = Row;
+            At += PauseButton.Bounds.Width + Gap;
 
-            SlowerButton.Bounds.X = At;
-            SlowerButton.Bounds.Y = Row;
-            At += SlowerButton.Bounds.Width + Gap;
+            ForwardButton.Bounds.X = At;
+            ForwardButton.Bounds.Y = Row;
+            At += ForwardButton.Bounds.Width + Gap * 4;
 
             SpeedLabel.Bounds.X = At;
             SpeedLabel.Bounds.Y = Row + 3;
-            At += SpeedLabel.Bounds.Width + Gap;
-
-            FasterButton.Bounds.X = At;
-            FasterButton.Bounds.Y = Row;
 
             ElapsedLabel.Bounds.X = Client.Left;
             ElapsedLabel.Bounds.Y = Row + 3;

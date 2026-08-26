@@ -289,7 +289,7 @@ namespace CTC
             }
         }
 
-        public void DrawText(SpriteBatch Batch, String Text, Vector2 Offset, Color Color)
+        public void DrawText(SpriteBatch Batch, String Text, Vector2 Offset, Color Color, float Size = 1.0f)
         {
             Offset.X = (int)Offset.X;
             Offset.Y = (int)Offset.Y;
@@ -297,25 +297,31 @@ namespace CTC
             Batch.DrawString(
                 UIContext.StandardFont, Text, Offset,
                 Color, 0.0f, new Vector2(0.0f, 0.0f),
-                1.0f, SpriteEffects.None, 0.5f
+                Size, SpriteEffects.None, 0.5f
            );
         }
 
-        public void DrawBoldedText(SpriteBatch Batch, String Text, Vector2 Offset, Boolean Centered, Color Primary)
+        /// <summary>
+        /// Text with a black outline, which is what keeps it readable over a map
+        /// of any colour. Size scales the whole thing, outline included.
+        /// </summary>
+        public void DrawBoldedText(SpriteBatch Batch, String Text, Vector2 Offset, Boolean Centered, Color Primary, float Size = 1.0f)
         {
             Offset.X = (int)Offset.X;
             Offset.Y = (int)Offset.Y;
 
             if (Centered)
             {
-                Vector2 TextSize = UIContext.StandardFont.MeasureString(Text);
+                Vector2 TextSize = UIContext.StandardFont.MeasureString(Text) * Size;
                 Offset.X -= (int)(TextSize.X / 2);
             }
-            DrawText(Batch, Text, new Vector2(Offset.X + 1, Offset.Y), Color.Black);
-            DrawText(Batch, Text, new Vector2(Offset.X - 1, Offset.Y), Color.Black);
-            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y + 1), Color.Black);
-            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y - 1), Color.Black);
-            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y), Primary);
+
+            float Edge = Math.Max(1, (int)Size);
+            DrawText(Batch, Text, new Vector2(Offset.X + Edge, Offset.Y), Color.Black, Size);
+            DrawText(Batch, Text, new Vector2(Offset.X - Edge, Offset.Y), Color.Black, Size);
+            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y + Edge), Color.Black, Size);
+            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y - Edge), Color.Black, Size);
+            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y), Primary, Size);
         }
 
         /// <summary>
@@ -500,10 +506,19 @@ namespace CTC
                 Vector2 Origin = OverheadAnchor(
                     ScreenPositionOf(Viewport, ScreenOffset, Scale, Anchor), Scale, Text.Overhead);
 
-                float Height = Text.Lines.Count * LineHeight;
+                // The speaker is named on the topmost of their run, which is the
+                // oldest of it: the stack grows upwards, so what is above this is
+                // what was said before it.
+                Boolean Named = Text.Speaker != null
+                    && Text.Speaker != SpeakerAbove(Speech, i, Anchor);
+
+                float Height = (Text.Lines.Count + (Named ? 1 : 0)) * LineHeight;
                 float Used;
                 Stacked.TryGetValue(Anchor, out Used);
-                Stacked[Anchor] = Used + Height;
+
+                // Half a line of air between one message and the next, so two of
+                // them read as two rather than as one long one.
+                Stacked[Anchor] = Used + Height + LineHeight / 2;
 
                 // Standing over the name, which itself sits 16 pixels over the
                 // health bar, with a little air in between.
@@ -519,12 +534,39 @@ namespace CTC
                 At.Y = MathHelper.Clamp(At.Y, View.Top + 2, View.Bottom - Height - 2);
 
                 Color Tint = MakeColor(Text.Color);
+
+                if (Named)
+                {
+                    DrawBoldedText(Batch, Text.Speaker + ":", At, true, Tint);
+                    At.Y += LineHeight;
+                }
+
                 foreach (String Line in Text.Lines)
                 {
                     DrawBoldedText(Batch, Line, At, true, Tint);
                     At.Y += LineHeight;
                 }
             }
+        }
+
+        /// <summary>
+        /// Who said the message stacked immediately above this one, or null if
+        /// this is the top of the stack.
+        /// </summary>
+        private static String SpeakerAbove(List<SpokenText> Speech, int Index, MapPosition Anchor)
+        {
+            for (int i = Index - 1; i >= 0; --i)
+            {
+                SpokenText Above = Speech[i];
+                if (Above.Expired)
+                    continue;
+
+                MapPosition Its = Above.FollowsPlayer ? Anchor : Above.Position;
+                if (Above.FollowsPlayer == Speech[Index].FollowsPlayer && Its.Equals(Anchor))
+                    return Above.Speaker;
+            }
+
+            return null;
         }
 
         public void DrawSceneForeground(SpriteBatch Batch, Vector2 ScreenOffset, Vector2 Scale, GameTime Time, ClientViewport Viewport, Dictionary<MapPosition, TileAnimations> PlayingAnimations = null)

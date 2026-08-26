@@ -38,6 +38,14 @@ namespace CTC
         public readonly Boolean FollowsPlayer;
 
         /// <summary>
+        /// Who said it, or null for a monster and for the messages about you.
+        /// Drawn as a line of its own above the words - but only on the topmost
+        /// of a run by the same speaker, so someone saying three things in a row
+        /// is named once rather than three times.
+        /// </summary>
+        public readonly String Speaker;
+
+        /// <summary>
         /// Where over the tile it stands, in map pixels: the point the speaker
         /// hangs their name and bar from, taken as they spoke so the words keep
         /// their place if the speaker walks away.
@@ -73,9 +81,10 @@ namespace CTC
             this.Position = Position;
             this.Overhead = Overhead;
             this.FollowsPlayer = FollowsPlayer;
+            this.Speaker = Speaker == "" ? null : Speaker;
 
-            if (Speaker != null && Speaker != "")
-                AddLine(Speaker + ":");
+            if (this.Speaker != null)
+                Widen(this.Speaker + ":");
 
             Wrap(Text);
 
@@ -107,6 +116,16 @@ namespace CTC
                 return;
 
             Lines.Add(Line);
+            Widen(Line);
+        }
+
+        /// <summary>
+        /// Counts a line towards the width without adding it. The speaker's line
+        /// is drawn or not depending on what is stacked above, but it is worth
+        /// keeping the block the same width either way.
+        /// </summary>
+        private void Widen(String Line)
+        {
             Width = Math.Max(Width, UIContext.StandardFont.MeasureString(Line).X);
         }
     }
