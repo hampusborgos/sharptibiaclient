@@ -46,6 +46,37 @@ namespace CTC
             Name = "CID#" + ContainerID.ToString();
         }
 
+        /// <summary>
+        /// Unlike a plain item, a container really is aliased - the same object
+        /// sits in Viewport.Containers and can be the item in an inventory slot -
+        /// so it goes through the identity map.
+        /// </summary>
+        public override ClientThing Clone(CloneContext Context)
+        {
+            return Context.Get<ClientContainer>(this,
+                delegate()
+                {
+                    return new ClientContainer(Type, ContainerID);
+                },
+                delegate(ClientContainer From, ClientContainer To)
+                {
+                    To.Subtype = From.Subtype;
+                    To.Name = From.Name;
+                    To.MaximumVolume = From.MaximumVolume;
+                    To.HasParent = From.HasParent;
+
+                    if (From.Contents == null)
+                    {
+                        To.Contents = null;
+                        return;
+                    }
+
+                    To.Contents = new List<ClientItem>(From.Contents.Count);
+                    foreach (ClientItem Item in From.Contents)
+                        To.Contents.Add(Item == null ? null : (ClientItem)Item.Clone(Context));
+                });
+        }
+
         public ClientItem GetItem(int index)
         {
             if (index >= Contents.Count)

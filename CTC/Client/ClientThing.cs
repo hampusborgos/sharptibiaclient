@@ -21,5 +21,14 @@ namespace CTC
                 return 0;
             }
         }
+
+        /// <summary>
+        /// Copies this thing for a snapshot, reusing anything Context has already
+        /// seen so that aliases stay aliases. See CloneContext.
+        /// </summary>
+        public virtual ClientThing Clone(CloneContext Context)
+        {
+            return new ClientThing();
+        }
     }
 }

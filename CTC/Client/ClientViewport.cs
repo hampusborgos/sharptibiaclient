@@ -53,6 +53,12 @@ namespace CTC
         public ClientMap Map = new ClientMap();
 
         /// <summary>
+        /// Ambient light for the whole scene, as sent by the server (0x82).
+        /// Level 255 is full daylight; the client ignores it underground.
+        /// </summary>
+        public LightSource WorldLight;
+
+        /// <summary>
         /// All open channels
         /// </summary>
         public Dictionary<UInt16, ClientChannel> Channels = new Dictionary<UInt16, ClientChannel>();
@@ -69,6 +75,7 @@ namespace CTC
         public delegate void LoginEvent(ClientViewport Viewport);
         public delegate void ContainerEvent(ClientViewport Viewport, ClientContainer Container);
         public delegate void VIPEvent(ClientViewport Viewport, ClientCreature Creature);
+        public delegate void MoveEvent(ClientViewport Viewport, ClientCreature Creature, MapPosition From, MapPosition To);
 
         /// <summary>
         /// 
@@ -99,6 +106,57 @@ namespace CTC
         /// Fired when a VIP is added, logs in or logs out.
         /// </summary>
         public event VIPEvent VIPStatusChanged;
+
+        /// <summary>
+        /// A creature walked from one tile to another.
+        ///
+        /// The move packet names the creature by the tile it was standing on and
+        /// its index in that tile's stack, so once the move has been applied
+        /// there is no way back to which creature it was. This is raised while
+        /// that is still known.
+        /// </summary>
+        public event MoveEvent CreatureMoved;
+
+        #endregion
+
+        #region Event Raisers
+
+        // A restore has to tell the panels what changed, but an event can only be
+        // raised from the class that declares it, so these are the way in.
+
+        public void RaiseOpenContainer(ClientContainer Container)
+        {
+            if (OpenContainer != null)
+                OpenContainer(this, Container);
+        }
+
+        public void RaiseUpdateContainer(ClientContainer Container)
+        {
+            if (UpdateContainer != null)
+                UpdateContainer(this, Container);
+        }
+
+        public void RaiseCloseContainer(ClientContainer Container)
+        {
+            if (CloseContainer != null)
+                CloseContainer(this, Container);
+        }
+
+        /// <summary>
+        /// VIPPanel rebuilds its whole list from VIPList and ignores the creature
+        /// it is handed, so a null here is a valid "everything changed".
+        /// </summary>
+        public void RaiseVIPStatusChanged(ClientCreature Creature)
+        {
+            if (VIPStatusChanged != null)
+                VIPStatusChanged(this, Creature);
+        }
+
+        public void RaiseLogin()
+        {
+            if (Login != null)
+                Login(this);
+        }
 
         #endregion
 
@@ -136,7 +194,8 @@ namespace CTC
             Protocol.CreatureShield.Add(OnCreatureShield);
             Protocol.CreatureSkull.Add(OnCreatureSkull);
             Protocol.CreatureHealth.Add(OnCreatureHealth);
-            Protocol.CreatureTurn.Add(OnCreatureLight);
+            Protocol.CreatureLight.Add(OnCreatureLight);
+            Protocol.WorldLight.Add(OnWorldLight);
 
             Protocol.CreatureSpeak.Add(OnCreatureSpeak);
             Protocol.OpenChannel.Add(OnOpenChannel);
@@ -279,6 +338,42 @@ namespace CTC
                     Map[Tile.Position] = Tile;
                 }
             }
+
+            ForgetCreaturesOutOfView();
+        }
+
+        /// <summary>
+        /// Drops creatures that are no longer anywhere: not on a tile, not on the
+        /// VIP list, and not us.
+        ///
+        /// The map is already pruned to a 19x15 window on every description, but
+        /// this dictionary was not, so it accumulated every creature seen for the
+        /// whole session. Nothing reads it - the protocol keeps its own cache of
+        /// the creatures it is allowed to refer to - so the growth went unnoticed
+        /// until snapshots started copying it.
+        /// </summary>
+        private void ForgetCreaturesOutOfView()
+        {
+            HashSet<UInt32> Visible = new HashSet<UInt32>();
+
+            foreach (ClientTile Tile in Map.AllTiles)
+                foreach (ClientThing Thing in Tile.Objects)
+                    if (Thing is ClientCreature)
+                        Visible.Add(((ClientCreature)Thing).ID);
+
+            foreach (UInt32 ID in VIPList.Keys)
+                Visible.Add(ID);
+
+            if (Player != null)
+                Visible.Add(Player.ID);
+
+            List<UInt32> Gone = new List<UInt32>();
+            foreach (UInt32 ID in Creatures.Keys)
+                if (!Visible.Contains(ID))
+                    Gone.Add(ID);
+
+            foreach (UInt32 ID in Gone)
+                Creatures.Remove(ID);
         }
 
         private void ProbeTileForCreatures(ClientTile Tile)
@@ -321,6 +416,9 @@ namespace CTC
             ToTile.Add(Creature, true);
 
             Creature.Move(OldPosition, ToPosition);
+
+            if (CreatureMoved != null)
+                CreatureMoved(this, Creature, OldPosition, ToPosition);
         }
 
         private void OnCreatureTurn(Packet props)
@@ -333,6 +431,12 @@ namespace CTC
         {
             ClientCreature Creature = (ClientCreature)props["Creature"];
             Creature.Health = (int)props["Health"];
+        }
+
+        private void OnWorldLight(Packet props)
+        {
+            WorldLight.Level = (int)props["Level"];
+            WorldLight.Color = (int)props["Color"];
         }
 
         private void OnCreatureLight(Packet props)

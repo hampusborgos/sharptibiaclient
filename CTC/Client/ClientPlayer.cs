@@ -46,5 +46,49 @@ namespace CTC
             Skill["Shield"] = new ClientSkill("Shielding");
             Skill["Fish"] = new ClientSkill("Fishing");
         }
+
+        protected override ClientCreature Allocate()
+        {
+            return new ClientPlayer(ID);
+        }
+
+        /// <summary>
+        /// As ClientCreature.CopyInto, plus the player-only fields.
+        ///
+        /// Note the skills are copied *into* the target's existing ClientSkill
+        /// objects rather than replacing them. SkillPanel holds one of those
+        /// references per row and reads it every frame, so replacing them would
+        /// leave the panel showing whatever the values were before the seek.
+        /// </summary>
+        protected override void CopyInto(ClientCreature Target)
+        {
+            base.CopyInto(Target);
+
+            ClientPlayer Player = (ClientPlayer)Target;
+            Player.Capacity = Capacity;
+            Player.Experience = Experience;
+            Player.Conditions = Conditions;
+
+            CopySkill(Level, Player.Level);
+            CopySkill(MagicLevel, Player.MagicLevel);
+
+            foreach (KeyValuePair<string, ClientSkill> Entry in Skill)
+            {
+                ClientSkill Into;
+                if (!Player.Skill.TryGetValue(Entry.Key, out Into))
+                {
+                    Into = new ClientSkill(Entry.Value.LongName);
+                    Player.Skill[Entry.Key] = Into;
+                }
+                CopySkill(Entry.Value, Into);
+            }
+        }
+
+        private static void CopySkill(ClientSkill From, ClientSkill To)
+        {
+            To.LongName = From.LongName;
+            To.Value = From.Value;
+            To.Percent = From.Percent;
+        }
     }
 }

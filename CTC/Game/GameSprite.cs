@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace CTC
 {
@@ -67,10 +68,66 @@ namespace CTC
             return this.Images[v];
         }
 
-        public GameImage GetImage(int X, int Y, Direction Direction, ClientOutfit Outfit, int Time)
+        /// <summary>
+        /// True when the second sprite layer is an outfit colour mask rather than
+        /// another blend frame, which is what makes DrawCreature dye the sprite.
+        /// </summary>
+        public Boolean HasColorTemplate
         {
-            int v;
-            v = (((((int)Direction) * this.BlendFrames) * this.Height + Y) * this.Width + X);
+            get { return ColorTemplate && BlendFrames > 1; }
+        }
+
+        /// <summary>
+        /// Where the furniture over a creature hangs, relative to the corner of
+        /// its tile and in map pixels: the top of the sprite, in the middle. Its
+        /// name, its health bar, what it is saying and the damage rolling off it
+        /// all hang from this one point.
+        ///
+        /// A quarter sprite of air is left over the head. The original code left
+        /// a whole half sprite, which read as the bar belonging to whatever was
+        /// standing on the tile behind.
+        /// </summary>
+        public Vector2 Overhead
+        {
+            get
+            {
+                return new Vector2(
+                    Width * 16 + RenderOffset,
+                    -Height * 16 + RenderOffset + 8);
+            }
+        }
+
+        /// <summary>
+        /// The same point over a tile with nothing standing on it.
+        /// </summary>
+        public static readonly Vector2 DefaultOverhead = new Vector2(16, -8);
+
+        public static Vector2 OverheadOf(GameSprite Sprite)
+        {
+            return Sprite == null ? DefaultOverhead : Sprite.Overhead;
+        }
+
+        /// <summary>
+        /// How many poses this creature has. Phase 0 is standing still and the
+        /// rest are the walk cycle; see CreatureWalks.
+        /// </summary>
+        public int Phases
+        {
+            get { return Math.Max(1, AnimationLength); }
+        }
+
+        /// <summary>
+        /// A creature image. Direction picks the column of the sheet, Layer picks
+        /// 0 for the sprite itself and 1 for its colour mask, Phase the pose.
+        ///
+        /// Diagonals are folded onto the four columns a creature sheet actually
+        /// has, which the modulo below used to do by accident - now that a phase
+        /// multiplies the column, a fifth direction would land in the next pose.
+        /// </summary>
+        public GameImage GetImage(int X, int Y, Direction Direction, int Layer, int Phase)
+        {
+            int Column = ((int)Direction) % this.XDiv;
+            int v = (((Phase * this.XDiv + Column) * this.BlendFrames + Layer) * this.Height + Y) * this.Width + X;
             if(v >= this.Images.Count)
             {
                 if(this.Images.Count == 1)
@@ -78,14 +135,6 @@ namespace CTC
                 else
                     v %= this.Images.Count;
             }
-
-            /*
-            if(frames > 1)
-            { // Template
-                TemplateImage* img = getTemplateImage(v, _outfit);
-                return img->getHardwareID();
-            }
-             * */
             return this.Images[v];
         }
     }

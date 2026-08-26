@@ -16,6 +16,9 @@ namespace CTC
 
         /// <summary>
         /// Reads the next packet from the stream and returns it.
+        ///
+        /// The message is only valid until the next call to Read: an implementation
+        /// is free to hand back one buffer it reuses, and MoviePlayback does.
         /// </summary>
         /// <returns>The next packet, or null if we've reached the end of the stream.</returns>
         NetworkMessage Read(GameTime Time);

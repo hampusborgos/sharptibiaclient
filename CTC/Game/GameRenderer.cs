@@ -25,21 +25,37 @@ namespace CTC
         TibiaGameData GameData;
         GraphicsDevice Device;
 
-        public GameRenderer(TibiaGameData GameData)
+        /// <summary>
+        /// Who is mid-step, which is all the renderer needs to know to pick a
+        /// creature's pose. Owned by the canvas, which keeps it wound. The
+        /// renderers that only draw inventory items leave it null.
+        /// </summary>
+        CreatureWalks Walks;
+
+        public GameRenderer(TibiaGameData GameData, CreatureWalks Walks = null)
         {
             this.Device = UIContext.Graphics.GraphicsDevice;
             this.GameData = GameData;
+            this.Walks = Walks;
         }
 
         #region Drawing Code
 
-        public Color MakeColor(int id)
-        {	    
-            Color c = new Color();
-            c.B = (byte)((id % 6) / 5f * 255);
-            c.G = (byte)(((id / 6) % 6) / 5f * 255);
-            c.R = (byte)((id / 36f) / 6f * 255);
-            return c;
+        /// <summary>
+        /// Tibia's 216 colour palette: six steps of 51 per channel, red counting
+        /// slowest. Animated text arrives as an index into it, and the message
+        /// colours in SpokenText are the classic entries of the same table.
+        ///
+        /// The red channel used to divide by six rather than five and never
+        /// reached zero, which tinted every colour - pure green came out
+        /// (35, 255, 0).
+        /// </summary>
+        public static Color MakeColor(int id)
+        {
+            return new Color(
+                (byte)(((id / 36) % 6) * 51),
+                (byte)(((id / 6) % 6) * 51),
+                (byte)((id % 6) * 51));
         }
 
         private void DrawImage(SpriteBatch Batch, GameImage Image, Rectangle dest, Color clr)
@@ -52,6 +68,42 @@ namespace CTC
             }
 
             Batch.Draw(Image.Texture, dest, clr);
+        }
+
+        /// <summary>
+        /// Colourised creature images, keyed by the two sprites they were built
+        /// from and the four colour indices. An outfit is worn by everyone wearing
+        /// it, so the cache holds one texture per distinct look rather than per
+        /// creature, and a recording only ever shows a handful of them.
+        /// </summary>
+        private readonly Dictionary<UInt64, Texture2D> ColorizedImages = new Dictionary<UInt64, Texture2D>();
+
+        /// <summary>
+        /// Draws a creature image dyed by its outfit.
+        ///
+        /// The sprite itself is painted in greys; the colours live in a second
+        /// layer that masks it in pure yellow, red, green and blue for head, body,
+        /// legs and feet. Multiplying the grey through the masked colour is what
+        /// turns one sprite sheet into every outfit in the game.
+        /// </summary>
+        private void DrawImage(SpriteBatch Batch, GameImage Image, GameImage Template, ClientOutfit Outfit, Rectangle dest, Color clr)
+        {
+            UInt64 Key = ((UInt64)(UInt16)Image.ID << 48)
+                       | ((UInt64)(UInt16)Template.ID << 32)
+                       | ((UInt64)(Byte)Outfit.LookHead << 24)
+                       | ((UInt64)(Byte)Outfit.LookBody << 16)
+                       | ((UInt64)(Byte)Outfit.LookLegs << 8)
+                       | ((UInt64)(Byte)Outfit.LookFeet);
+
+            Texture2D Texture;
+            if (!ColorizedImages.TryGetValue(Key, out Texture))
+            {
+                Texture = new Texture2D(Device, 32, 32, false, SurfaceFormat.Color);
+                Texture.SetData<Byte>(OutfitColors.Dye(Image.LoadRGBA(), Template.LoadRGBA(), Outfit));
+                ColorizedImages[Key] = Texture;
+            }
+
+            Batch.Draw(Texture, dest, clr);
         }
 
         public void DrawSprite(SpriteBatch Batch, GameTime Time, ClientTile Tile, GameSprite Sprite, int SubType, int Frame, Vector2 Position, Color clr)
@@ -167,6 +219,40 @@ namespace CTC
             UIContext.Skin.DrawBox(Batch, UIElementType.InventorySlot, rect);
         }
 
+        /// <summary>
+        /// A creature mid-step, held back until the rest of its floor is drawn.
+        /// </summary>
+        private struct Sliding
+        {
+            public ClientCreature Creature;
+            public Vector2 Position;
+
+            public Sliding(ClientCreature Creature, Vector2 Position)
+            {
+                this.Creature = Creature;
+                this.Position = Position;
+            }
+        }
+
+        /// <summary>
+        /// How far the world is drawn from where the map says it is, in map
+        /// pixels.
+        ///
+        /// The player is always in the middle of the view, so a step of theirs is
+        /// the world moving rather than them: the map has already put them on the
+        /// tile they are walking to, and everything else is drawn back by as far
+        /// as they still have to go. Their own offset then cancels it out and
+        /// leaves them centred, walking on the spot while the ground slides under
+        /// them.
+        /// </summary>
+        private Vector2 WorldSlide(ClientViewport Viewport)
+        {
+            if (Walks == null || Viewport.Player == null)
+                return Vector2.Zero;
+
+            return -Walks.Offset(Viewport.Player.ID);
+        }
+
         public void DrawCreature(SpriteBatch Batch, GameTime Time, ClientCreature Creature, Vector2 Offset, Color clr)
         {
             if (Creature.Outfit.LookItem != 0)
@@ -179,27 +265,31 @@ namespace CTC
 
                 Offset.X += Sprite.RenderOffset;
                 Offset.Y += Sprite.RenderOffset;
+
+                if (Walks != null)
+                    Offset += Walks.Offset(Creature.ID);
                 if (Sprite != null)
                 {
                     for (int cx = 0; cx != Sprite.Width; ++cx)
                     {
                         for (int cy = 0; cy != Sprite.Height; ++cy)
                         {
-                            GameImage Image = Sprite.GetImage(
-                                cx, cy,
-                                Creature.Direction, Creature.Outfit,
-                                (int)(Time.TotalGameTime.TotalMilliseconds / Sprite.AnimationSpeed)
-                            );
+                            int Phase = Walks == null ? 0 : Walks.Phase(Creature.ID, Sprite.Phases);
 
+                            GameImage Image = Sprite.GetImage(cx, cy, Creature.Direction, 0, Phase);
                             Rectangle rect = new Rectangle((int)Offset.X - 32 * cx, (int)Offset.Y - 32 * cy, 32, 32);
-                            DrawImage(Batch, Image, rect, clr);
+
+                            if (Sprite.HasColorTemplate)
+                                DrawImage(Batch, Image, Sprite.GetImage(cx, cy, Creature.Direction, 1, Phase), Creature.Outfit, rect, clr);
+                            else
+                                DrawImage(Batch, Image, rect, clr);
                         }
                     }
                 }
             }
         }
 
-        public void DrawText(SpriteBatch Batch, String Text, Vector2 Offset, Color Color)
+        public void DrawText(SpriteBatch Batch, String Text, Vector2 Offset, Color Color, float Size = 1.0f)
         {
             Offset.X = (int)Offset.X;
             Offset.Y = (int)Offset.Y;
@@ -207,25 +297,45 @@ namespace CTC
             Batch.DrawString(
                 UIContext.StandardFont, Text, Offset,
                 Color, 0.0f, new Vector2(0.0f, 0.0f),
-                1.0f, SpriteEffects.None, 0.5f
+                Size, SpriteEffects.None, 0.5f
            );
         }
 
-        public void DrawBoldedText(SpriteBatch Batch, String Text, Vector2 Offset, Boolean Centered, Color Primary)
+        /// <summary>
+        /// Text with a black outline, which is what keeps it readable over a map
+        /// of any colour. Size scales the whole thing, outline included.
+        /// </summary>
+        public void DrawBoldedText(SpriteBatch Batch, String Text, Vector2 Offset, Boolean Centered, Color Primary, float Size = 1.0f)
         {
             Offset.X = (int)Offset.X;
             Offset.Y = (int)Offset.Y;
 
             if (Centered)
             {
-                Vector2 TextSize = UIContext.StandardFont.MeasureString(Text);
+                Vector2 TextSize = UIContext.StandardFont.MeasureString(Text) * Size;
                 Offset.X -= (int)(TextSize.X / 2);
             }
-            DrawText(Batch, Text, new Vector2(Offset.X + 1, Offset.Y), Color.Black);
-            DrawText(Batch, Text, new Vector2(Offset.X - 1, Offset.Y), Color.Black);
-            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y + 1), Color.Black);
-            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y - 1), Color.Black);
-            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y), Primary);
+
+            float Edge = Math.Max(1, (int)Size);
+            DrawText(Batch, Text, new Vector2(Offset.X + Edge, Offset.Y), Color.Black, Size);
+            DrawText(Batch, Text, new Vector2(Offset.X - Edge, Offset.Y), Color.Black, Size);
+            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y + Edge), Color.Black, Size);
+            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y - Edge), Color.Black, Size);
+            DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y), Primary, Size);
+        }
+
+        /// <summary>
+        /// Where a creature's overhead furniture goes on screen. GameSprite.Overhead
+        /// is in map pixels and so scales with the view; the text and the bar that
+        /// hang off it are drawn at their own size and do not.
+        ///
+        /// That distinction is what was missing. The bars were placed with unscaled
+        /// map pixels, which walked them off their sprite as the window grew, and
+        /// everything else was lining up with a tile instead of with them.
+        /// </summary>
+        private static Vector2 OverheadAnchor(Vector2 TileOrigin, Vector2 Scale, Vector2 Overhead)
+        {
+            return TileOrigin + Overhead * Scale;
         }
 
         public Color LifeColorForCreature(ClientCreature Creature)
@@ -236,21 +346,15 @@ namespace CTC
             return new Color(255, 255, 255);
         }
 
-        public void DrawCreatureBars(SpriteBatch Batch, ClientCreature Creature, Vector2 Offset)
+        public void DrawCreatureBars(SpriteBatch Batch, ClientCreature Creature, Vector2 Offset, Vector2 Scale)
         {
             if (Creature.Name != "")
             {
-                GameSprite Sprite = GameData.GetCreatureSprite(Creature.Outfit.LookType);
                 Vector2 TextSize = UIContext.StandardFont.MeasureString(Creature.Name);
                 Color LifeColor = LifeColorForCreature(Creature);
-                
-                // Put at the center of the sprite
-                Offset.X += Sprite.Width * 16;
-                Offset.Y -= Sprite.Height * 16;
-                
-                // Render offsets are negative
-                Offset.X += Sprite.RenderOffset;
-                Offset.Y += Sprite.RenderOffset;
+
+                Offset = OverheadAnchor(Offset, Scale,
+                    GameSprite.OverheadOf(GameData.GetCreatureSprite(Creature.Outfit.LookType)));
 
                 // Render the text
                 Vector2 TextOffset = Offset;
@@ -274,7 +378,7 @@ namespace CTC
             }
         }
 
-        public void DrawTile(SpriteBatch Batch, GameTime Time, Vector2 Position, ClientTile Tile, TileAnimations Animations)
+        private void DrawTile(SpriteBatch Batch, GameTime Time, Vector2 Position, ClientTile Tile, TileAnimations Animations, List<Sliding> Deferred)
         {
             if (Tile == null)
                 return;
@@ -286,7 +390,18 @@ namespace CTC
             foreach (ClientThing Thing in Tile.ObjectsByDrawOrder)
             {
                 if (Thing is ClientCreature)
-                    DrawCreature(Batch, Time, (ClientCreature)Thing, Position, Color.White);
+                {
+                    ClientCreature Creature = (ClientCreature)Thing;
+
+                    // A creature between two tiles hangs over one of them, and
+                    // the tiles are drawn in order: whichever it hangs over is
+                    // painted after it half the time. So it waits for the rest of
+                    // its floor and goes on top of it.
+                    if (Deferred != null && Walks != null && Walks.Stepping(Creature.ID))
+                        Deferred.Add(new Sliding(Creature, Position));
+                    else
+                        DrawCreature(Batch, Time, Creature, Position, Color.White);
+                }
                 else
                 {
                     ClientItem Item = (ClientItem)Thing;
@@ -315,7 +430,7 @@ namespace CTC
             }
         }
 
-        public void DrawTileForeground(SpriteBatch Batch, GameTime Time, Vector2 Offset, ClientTile Tile, TileAnimations Animations)
+        public void DrawTileForeground(SpriteBatch Batch, GameTime Time, Vector2 Offset, Vector2 Scale, ClientTile Tile, TileAnimations Animations)
         {
             if (Tile == null)
                 return;
@@ -323,7 +438,13 @@ namespace CTC
             foreach (ClientThing Thing in Tile.Objects)
             {
                 if (Thing is ClientCreature)
-                    DrawCreatureBars(Batch, (ClientCreature)Thing, Offset);
+                {
+                    ClientCreature Creature = (ClientCreature)Thing;
+
+                    // The name and bar ride along with a creature mid-step.
+                    Vector2 Slide = Walks == null ? Vector2.Zero : Walks.Offset(Creature.ID) * Scale;
+                    DrawCreatureBars(Batch, Creature, Offset + Slide, Scale);
+                }
             }
 
             if (Animations != null)
@@ -333,51 +454,147 @@ namespace CTC
                     if (!Effect.Expired && Effect is AnimatedText)
                     {
                         AnimatedText Text = (AnimatedText)Effect;
-                        Vector2 DrawOffset = Offset + Text.Offset;
-                        // DrawOffset.X += 16;
-                        // DrawOffset.Y += 26;
-                        DrawBoldedText(Batch, Text.Text, DrawOffset, true, MakeColor(Text.Color));
+
+                        // Damage rolls off whoever took it, so it floats from the
+                        // point their name and bar hang from.
+                        Vector2 Anchor = OverheadAnchor(Offset, Scale, Text.Overhead);
+                        DrawBoldedText(Batch, Text.Text, Anchor + Text.Offset, true, MakeColor(Text.Color));
                     }
                 }
             }
         }
 
-        public void DrawSceneForeground(SpriteBatch Batch, Vector2 ScreenOffset, Vector2 Scale, GameTime Time, ClientViewport Viewport, Dictionary<MapPosition, TileAnimations> PlayingAnimations = null)
+        /// <summary>
+        /// Where the top left corner of a map position lands on the screen. The
+        /// scene is drawn around Viewport.ViewPosition, which sits seven tiles in
+        /// and five down.
+        ///
+        /// Positions on another floor are projected as if they were on this one.
+        /// The only thing that reaches this from another floor is a yell, and a
+        /// yell from a floor away is clamped to the edge of the view regardless.
+        /// </summary>
+        public static Vector2 ScreenPositionOf(ClientViewport Viewport, Vector2 ScreenOffset, Vector2 Scale, MapPosition Position)
         {
             MapPosition Center = Viewport.ViewPosition;
 
-
-            Vector2 TopLeft = new Vector2(
-                -(Center.X - 7) * 32,
-                -(Center.Y - 5) * 32
+            return new Vector2(
+                ScreenOffset.X + (32 * (Position.X - Center.X + 7)) * Scale.X,
+                ScreenOffset.Y + (32 * (Position.Y - Center.Y + 5)) * Scale.Y
             );
+        }
 
-            int StartZ = 7;
-            int EndZ = Center.Z;
+        /// <summary>
+        /// Draws what is being said over the map. Text is screen space, like the
+        /// names and health bars, so it stays crisp at any window size.
+        /// </summary>
+        public void DrawSpeech(SpriteBatch Batch, Rectangle View, Vector2 Scale, ClientViewport Viewport, List<SpokenText> Speech)
+        {
+            float LineHeight = UIContext.StandardFont.LineSpacing;
+            Vector2 ScreenOffset = new Vector2(View.X, View.Y) + WorldSlide(Viewport) * Scale;
+
+            // How much is already stacked over each tile. Newest first, so the
+            // last thing said sits closest to the head and pushes older lines up.
+            Dictionary<MapPosition, float> Stacked = new Dictionary<MapPosition, float>();
+
+            for (int i = Speech.Count - 1; i >= 0; --i)
+            {
+                SpokenText Text = Speech[i];
+                if (Text.Expired)
+                    continue;
+
+                MapPosition Anchor = Text.FollowsPlayer ? Viewport.ViewPosition : Text.Position;
+                Vector2 Origin = OverheadAnchor(
+                    ScreenPositionOf(Viewport, ScreenOffset, Scale, Anchor), Scale, Text.Overhead);
+
+                // The speaker is named on the topmost of their run, which is the
+                // oldest of it: the stack grows upwards, so what is above this is
+                // what was said before it.
+                Boolean Named = Text.Speaker != null
+                    && Text.Speaker != SpeakerAbove(Speech, i, Anchor);
+
+                float Height = (Text.Lines.Count + (Named ? 1 : 0)) * LineHeight;
+                float Used;
+                Stacked.TryGetValue(Anchor, out Used);
+
+                // Half a line of air between one message and the next, so two of
+                // them read as two rather than as one long one.
+                Stacked[Anchor] = Used + Height + LineHeight / 2;
+
+                // Standing over the name, which itself sits 16 pixels over the
+                // health bar, with a little air in between.
+                Vector2 At = new Vector2(
+                    Origin.X,
+                    Origin.Y - 20 - Height - Used
+                );
+
+                // A creature can talk from outside the view - a monster yelling
+                // a screen away - so the text is pinned to the edge it would
+                // otherwise go past, pointing at where the shouting came from.
+                At.X = MathHelper.Clamp(At.X, View.Left + Text.Width / 2 + 2, View.Right - Text.Width / 2 - 2);
+                At.Y = MathHelper.Clamp(At.Y, View.Top + 2, View.Bottom - Height - 2);
+
+                Color Tint = MakeColor(Text.Color);
+
+                if (Named)
+                {
+                    DrawBoldedText(Batch, Text.Speaker + ":", At, true, Tint);
+                    At.Y += LineHeight;
+                }
+
+                foreach (String Line in Text.Lines)
+                {
+                    DrawBoldedText(Batch, Line, At, true, Tint);
+                    At.Y += LineHeight;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Who said the message stacked immediately above this one, or null if
+        /// this is the top of the stack.
+        /// </summary>
+        private static String SpeakerAbove(List<SpokenText> Speech, int Index, MapPosition Anchor)
+        {
+            for (int i = Index - 1; i >= 0; --i)
+            {
+                SpokenText Above = Speech[i];
+                if (Above.Expired)
+                    continue;
+
+                MapPosition Its = Above.FollowsPlayer ? Anchor : Above.Position;
+                if (Above.FollowsPlayer == Speech[Index].FollowsPlayer && Its.Equals(Anchor))
+                    return Above.Speaker;
+            }
+
+            return null;
+        }
+
+        public void DrawSceneForeground(SpriteBatch Batch, Vector2 ScreenOffset, Vector2 Scale, GameTime Time, ClientViewport Viewport, Dictionary<MapPosition, TileAnimations> PlayingAnimations = null)
+        {
+            ScreenOffset += WorldSlide(Viewport) * Scale;
+
+            // Which tiles are on screen. Above ground the window shifts with the
+            // floor; where they draw is ScreenPositionOf's business.
+            MapPosition Center = Viewport.ViewPosition;
+
             if (Center.Z <= 7)
             {
                 Center.Y -= (7 - Center.Z);
                 Center.X -= (7 - Center.Z);
-            }
-            else
-            {
-                StartZ = Math.Min(Center.Z + 2, 15);
-                EndZ = Center.Z;
             }
 
             for (int X = Center.X - 8; X <= Center.X + 8; ++X)
             {
                 for (int Y = Center.Y - 6; Y <= Center.Y + 6; ++Y)
                 {
-                    ClientTile Tile = Viewport.Map[new MapPosition(X, Y, Center.Z)];
-
-                    Vector2 DrawOffset = new Vector2(32 * X + TopLeft.X, 32 * Y + TopLeft.Y);
-                    DrawOffset *= Scale;
+                    MapPosition Position = new MapPosition(X, Y, Center.Z);
+                    ClientTile Tile = Viewport.Map[Position];
 
                     TileAnimations Animations = null;
                     if (PlayingAnimations != null && Tile != null)
                         PlayingAnimations.TryGetValue(Tile.Position, out Animations);
-                    DrawTileForeground(Batch, Time, ScreenOffset + DrawOffset, Tile, Animations);
+                    DrawTileForeground(Batch, Time,
+                        ScreenPositionOf(Viewport, ScreenOffset, Scale, Position), Scale, Tile, Animations);
                 }
             }
         }
@@ -404,8 +621,9 @@ namespace CTC
             Vector2 TopLeft = new Vector2(
                 -(Center.X - 7) * 32,
                 -(Center.Y - 5) * 32
-            );
+            ) + WorldSlide(Viewport);
 
+            List<Sliding> Deferred = new List<Sliding>();
 
             for (int Z = StartZ; Z >= EndZ; --Z)
             {
@@ -420,11 +638,114 @@ namespace CTC
                         TileAnimations Animations = null;
                         if (PlayingAnimations != null && Tile != null)
                             PlayingAnimations.TryGetValue(Tile.Position, out Animations);
-                        DrawTile(Batch, Time, pos, Tile, Animations);
+                        DrawTile(Batch, Time, pos, Tile, Animations, Deferred);
+                    }
+                }
+
+                foreach (Sliding Walker in Deferred)
+                    DrawCreature(Batch, Time, Walker.Creature, Walker.Position, Color.White);
+                Deferred.Clear();
+
+                TopLeft -= new Vector2(32, 32);
+            }
+        }
+
+        /// <summary>
+        /// Accumulates every light source on screen into the currently bound
+        /// render target. Walks the same floors and tiles as DrawScene so the
+        /// glows land exactly where the sprites that cast them were drawn.
+        ///
+        /// The caller is responsible for clearing the target to the ambient
+        /// colour first and for compositing the result over the scene.
+        /// </summary>
+        public void DrawLights(SpriteBatch Batch, ClientViewport Viewport)
+        {
+            MapPosition Center = Viewport.ViewPosition;
+
+            int StartZ = 7;
+            int EndZ = Center.Z;
+            if (Center.Z <= 7)
+            {
+                Center.Y -= (7 - Center.Z);
+                Center.X -= (7 - Center.Z);
+            }
+            else
+            {
+                StartZ = Math.Min(Center.Z + 2, 15);
+                EndZ = Center.Z;
+                Center.X -= 2;
+                Center.Y -= 2;
+            }
+
+            Vector2 TopLeft = new Vector2(
+                -(Center.X - 7) * 32,
+                -(Center.Y - 5) * 32
+            ) + WorldSlide(Viewport);
+
+            Texture2D Glow = LightMap.Glow(Batch.GraphicsDevice);
+
+            for (int Z = StartZ; Z >= EndZ; --Z)
+            {
+                // A tile's light can spill onto neighbours, so sweep a little
+                // wider than the visible area to avoid glows popping in at the
+                // screen edge.
+                for (int X = Center.X - 12; X <= Center.X + 13; ++X)
+                {
+                    for (int Y = Center.Y - 10; Y <= Center.Y + 11; ++Y)
+                    {
+                        ClientTile Tile = Viewport.Map[new MapPosition(X, Y, Z)];
+                        if (Tile == null)
+                            continue;
+
+                        Vector2 Position = new Vector2(32 * X + TopLeft.X, 32 * Y + TopLeft.Y);
+
+                        if (Tile.Ground != null && Tile.Ground.Type != null && Tile.Ground.Type.MakesLight)
+                            DrawLight(Batch, Glow, Position,
+                                Tile.Ground.Type.LightLevel, Tile.Ground.Type.LightColor);
+
+                        foreach (ClientThing Thing in Tile.ObjectsByDrawOrder)
+                        {
+                            if (Thing is ClientCreature)
+                            {
+                                ClientCreature Creature = (ClientCreature)Thing;
+                                Vector2 Slide = Walks == null ? Vector2.Zero : Walks.Offset(Creature.ID);
+                                DrawLight(Batch, Glow, Position + Slide,
+                                    Creature.Light.Level, Creature.Light.Color);
+                            }
+                            else
+                            {
+                                ClientItem Item = (ClientItem)Thing;
+                                if (Item.Type != null && Item.Type.MakesLight)
+                                    DrawLight(Batch, Glow, Position,
+                                        Item.Type.LightLevel, Item.Type.LightColor);
+                            }
+                        }
                     }
                 }
                 TopLeft -= new Vector2(32, 32);
             }
+        }
+
+        /// <summary>
+        /// Draws one radial glow. Level is a radius in tiles, Color an index
+        /// into the Tibia palette.
+        /// </summary>
+        private void DrawLight(SpriteBatch Batch, Texture2D Glow, Vector2 TilePosition, int Level, int Color)
+        {
+            if (Level <= 0)
+                return;
+
+            // Light is centred on the tile, not its top-left corner.
+            Vector2 Origin = TilePosition + new Vector2(16, 16);
+            float Radius = Level * 32.0f;
+
+            Rectangle Destination = new Rectangle(
+                (int)(Origin.X - Radius),
+                (int)(Origin.Y - Radius),
+                (int)(Radius * 2),
+                (int)(Radius * 2));
+
+            Batch.Draw(Glow, Destination, LightMap.FromEightBit(Color));
         }
 
         #endregion

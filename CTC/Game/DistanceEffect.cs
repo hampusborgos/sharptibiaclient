@@ -8,6 +8,16 @@ namespace CTC
 {
     public class DistanceEffect : GameEffect
     {
+        /// <summary>
+        /// How fast a projectile flies, in map pixels a second: ten tiles.
+        ///
+        /// It used to fly at half this, while its lifetime was already written
+        /// for the full speed - the old duration, the distance over ten, is
+        /// exactly this speed's travel time - so every shot vanished halfway to
+        /// what it was aimed at.
+        /// </summary>
+        private const float Velocity = 320;
+
         public readonly int ID;
         public readonly GameSprite Sprite;
         public int Frame;
@@ -70,13 +80,17 @@ namespace CTC
                     Frame = 1;// NORTH
             }
 
-            Duration = Math.Sqrt(dx * dx + dy * dy) / 10;
             Offset = new Vector2(
                 (From.X - Math.Max(From.X, To.X)) * 32,
                 (From.Y - Math.Max(From.Y, To.Y)) * 32
             );
-            Speed = new Vector2(Math.Sign(dx) * 160, Math.Sign(dy) * 160);
-            //Speed -= Offset;
+            Speed = new Vector2(Math.Sign(dx) * Velocity, Math.Sign(dy) * Velocity);
+
+            // Last exactly as long as the flight takes, so the shot lands on its
+            // target rather than short of it or past it. Both axes close at the
+            // same rate, so what governs is the longer of the two - not the
+            // diagonal between them, which is what the distance over ten was.
+            Duration = Math.Max(Math.Abs(dx), Math.Abs(dy)) * 32 / Velocity;
         }
 
         public override void Update(GameTime Time)

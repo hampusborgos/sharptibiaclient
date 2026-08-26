@@ -34,6 +34,15 @@ namespace CTC
         GameSidebar Sidebar;
         ChatPanel Chat;
         GameFrame Frame;
+        PlaybackBar Playback;
+
+        /// <summary>
+        /// The chat never gets squeezed below this, however wide the window is.
+        /// Deliberately just its tab strip: the game view reaching the sidebar
+        /// takes priority, and at wide, short window shapes the 15x11 view needs
+        /// nearly all the height to get there.
+        /// </summary>
+        private const int MinimumChatHeight = 40;
 
         SpriteBatch ForegroundBatch;
 
@@ -45,7 +54,8 @@ namespace CTC
             }
             set
             {
-                ActiveViewportChanged(value.Viewport);
+                if (ActiveViewportChanged != null)
+                    ActiveViewportChanged(value.Viewport);
                 _ActiveClient = value;
             }
         }
@@ -85,7 +95,32 @@ namespace CTC
             // Hook up handlers for some events
             State.Viewport.OpenContainer += OnOpenContainer;
             State.Viewport.CloseContainer += OnCloseContainer;
+
+            // A restore that swaps in a different player leaves the panels holding
+            // objects from the old one, so they have to be rebuilt. Only a second
+            // login in one recording does this; ordinary seeks keep the player.
+            State.PlayerIdentityChanged += OnPlayerIdentityChanged;
+
             Frame.AddClient(State);
+            Playback.SetClient(State);
+            NeedsLayout = true;
+        }
+
+        protected void OnPlayerIdentityChanged(ClientState State)
+        {
+            if (State == ActiveClient && ActiveViewportChanged != null)
+                ActiveViewportChanged(State.Viewport);
+        }
+
+        /// <summary>
+        /// A key was pressed. There is no focus system in this framework, and
+        /// building one so that a single view can hear about the space bar would
+        /// be a lot of machinery for nothing, so this goes straight to the
+        /// transport.
+        /// </summary>
+        public Boolean KeyPressed(Keys Key, KeyboardState Keyboard)
+        {
+            return Playback.KeyPressed(Key, Keyboard);
         }
 
         #region Event Handlers
@@ -146,7 +181,7 @@ namespace CTC
 
         protected void OnCloseContainer(ClientViewport Viewport, ClientContainer Container)
         {
-            foreach (ContainerPanel CPanel in Sidebar.ContentView.SubviewsOfType<ContainerPanel>())
+            foreach (ContainerPanel CPanel in Sidebar.WindowsOfType<ContainerPanel>())
                 if (CPanel.ContainerID == Container.ContainerID)
                     CPanel.RemoveFromSuperview();
         }
@@ -159,6 +194,10 @@ namespace CTC
             Bounds.Width = UIContext.GameWindowSize.Width;
             Bounds.Height = UIContext.GameWindowSize.Height;
 
+            // Settle the sidebar width first: it is user draggable, and both the
+            // game view and the chat get whatever is left over.
+            Sidebar.ResolveWidth(ClientBounds.Width);
+
             // Resize the sidebar to fit
             Sidebar.Bounds = new Rectangle
             {
@@ -168,21 +207,43 @@ namespace CTC
                 Width = Sidebar.FullBounds.Width
             }.Subtract(Sidebar.Margin);
 
-            Chat.Bounds = new Rectangle
-            {
-                X = ClientBounds.Top,
-                Y = ClientBounds.Height - Chat.FullBounds.Height,
-                Width = ClientBounds.Width - Sidebar.FullBounds.Width,
-                Height = Chat.Bounds.Height
-            }.Subtract(Chat.Margin);
+            int RemainingWidth = ClientBounds.Width - Sidebar.FullBounds.Width;
+
+            // The transport is a fixed strip under the game view; take its height
+            // off the top before anything else gets to ask for room.
+            int PlaybackHeight = Playback.Visible ? PlaybackBar.PreferredHeight : 0;
+
+            // Give the game view exactly the height it needs to span that width,
+            // so it reaches the sidebar instead of being letterboxed, and let the
+            // chat have the rest. The chat keeps a usable minimum either way.
+            int FrameHeight = Frame.PreferredHeightForWidth(RemainingWidth);
+            FrameHeight = (int)MathHelper.Clamp(
+                FrameHeight, 0,
+                Math.Max(0, ClientBounds.Height - MinimumChatHeight - PlaybackHeight));
 
             Frame.Bounds = new Rectangle
             {
                 X = ClientBounds.Top,
                 Y = ClientBounds.Left,
-                Width = ClientBounds.Width - Sidebar.FullBounds.Width,
-                Height = ClientBounds.Height - Chat.Bounds.Height
+                Width = RemainingWidth,
+                Height = FrameHeight
             }.Subtract(Frame.Margin);
+
+            Playback.Bounds = new Rectangle
+            {
+                X = ClientBounds.Top,
+                Y = ClientBounds.Top + FrameHeight,
+                Width = RemainingWidth,
+                Height = PlaybackHeight
+            }.Subtract(Playback.Margin);
+
+            Chat.Bounds = new Rectangle
+            {
+                X = ClientBounds.Top,
+                Y = ClientBounds.Top + FrameHeight + PlaybackHeight,
+                Width = RemainingWidth,
+                Height = ClientBounds.Height - FrameHeight - PlaybackHeight
+            }.Subtract(Chat.Margin);
 
             base.LayoutSubviews();
         }
@@ -265,6 +326,10 @@ namespace CTC
 
             Sidebar = new GameSidebar(this);
             AddSubview(Sidebar);
+
+            Playback = new PlaybackBar();
+            Playback.Visible = false;
+            AddSubview(Playback);
 
             Chat = new ChatPanel();
             Chat.Bounds.Height = 180;

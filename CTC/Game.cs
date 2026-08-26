@@ -5,7 +5,6 @@ using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
@@ -21,9 +20,25 @@ namespace CTC
 
         GameDesktop Desktop;
         MouseState LastMouseState;
+        KeyboardState LastKeyboardState;
 
-        public Game()
+        /// <summary>
+        /// The .tmv recording to play back, resolved from the command line.
+        /// </summary>
+        private readonly String MoviePath;
+
+        /// <summary>
+        /// Where playback starts and how fast, from --start and --speed.
+        /// </summary>
+        private readonly TimeSpan StartPosition;
+        private readonly double StartSpeed;
+
+        public Game(String[] Args)
         {
+            MoviePath = AppPaths.ResolveRecording(Args);
+            StartPosition = AppPaths.StartPosition(Args);
+            StartSpeed = AppPaths.StartSpeed(Args);
+
             Graphics = new GraphicsDeviceManager(this);
             
 
@@ -44,7 +59,9 @@ namespace CTC
             base.Initialize();
 
             // Setup the window
-            IsFixedTimeStep = false;
+            // The original ran uncapped, which on modern hardware just pegs a GPU core.
+            IsFixedTimeStep = true;
+            TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 120.0);
             Graphics.SynchronizeWithVerticalRetrace = false;
             //graphics.GraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.One;
             //graphics.PreferWaitForVerticalTrace = false;
@@ -74,9 +91,9 @@ namespace CTC
             Desktop.NeedsLayout = true;
 
             ///////////////////////////////////////////////////////////////////
-            // For debugging read a TMV file as input
+            // Read the TMV file we were pointed at
 
-            FileInfo file = new FileInfo("./Test.tmv");
+            FileInfo file = new FileInfo(MoviePath);
             Stream virtualStream = null;
 
             FileStream fileStream = file.OpenRead();
@@ -85,32 +102,18 @@ namespace CTC
             else
                 virtualStream = fileStream;
 
-            // Add the initial state
-            TibiaMovieStream MovieStream = new TibiaMovieStream(virtualStream, file.Name);
-            ClientState State = new ClientState(MovieStream);
+            TibiaMovieRecording Recording = TibiaMovieRecording.Load(virtualStream, file.Name);
+            ClientState State = new ClientState(Recording);
 
-            MovieStream.PlaybackSpeed = 50;
-            State.ForwardTo(new TimeSpan(0, 30, 0));
+            // The tab wants a player name and the parser cannot read a creature
+            // before it has a Player, so always get as far as the login packet.
+            State.PrimeToLogin();
+            Desktop.AddClient(State);
 
-            // If fast-forwarded, client tab immediately,
-            // otherwise delay until we receive the login packet.
-            if (State.Viewport.Player == null)
-            {
-                State.Viewport.Login += delegate(ClientViewport Viewport)
-                {
-                    Desktop.AddClient(State);
-                };
-            }
-            else
-            {
-                Desktop.AddClient(State);
-            }
-
-            State.Update(new GameTime());
-            /*
-            while (MS.Elapsed.TotalMinutes < 0 || MS.Elapsed.Seconds < 0)
-                Protocol.parsePacket(InStream.Read());
-             */
+            State.Playback.Speed = StartSpeed;
+            State.Playback.Playing = true;
+            if (StartPosition > TimeSpan.Zero)
+                State.SeekTo(StartPosition);
         }
 
         /// <summary>
@@ -129,7 +132,11 @@ namespace CTC
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            MouseState mouse = Mouse.GetState();
+            UIContext.Input.Update(gameTime);
+            MouseState mouse = UIContext.Input.CurrentMouseState;
+
+            if (UIContext.Input.Finished)
+                Exit();
 
             // Do input handling
 
@@ -144,8 +151,16 @@ namespace CTC
             if (LastMouseState.X != mouse.X || LastMouseState.Y != mouse.Y)
                 Desktop.MouseMove(mouse);
 
+            // Then the keyboard, the same way: a key counts as pressed on the
+            // frame it first differs from the last poll.
+            KeyboardState keyboard = UIContext.Input.CurrentKeyboardState;
+            foreach (Keys key in keyboard.GetPressedKeys())
+                if (LastKeyboardState.IsKeyUp(key))
+                    Desktop.KeyPressed(key, keyboard);
+
             // Save the state for next frame so we can see what changed
             LastMouseState = mouse;
+            LastKeyboardState = keyboard;
 
             // Update the game state
             Desktop.Update(gameTime);
@@ -171,6 +186,36 @@ namespace CTC
             }
 
             base.Draw(gameTime);
+
+            SaveScreenshotIfRequested();
+        }
+
+        /// <summary>
+        /// Writes the frame that was just drawn to disk, when a script asked for
+        /// it. Reading the back buffer here means a test gets exactly what the
+        /// user would see, without going anywhere near the window server.
+        /// </summary>
+        private void SaveScreenshotIfRequested()
+        {
+            string Path = UIContext.Input.PendingScreenshot;
+            if (Path == null)
+                return;
+            UIContext.Input.PendingScreenshot = null;
+
+            int Width = GraphicsDevice.PresentationParameters.BackBufferWidth;
+            int Height = GraphicsDevice.PresentationParameters.BackBufferHeight;
+
+            Color[] Pixels = new Color[Width * Height];
+            GraphicsDevice.GetBackBufferData(Pixels);
+
+            using (Texture2D Frame = new Texture2D(GraphicsDevice, Width, Height))
+            {
+                Frame.SetData(Pixels);
+                using (Stream Output = File.Create(Path))
+                    Frame.SaveAsPng(Output, Width, Height);
+            }
+
+            Log.Notice("Saved screenshot to " + Path, this);
         }
 
         protected void PrepareDevice(object sender, PreparingDeviceSettingsEventArgs e)

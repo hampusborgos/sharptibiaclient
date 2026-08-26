@@ -84,6 +84,49 @@ namespace CTC
         private Dictionary<uint, ClientCreature> KnownCreatures = new Dictionary<uint, ClientCreature>();
 
         /// <summary>
+        /// The mutable state the parser carries between packets.
+        ///
+        /// Rewinding ClientViewport without this desynchronises the parser: it
+        /// would keep walking CurrentPosition on from wherever it had got to, and
+        /// hand out creatures from a KnownCreatures cache the restored viewport
+        /// has never heard of.
+        ///
+        /// KnownCreatures is not the same set as ClientViewport.Creatures - the
+        /// protocol explicitly forgets creatures from it and the viewport never
+        /// does - but the two share objects wherever they overlap, which is why
+        /// capture and restore have to run through the viewport's CloneContext.
+        /// </summary>
+        public class ParserSession
+        {
+            public MapPosition CurrentPosition;
+            public ClientPlayer Player;
+            public Dictionary<uint, ClientCreature> KnownCreatures;
+        }
+
+        public ParserSession CaptureSession(CloneContext Context)
+        {
+            ParserSession Session = new ParserSession();
+            Session.CurrentPosition = CurrentPosition;
+            Session.Player = Player == null ? null : (ClientPlayer)Player.Clone(Context);
+            Session.KnownCreatures = new Dictionary<uint, ClientCreature>(KnownCreatures.Count);
+
+            foreach (KeyValuePair<uint, ClientCreature> Entry in KnownCreatures)
+                Session.KnownCreatures[Entry.Key] = (ClientCreature)Entry.Value.Clone(Context);
+
+            return Session;
+        }
+
+        public void RestoreSession(ParserSession Session, CloneContext Context)
+        {
+            CurrentPosition = Session.CurrentPosition;
+            Player = Session.Player == null ? null : (ClientPlayer)Session.Player.Clone(Context);
+
+            KnownCreatures.Clear();
+            foreach (KeyValuePair<uint, ClientCreature> Entry in Session.KnownCreatures)
+                KnownCreatures[Entry.Key] = (ClientCreature)Entry.Value.Clone(Context);
+        }
+
+        /// <summary>
         /// Loads all mapped handlers from the file.
         /// </summary>
         /// <param name="File"></param>
@@ -678,7 +721,9 @@ namespace CTC
                                 break;
                             }
                         default:
-                            Log.Warning("Unknown speak class " + (int)props["MessageType"], this);
+                            // props["MessageType"] is never assigned in this parser; reading it
+                            // back unboxed a null and turned an unknown speak class into a crash.
+                            Log.Warning("Unknown speak class " + (int)Message.Type, this);
                             return null;
                     }
                     props["Message"] = Message;

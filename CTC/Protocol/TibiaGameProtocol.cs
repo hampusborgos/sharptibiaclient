@@ -199,6 +199,20 @@ namespace CTC
             PacketHandlers.Add(pp.type, handler);
         }
 
+        /// <summary>
+        /// Snapshots the parser's own session state. See ParserSession: this has
+        /// to travel with the client state or a seek leaves the two disagreeing.
+        /// </summary>
+        public TibiaGamePacketParserFactory.ParserSession CaptureSession(CloneContext Context)
+        {
+            return Factory.CaptureSession(Context);
+        }
+
+        public void RestoreSession(TibiaGamePacketParserFactory.ParserSession Session, CloneContext Context)
+        {
+            Factory.RestoreSession(Session, Context);
+        }
+
         public void parsePacket(NetworkMessage nmsg)
         {
             int packetType = nmsg.ReadByte();
