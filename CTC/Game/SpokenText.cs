@@ -37,6 +37,13 @@ namespace CTC
         public readonly MapPosition Position;
         public readonly Boolean FollowsPlayer;
 
+        /// <summary>
+        /// Where over the tile it stands, in map pixels: the point the speaker
+        /// hangs their name and bar from, taken as they spoke so the words keep
+        /// their place if the speaker walks away.
+        /// </summary>
+        public readonly Vector2 Overhead;
+
         public readonly List<String> Lines = new List<String>();
 
         /// <summary>
@@ -44,23 +51,31 @@ namespace CTC
         /// </summary>
         public float Width;
 
-        /// <summary>Speech, above the tile it was said from.</summary>
-        public SpokenText(String Text, int Color, MapPosition Position)
-            : this(Text, Color, Position, false)
+        /// <summary>
+        /// Speech, above the tile it was said from. A speaker gets a line of
+        /// their own over what they said; monsters are given none, since a
+        /// goblin announcing itself by name reads as a second name tag.
+        /// </summary>
+        public SpokenText(String Speaker, String Text, int Color, MapPosition Position, Vector2 Overhead)
+            : this(Speaker, Text, Color, Position, Overhead, false)
         {
         }
 
         /// <summary>A message about the player, above the player.</summary>
-        public SpokenText(String Text, int Color)
-            : this(Text, Color, new MapPosition(), true)
+        public SpokenText(String Text, int Color, Vector2 Overhead)
+            : this(null, Text, Color, new MapPosition(), Overhead, true)
         {
         }
 
-        private SpokenText(String Text, int Color, MapPosition Position, Boolean FollowsPlayer)
+        private SpokenText(String Speaker, String Text, int Color, MapPosition Position, Vector2 Overhead, Boolean FollowsPlayer)
         {
             this.Color = Color;
             this.Position = Position;
+            this.Overhead = Overhead;
             this.FollowsPlayer = FollowsPlayer;
+
+            if (Speaker != null && Speaker != "")
+                AddLine(Speaker + ":");
 
             Wrap(Text);
 

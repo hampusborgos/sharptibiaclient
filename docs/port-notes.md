@@ -129,9 +129,17 @@ Two details worth keeping:
 ## Messages on the map
 
 Added in `SpokenText.cs` + `GameRenderer.DrawSpeech`. Speech stands over the
-speaker in yellow, monsters talk in red, and the messages the server sends
-about you - what you looked at, what you advanced to, what you were warned
-about - stand over your own character in green, white and red.
+speaker in yellow under a line naming them —
+
+```
+Hussar:
+Hei hei!
+```
+
+— monsters talk in red and are given no such line, since a goblin announcing
+itself by name reads as a second name tag. The messages the server sends about
+you - what you looked at, what you advanced to, what you were warned about -
+stand over your own character in green, white and red.
 
 Which messages belong on the map and which are console lines is decided by
 `MessageType`, and the enum already carried the answer in its comments:
@@ -159,6 +167,26 @@ Along the way, `MakeColor` was wrong. Tibia's 216-colour palette is six steps of
 51 per channel, but the red channel divided by six rather than five and so never
 reached zero: pure green came out as `(35, 255, 0)`. Only animated damage text
 used it before now.
+
+## One point over a creature's head
+
+Everything that hangs over a creature - its name, its health bar, what it is
+saying, the damage rolling off it - hangs from `GameSprite.Overhead`, the middle
+of the top of its sprite. Before, each of them worked it out separately and none
+of them agreed.
+
+The bars had the interesting bug. Their offsets are in *map* pixels, taken from
+the sprite's own size and render offset, but they were being added to a *screen*
+position without scaling, so they drifted further off their creature the larger
+the window got - about fourteen pixels at the default size, which is half a
+sprite. Scale the offset and they land on the creature at any size.
+
+The rest is the same point applied to text. Speech and damage are anchored to a
+tile rather than to a creature, because that is all the protocol gives them, so
+they take the anchor of whoever is standing there **when they are created**. A
+damage number takes about a second to float away and the creature it came off
+may well have walked on by then; looking the anchor up while drawing made the
+number jump sideways as they left.
 
 ## Walking
 

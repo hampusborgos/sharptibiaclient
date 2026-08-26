@@ -291,6 +291,25 @@ namespace CTC
             Walks.Stepped(Viewport.Player.ID, From, To, GroundSpeedAt(To), Viewport.Player.Speed);
         }
 
+        /// <summary>
+        /// The point over a tile that whoever is standing on it hangs their name
+        /// and health bar from, so anything put over that tile lines up with
+        /// them. Taken when the text is made rather than when it is drawn: the
+        /// creature may well have walked on by then, and the words should not
+        /// slide sideways when they do.
+        /// </summary>
+        private Vector2 OverheadAt(MapPosition Position)
+        {
+            ClientTile Tile = Viewport.Map[Position];
+            if (Tile != null)
+                foreach (ClientThing Thing in Tile.Objects)
+                    if (Thing is ClientCreature)
+                        return GameSprite.OverheadOf(Viewport.GameData.GetCreatureSprite(
+                            ((ClientCreature)Thing).Outfit.LookType));
+
+            return GameSprite.DefaultOverhead;
+        }
+
         private int GroundSpeedAt(MapPosition Position)
         {
             ClientTile Tile = Viewport.Map[Position];
@@ -372,7 +391,7 @@ namespace CTC
                 Animations = new TileAnimations();
                 PlayingAnimations.Add(Position, Animations);
             }
-            Animations.Effects.Add(new AnimatedText(Text, Color));
+            Animations.Effects.Add(new AnimatedText(Text, Color, OverheadAt(Position)));
         }
 
         /// <summary>
@@ -390,6 +409,7 @@ namespace CTC
             ClientMessage Message = (ClientMessage)props["Message"];
 
             int Color;
+            String Speaker;
             switch (Message.Type)
             {
                 case MessageType.Say:
@@ -398,16 +418,19 @@ namespace CTC
                 case MessageType.PrivateNPCToPlayer:
                 case MessageType.PrivatePlayerToNPC:
                     Color = SpokenText.Yellow;
+                    Speaker = Message.Speaker;
                     break;
                 case MessageType.MonsterSay:
                 case MessageType.MonsterYell:
                     Color = SpokenText.Red;
+                    Speaker = null;
                     break;
                 default:
                     return;
             }
 
-            Speech.Add(new SpokenText(Message.Text, Color, (MapPosition)props["Position"]));
+            MapPosition Said = (MapPosition)props["Position"];
+            Speech.Add(new SpokenText(Speaker, Message.Text, Color, Said, OverheadAt(Said)));
         }
 
         /// <summary>
@@ -438,7 +461,7 @@ namespace CTC
                     return;
             }
 
-            Speech.Add(new SpokenText(Message.Text, Color));
+            Speech.Add(new SpokenText(Message.Text, Color, OverheadAt(Viewport.ViewPosition)));
         }
 
         #endregion

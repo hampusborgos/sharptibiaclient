@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace CTC
 {
@@ -74,6 +75,32 @@ namespace CTC
         public Boolean HasColorTemplate
         {
             get { return ColorTemplate && BlendFrames > 1; }
+        }
+
+        /// <summary>
+        /// Where the furniture over a creature hangs, relative to the corner of
+        /// its tile and in map pixels: the middle of the top of the sprite. Its
+        /// name, its health bar, what it is saying and the damage rolling off it
+        /// all hang from this one point.
+        /// </summary>
+        public Vector2 Overhead
+        {
+            get
+            {
+                return new Vector2(
+                    Width * 16 + RenderOffset,
+                    -Height * 16 + RenderOffset);
+            }
+        }
+
+        /// <summary>
+        /// The same point over a tile with nothing standing on it.
+        /// </summary>
+        public static readonly Vector2 DefaultOverhead = new Vector2(16, -16);
+
+        public static Vector2 OverheadOf(GameSprite Sprite)
+        {
+            return Sprite == null ? DefaultOverhead : Sprite.Overhead;
         }
 
         /// <summary>

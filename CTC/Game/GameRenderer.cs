@@ -318,6 +318,20 @@ namespace CTC
             DrawText(Batch, Text, new Vector2(Offset.X, Offset.Y), Primary);
         }
 
+        /// <summary>
+        /// Where a creature's overhead furniture goes on screen. GameSprite.Overhead
+        /// is in map pixels and so scales with the view; the text and the bar that
+        /// hang off it are drawn at their own size and do not.
+        ///
+        /// That distinction is what was missing. The bars were placed with unscaled
+        /// map pixels, which walked them off their sprite as the window grew, and
+        /// everything else was lining up with a tile instead of with them.
+        /// </summary>
+        private static Vector2 OverheadAnchor(Vector2 TileOrigin, Vector2 Scale, Vector2 Overhead)
+        {
+            return TileOrigin + Overhead * Scale;
+        }
+
         public Color LifeColorForCreature(ClientCreature Creature)
         {
             ColorGradient cg = UIContext.Skin.Gradient("Health");
@@ -326,21 +340,15 @@ namespace CTC
             return new Color(255, 255, 255);
         }
 
-        public void DrawCreatureBars(SpriteBatch Batch, ClientCreature Creature, Vector2 Offset)
+        public void DrawCreatureBars(SpriteBatch Batch, ClientCreature Creature, Vector2 Offset, Vector2 Scale)
         {
             if (Creature.Name != "")
             {
-                GameSprite Sprite = GameData.GetCreatureSprite(Creature.Outfit.LookType);
                 Vector2 TextSize = UIContext.StandardFont.MeasureString(Creature.Name);
                 Color LifeColor = LifeColorForCreature(Creature);
-                
-                // Put at the center of the sprite
-                Offset.X += Sprite.Width * 16;
-                Offset.Y -= Sprite.Height * 16;
-                
-                // Render offsets are negative
-                Offset.X += Sprite.RenderOffset;
-                Offset.Y += Sprite.RenderOffset;
+
+                Offset = OverheadAnchor(Offset, Scale,
+                    GameSprite.OverheadOf(GameData.GetCreatureSprite(Creature.Outfit.LookType)));
 
                 // Render the text
                 Vector2 TextOffset = Offset;
@@ -429,7 +437,7 @@ namespace CTC
 
                     // The name and bar ride along with a creature mid-step.
                     Vector2 Slide = Walks == null ? Vector2.Zero : Walks.Offset(Creature.ID) * Scale;
-                    DrawCreatureBars(Batch, Creature, Offset + Slide);
+                    DrawCreatureBars(Batch, Creature, Offset + Slide, Scale);
                 }
             }
 
@@ -440,10 +448,11 @@ namespace CTC
                     if (!Effect.Expired && Effect is AnimatedText)
                     {
                         AnimatedText Text = (AnimatedText)Effect;
-                        Vector2 DrawOffset = Offset + Text.Offset;
-                        // DrawOffset.X += 16;
-                        // DrawOffset.Y += 26;
-                        DrawBoldedText(Batch, Text.Text, DrawOffset, true, MakeColor(Text.Color));
+
+                        // Damage rolls off whoever took it, so it floats from the
+                        // point their name and bar hang from.
+                        Vector2 Anchor = OverheadAnchor(Offset, Scale, Text.Overhead);
+                        DrawBoldedText(Batch, Text.Text, Anchor + Text.Offset, true, MakeColor(Text.Color));
                     }
                 }
             }
@@ -488,18 +497,19 @@ namespace CTC
                     continue;
 
                 MapPosition Anchor = Text.FollowsPlayer ? Viewport.ViewPosition : Text.Position;
-                Vector2 Origin = ScreenPositionOf(Viewport, ScreenOffset, Scale, Anchor);
+                Vector2 Origin = OverheadAnchor(
+                    ScreenPositionOf(Viewport, ScreenOffset, Scale, Anchor), Scale, Text.Overhead);
 
                 float Height = Text.Lines.Count * LineHeight;
                 float Used;
                 Stacked.TryGetValue(Anchor, out Used);
                 Stacked[Anchor] = Used + Height;
 
-                // Clear of the name and health bar, which take the 32 pixels
-                // above the tile, with a line's worth of air under the text.
+                // Standing over the name, which itself sits 16 pixels over the
+                // health bar, with a little air in between.
                 Vector2 At = new Vector2(
-                    Origin.X + 16 * Scale.X,
-                    Origin.Y - 40 - Height - Used
+                    Origin.X,
+                    Origin.Y - 20 - Height - Used
                 );
 
                 // A creature can talk from outside the view - a monster yelling
