@@ -79,9 +79,13 @@ namespace CTC
 
         /// <summary>
         /// Where the furniture over a creature hangs, relative to the corner of
-        /// its tile and in map pixels: the middle of the top of the sprite. Its
+        /// its tile and in map pixels: the top of the sprite, in the middle. Its
         /// name, its health bar, what it is saying and the damage rolling off it
         /// all hang from this one point.
+        ///
+        /// The half sprite of air that used to be left above the head was the
+        /// original code's, and it read as the bar belonging to whatever was on
+        /// the tile behind.
         /// </summary>
         public Vector2 Overhead
         {
@@ -89,14 +93,14 @@ namespace CTC
             {
                 return new Vector2(
                     Width * 16 + RenderOffset,
-                    -Height * 16 + RenderOffset);
+                    -Height * 16 + RenderOffset + 16);
             }
         }
 
         /// <summary>
         /// The same point over a tile with nothing standing on it.
         /// </summary>
-        public static readonly Vector2 DefaultOverhead = new Vector2(16, -16);
+        public static readonly Vector2 DefaultOverhead = new Vector2(16, 0);
 
         public static Vector2 OverheadOf(GameSprite Sprite)
         {

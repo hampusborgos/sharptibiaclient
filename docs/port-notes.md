@@ -62,6 +62,14 @@ and the stream desynced on the first chunk. The compiler flags these as
 count seek into the middle of the sprite data and read a nonsense length, and
 empty sprites legitimately carry an offset of 0. Both are bounds-checked now.
 
+**Projectiles vanishing halfway.** `DistanceEffect` flew at 160 map pixels a
+second while its lifetime was `distance / 10` seconds, which is the time that
+flight takes at *320* - so every arrow and rune gave up half way to what it was
+aimed at. Flying at the speed the lifetime was written for fixes both at once.
+The lifetime now comes from the longer of the two axes rather than the diagonal
+between them, since the offset closes one axis at a time and a diagonal shot
+otherwise outlives its own arrival.
+
 **A crash inside a crash handler.** The "unknown speak class" diagnostic read
 `props["MessageType"]`, which that parser never assigns; `Packet`'s indexer
 returns `null` for absent keys, so unboxing it turned an unrecognised message
@@ -171,9 +179,10 @@ used it before now.
 ## One point over a creature's head
 
 Everything that hangs over a creature - its name, its health bar, what it is
-saying, the damage rolling off it - hangs from `GameSprite.Overhead`, the middle
-of the top of its sprite. Before, each of them worked it out separately and none
-of them agreed.
+saying, the damage rolling off it - hangs from `GameSprite.Overhead`, the top of
+its sprite, in the middle. Before, each of them worked it out separately and
+none of them agreed, and all of them sat half a sprite of air above the head,
+close enough to whatever stood on the tile behind to look like its bar.
 
 The bars had the interesting bug. Their offsets are in *map* pixels, taken from
 the sprite's own size and render offset, but they were being added to a *screen*
