@@ -63,10 +63,12 @@ anything. Backwards has to restore and replay on every step, so the steps are
 rationed — state is applied fifteen times a second and the frames in between
 redraw the last one.
 
-Nothing is lost by that here. The client has no walking animation and no
-creature interpolation, so creatures only ever move on packet boundaries
-anyway; a reverse step at 120Hz would produce the same picture as one at 15Hz,
-eight times over.
+Nothing is lost by that here. Creatures do slide between their tiles going
+forward, but that runs on the playback clock, which does not advance while
+reversing — and every reverse step is a seek, which drops the walks along with
+the effects, so creatures stand on their tiles the whole way back. Between two
+applications of state there is nothing left to move, and a reverse step at 120Hz
+would produce the same picture as one at 15Hz, eight times over.
 
 ## What has to be copied, and what must not be
 

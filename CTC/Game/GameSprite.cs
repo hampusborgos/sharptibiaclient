@@ -77,15 +77,26 @@ namespace CTC
         }
 
         /// <summary>
-        /// A creature image. Direction picks the column of the sheet, Layer picks
-        /// 0 for the sprite itself and 1 for its colour mask.
-        ///
-        /// The animation frame is always the first one: the client never walks a
-        /// creature between packets, so an idle pose is the only one it could show.
+        /// How many poses this creature has. Phase 0 is standing still and the
+        /// rest are the walk cycle; see CreatureWalks.
         /// </summary>
-        public GameImage GetImage(int X, int Y, Direction Direction, int Layer)
+        public int Phases
         {
-            int v = ((((int)Direction) * this.BlendFrames + Layer) * this.Height + Y) * this.Width + X;
+            get { return Math.Max(1, AnimationLength); }
+        }
+
+        /// <summary>
+        /// A creature image. Direction picks the column of the sheet, Layer picks
+        /// 0 for the sprite itself and 1 for its colour mask, Phase the pose.
+        ///
+        /// Diagonals are folded onto the four columns a creature sheet actually
+        /// has, which the modulo below used to do by accident - now that a phase
+        /// multiplies the column, a fifth direction would land in the next pose.
+        /// </summary>
+        public GameImage GetImage(int X, int Y, Direction Direction, int Layer, int Phase)
+        {
+            int Column = ((int)Direction) % this.XDiv;
+            int v = (((Phase * this.XDiv + Column) * this.BlendFrames + Layer) * this.Height + Y) * this.Width + X;
             if(v >= this.Images.Count)
             {
                 if(this.Images.Count == 1)

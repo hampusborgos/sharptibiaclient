@@ -75,6 +75,7 @@ namespace CTC
         public delegate void LoginEvent(ClientViewport Viewport);
         public delegate void ContainerEvent(ClientViewport Viewport, ClientContainer Container);
         public delegate void VIPEvent(ClientViewport Viewport, ClientCreature Creature);
+        public delegate void MoveEvent(ClientViewport Viewport, ClientCreature Creature, MapPosition From, MapPosition To);
 
         /// <summary>
         /// 
@@ -105,6 +106,16 @@ namespace CTC
         /// Fired when a VIP is added, logs in or logs out.
         /// </summary>
         public event VIPEvent VIPStatusChanged;
+
+        /// <summary>
+        /// A creature walked from one tile to another.
+        ///
+        /// The move packet names the creature by the tile it was standing on and
+        /// its index in that tile's stack, so once the move has been applied
+        /// there is no way back to which creature it was. This is raised while
+        /// that is still known.
+        /// </summary>
+        public event MoveEvent CreatureMoved;
 
         #endregion
 
@@ -405,6 +416,9 @@ namespace CTC
             ToTile.Add(Creature, true);
 
             Creature.Move(OldPosition, ToPosition);
+
+            if (CreatureMoved != null)
+                CreatureMoved(this, Creature, OldPosition, ToPosition);
         }
 
         private void OnCreatureTurn(Packet props)

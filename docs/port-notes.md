@@ -160,6 +160,76 @@ Along the way, `MakeColor` was wrong. Tibia's 216-colour palette is six steps of
 reached zero: pure green came out as `(35, 255, 0)`. Only animated damage text
 used it before now.
 
+## Walking
+
+Added in `CreatureWalks.cs`. Outfits in `Tibia.spr` carry three poses — one
+standing and two mid-stride — and `GetImage` only ever asked for the first,
+with the animation dimension left out of its index arithmetic entirely.
+
+What makes the cycle look right is not a frame rate. Everything - both stride
+poses and the slide between the tiles - is spread across one step, so a fast
+creature's legs move faster because its steps are shorter and there is no
+separate animation speed to keep in sync with anything. Consecutive steps start
+on opposite feet, and a diagonal is given twice as long.
+
+**How long a step takes is measured, not calculated.** The obvious answer is the
+server's own arithmetic, the ground's speed over the creature's speed, and it is
+wrong: that is how fast the server *can* walk something, and what it actually
+walks it at is that times a constant of its own that no packet ever states.
+Measured over these recordings it is between one and two, and not the same one
+twice.
+
+What the recording does say is the rhythm. While a creature keeps walking, the
+gap since its last step is a far better estimate of the next one than the
+formula is, so that is what the slide runs for - blended half and half with the
+previous estimate, which keeps one late packet from lurching the world. The
+formula stays on as the floor: a gap shorter than it is packet timing rather
+than walking, and a gap more than four times it is a creature taking its time,
+not a rhythm to match.
+
+The difference is the whole point of the exercise. Over the gap between two
+steps of a walk, the share of it the view spends actually moving:
+
+| | Kolskagg | Xyvero |
+|---|---|---|
+| the formula alone | 0.48 | 0.87 |
+| paced by the rhythm | 0.95 | 1.00 |
+
+The rest was the world standing still with the player mid-stride, which is
+exactly what a stutter is.
+
+The map moves a creature the instant the packet arrives, so sliding is drawing
+it *short* of where it already is: `Offset` is the distance still to go, and it
+runs out as the cycle finishes. Anything that is not a step to a neighbouring
+tile - a summon appearing, a portal - has no walk in it and is left to jump.
+
+Two things follow from that, and both are in `GameRenderer`:
+
+- **The player does not slide; the world does.** They are always in the middle
+  of the view, so the map has already put them on the tile they are walking to
+  and everything else is drawn back by as far as they still have to go. Their
+  own offset cancels that out and leaves them centred, walking on the spot while
+  the ground slides under them. The scene loop already drew a tile of margin
+  past every edge, which is exactly the room a step needs.
+- **A creature between tiles is drawn after the rest of its floor.** It hangs
+  over one of two tiles and the tiles are painted in order, so half the time the
+  tile it hangs over is painted after it. The cost is that a creature mid-step
+  is briefly in front of things it should be behind, which is a fair trade for
+  not being sliced in half by the next tile's ground.
+
+The state lives beside the effects rather than on `ClientCreature`, keyed by
+creature id: it is not in the recording, a snapshot has no business copying it,
+and a seek throws it away like every other animation. It runs on the playback
+clock too, so at four times speed the legs move four times as fast and a paused
+client holds its stride.
+
+Your own steps needed a second source. The server does not send a creature move
+for you — it scrolls the map and says which way it went — so `MoveNorth` and its
+three siblings start the player's cycle. Everyone else's arrives on
+`ClientViewport.CreatureMoved`, which is new: the move packet names a creature
+by the tile it was standing on and its index in that tile's stack, so once the
+move has been applied there is no way back to which creature it was.
+
 ## Still outstanding
 
 - **The player has no name.** Nothing in the 7.4 protocol ever sends it for
@@ -168,10 +238,8 @@ used it before now.
 - **The chat panel is dead.** `ActiveViewportChanged += Chat.OnNewState` is
   commented out in `GameDesktop.CreatePanels` — in the *original* source, not
   as a result of the port. It never receives a viewport, so it shows nothing.
-- Walking animation was never implemented (the original README says so). This
-  turns out to be load-bearing for backwards playback: with nothing tweened
-  between packets, applying reverse steps at 15Hz looks the same as applying
-  them every frame. See [playback.md](playback.md).
+- Creatures walk, but nothing else animates: no attack, no idle motion, and
+  the map still jumps a tile at a time when the player is teleported.
 - Input is view-only beyond the playback transport: the keyboard now reaches
   `GameDesktop.KeyPressed`, but there is no focus system behind it, and the
   `send*` protocol functions are still unused.

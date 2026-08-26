@@ -25,10 +25,18 @@ namespace CTC
         TibiaGameData GameData;
         GraphicsDevice Device;
 
-        public GameRenderer(TibiaGameData GameData)
+        /// <summary>
+        /// Who is mid-step, which is all the renderer needs to know to pick a
+        /// creature's pose. Owned by the canvas, which keeps it wound. The
+        /// renderers that only draw inventory items leave it null.
+        /// </summary>
+        CreatureWalks Walks;
+
+        public GameRenderer(TibiaGameData GameData, CreatureWalks Walks = null)
         {
             this.Device = UIContext.Graphics.GraphicsDevice;
             this.GameData = GameData;
+            this.Walks = Walks;
         }
 
         #region Drawing Code
@@ -211,6 +219,40 @@ namespace CTC
             UIContext.Skin.DrawBox(Batch, UIElementType.InventorySlot, rect);
         }
 
+        /// <summary>
+        /// A creature mid-step, held back until the rest of its floor is drawn.
+        /// </summary>
+        private struct Sliding
+        {
+            public ClientCreature Creature;
+            public Vector2 Position;
+
+            public Sliding(ClientCreature Creature, Vector2 Position)
+            {
+                this.Creature = Creature;
+                this.Position = Position;
+            }
+        }
+
+        /// <summary>
+        /// How far the world is drawn from where the map says it is, in map
+        /// pixels.
+        ///
+        /// The player is always in the middle of the view, so a step of theirs is
+        /// the world moving rather than them: the map has already put them on the
+        /// tile they are walking to, and everything else is drawn back by as far
+        /// as they still have to go. Their own offset then cancels it out and
+        /// leaves them centred, walking on the spot while the ground slides under
+        /// them.
+        /// </summary>
+        private Vector2 WorldSlide(ClientViewport Viewport)
+        {
+            if (Walks == null || Viewport.Player == null)
+                return Vector2.Zero;
+
+            return -Walks.Offset(Viewport.Player.ID);
+        }
+
         public void DrawCreature(SpriteBatch Batch, GameTime Time, ClientCreature Creature, Vector2 Offset, Color clr)
         {
             if (Creature.Outfit.LookItem != 0)
@@ -223,17 +265,22 @@ namespace CTC
 
                 Offset.X += Sprite.RenderOffset;
                 Offset.Y += Sprite.RenderOffset;
+
+                if (Walks != null)
+                    Offset += Walks.Offset(Creature.ID);
                 if (Sprite != null)
                 {
                     for (int cx = 0; cx != Sprite.Width; ++cx)
                     {
                         for (int cy = 0; cy != Sprite.Height; ++cy)
                         {
-                            GameImage Image = Sprite.GetImage(cx, cy, Creature.Direction, 0);
+                            int Phase = Walks == null ? 0 : Walks.Phase(Creature.ID, Sprite.Phases);
+
+                            GameImage Image = Sprite.GetImage(cx, cy, Creature.Direction, 0, Phase);
                             Rectangle rect = new Rectangle((int)Offset.X - 32 * cx, (int)Offset.Y - 32 * cy, 32, 32);
 
                             if (Sprite.HasColorTemplate)
-                                DrawImage(Batch, Image, Sprite.GetImage(cx, cy, Creature.Direction, 1), Creature.Outfit, rect, clr);
+                                DrawImage(Batch, Image, Sprite.GetImage(cx, cy, Creature.Direction, 1, Phase), Creature.Outfit, rect, clr);
                             else
                                 DrawImage(Batch, Image, rect, clr);
                         }
@@ -317,7 +364,7 @@ namespace CTC
             }
         }
 
-        public void DrawTile(SpriteBatch Batch, GameTime Time, Vector2 Position, ClientTile Tile, TileAnimations Animations)
+        private void DrawTile(SpriteBatch Batch, GameTime Time, Vector2 Position, ClientTile Tile, TileAnimations Animations, List<Sliding> Deferred)
         {
             if (Tile == null)
                 return;
@@ -329,7 +376,18 @@ namespace CTC
             foreach (ClientThing Thing in Tile.ObjectsByDrawOrder)
             {
                 if (Thing is ClientCreature)
-                    DrawCreature(Batch, Time, (ClientCreature)Thing, Position, Color.White);
+                {
+                    ClientCreature Creature = (ClientCreature)Thing;
+
+                    // A creature between two tiles hangs over one of them, and
+                    // the tiles are drawn in order: whichever it hangs over is
+                    // painted after it half the time. So it waits for the rest of
+                    // its floor and goes on top of it.
+                    if (Deferred != null && Walks != null && Walks.Stepping(Creature.ID))
+                        Deferred.Add(new Sliding(Creature, Position));
+                    else
+                        DrawCreature(Batch, Time, Creature, Position, Color.White);
+                }
                 else
                 {
                     ClientItem Item = (ClientItem)Thing;
@@ -358,7 +416,7 @@ namespace CTC
             }
         }
 
-        public void DrawTileForeground(SpriteBatch Batch, GameTime Time, Vector2 Offset, ClientTile Tile, TileAnimations Animations)
+        public void DrawTileForeground(SpriteBatch Batch, GameTime Time, Vector2 Offset, Vector2 Scale, ClientTile Tile, TileAnimations Animations)
         {
             if (Tile == null)
                 return;
@@ -366,7 +424,13 @@ namespace CTC
             foreach (ClientThing Thing in Tile.Objects)
             {
                 if (Thing is ClientCreature)
-                    DrawCreatureBars(Batch, (ClientCreature)Thing, Offset);
+                {
+                    ClientCreature Creature = (ClientCreature)Thing;
+
+                    // The name and bar ride along with a creature mid-step.
+                    Vector2 Slide = Walks == null ? Vector2.Zero : Walks.Offset(Creature.ID) * Scale;
+                    DrawCreatureBars(Batch, Creature, Offset + Slide);
+                }
             }
 
             if (Animations != null)
@@ -411,6 +475,7 @@ namespace CTC
         public void DrawSpeech(SpriteBatch Batch, Rectangle View, Vector2 Scale, ClientViewport Viewport, List<SpokenText> Speech)
         {
             float LineHeight = UIContext.StandardFont.LineSpacing;
+            Vector2 ScreenOffset = new Vector2(View.X, View.Y) + WorldSlide(Viewport) * Scale;
 
             // How much is already stacked over each tile. Newest first, so the
             // last thing said sits closest to the head and pushes older lines up.
@@ -423,7 +488,7 @@ namespace CTC
                     continue;
 
                 MapPosition Anchor = Text.FollowsPlayer ? Viewport.ViewPosition : Text.Position;
-                Vector2 Origin = ScreenPositionOf(Viewport, new Vector2(View.X, View.Y), Scale, Anchor);
+                Vector2 Origin = ScreenPositionOf(Viewport, ScreenOffset, Scale, Anchor);
 
                 float Height = Text.Lines.Count * LineHeight;
                 float Used;
@@ -454,6 +519,8 @@ namespace CTC
 
         public void DrawSceneForeground(SpriteBatch Batch, Vector2 ScreenOffset, Vector2 Scale, GameTime Time, ClientViewport Viewport, Dictionary<MapPosition, TileAnimations> PlayingAnimations = null)
         {
+            ScreenOffset += WorldSlide(Viewport) * Scale;
+
             // Which tiles are on screen. Above ground the window shifts with the
             // floor; where they draw is ScreenPositionOf's business.
             MapPosition Center = Viewport.ViewPosition;
@@ -475,7 +542,7 @@ namespace CTC
                     if (PlayingAnimations != null && Tile != null)
                         PlayingAnimations.TryGetValue(Tile.Position, out Animations);
                     DrawTileForeground(Batch, Time,
-                        ScreenPositionOf(Viewport, ScreenOffset, Scale, Position), Tile, Animations);
+                        ScreenPositionOf(Viewport, ScreenOffset, Scale, Position), Scale, Tile, Animations);
                 }
             }
         }
@@ -502,8 +569,9 @@ namespace CTC
             Vector2 TopLeft = new Vector2(
                 -(Center.X - 7) * 32,
                 -(Center.Y - 5) * 32
-            );
+            ) + WorldSlide(Viewport);
 
+            List<Sliding> Deferred = new List<Sliding>();
 
             for (int Z = StartZ; Z >= EndZ; --Z)
             {
@@ -518,9 +586,14 @@ namespace CTC
                         TileAnimations Animations = null;
                         if (PlayingAnimations != null && Tile != null)
                             PlayingAnimations.TryGetValue(Tile.Position, out Animations);
-                        DrawTile(Batch, Time, pos, Tile, Animations);
+                        DrawTile(Batch, Time, pos, Tile, Animations, Deferred);
                     }
                 }
+
+                foreach (Sliding Walker in Deferred)
+                    DrawCreature(Batch, Time, Walker.Creature, Walker.Position, Color.White);
+                Deferred.Clear();
+
                 TopLeft -= new Vector2(32, 32);
             }
         }
@@ -555,7 +628,7 @@ namespace CTC
             Vector2 TopLeft = new Vector2(
                 -(Center.X - 7) * 32,
                 -(Center.Y - 5) * 32
-            );
+            ) + WorldSlide(Viewport);
 
             Texture2D Glow = LightMap.Glow(Batch.GraphicsDevice);
 
@@ -583,7 +656,8 @@ namespace CTC
                             if (Thing is ClientCreature)
                             {
                                 ClientCreature Creature = (ClientCreature)Thing;
-                                DrawLight(Batch, Glow, Position,
+                                Vector2 Slide = Walks == null ? Vector2.Zero : Walks.Offset(Creature.ID);
+                                DrawLight(Batch, Glow, Position + Slide,
                                     Creature.Light.Level, Creature.Light.Color);
                             }
                             else

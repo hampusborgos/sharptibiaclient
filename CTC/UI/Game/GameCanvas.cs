@@ -41,6 +41,11 @@ namespace CTC
         /// </summary>
         private List<SpokenText> Speech = new List<SpokenText>();
 
+        /// <summary>
+        /// Who is mid-step. Read by the renderer to pick each creature's pose.
+        /// </summary>
+        private CreatureWalks Walks = new CreatureWalks();
+
 
         #region Logic Code
 
@@ -50,7 +55,7 @@ namespace CTC
 
             if (Backbuffer == null)
             {
-                Renderer = new GameRenderer(Viewport.GameData);
+                Renderer = new GameRenderer(Viewport.GameData, Walks);
 
                 Backbuffer = new RenderTarget2D(
                     UIContext.Graphics.GraphicsDevice,
@@ -92,6 +97,8 @@ namespace CTC
                 foreach (SpokenText Text in Speech)
                     if (!Text.Expired)
                         Text.Update(EffectTime);
+
+                Walks.Update(EffectTime);
             }
 
             LastCleanup += Time.ElapsedGameTime.TotalMilliseconds;
@@ -129,6 +136,7 @@ namespace CTC
         {
             PlayingAnimations.Clear();
             Speech.Clear();
+            Walks.Clear();
         }
 
         public void Cleanup()
@@ -158,6 +166,8 @@ namespace CTC
             for (int i = Speech.Count - 1; i >= 0; --i)
                 if (Speech[i].Expired)
                     Speech.RemoveAt(i);
+
+            Walks.Cleanup();
         }
 
         private void UpdateName()
@@ -240,6 +250,54 @@ namespace CTC
             Protocol.AnimatedText.Add(OnAnimatedText);
             Protocol.CreatureSpeak.Add(OnCreatureSpeak);
             Protocol.TextMessage.Add(OnTextMessage);
+
+            Viewport.CreatureMoved += OnCreatureMoved;
+
+            // Your own steps do not arrive as creature moves: the server scrolls
+            // the map instead and says which way it went, so the direction is in
+            // which packet arrived rather than in anything it carries.
+            Protocol.MoveNorth.Add(OnStepNorth);
+            Protocol.MoveSouth.Add(OnStepSouth);
+            Protocol.MoveEast.Add(OnStepEast);
+            Protocol.MoveWest.Add(OnStepWest);
+        }
+
+        /// <summary>
+        /// Starts the walk cycle for a creature that just moved a tile. How long
+        /// it runs for is the ground it stepped onto over how fast the creature
+        /// is, which is the same arithmetic the server walked it with.
+        /// </summary>
+        private void OnCreatureMoved(ClientViewport Viewport, ClientCreature Creature, MapPosition From, MapPosition To)
+        {
+            if (State.Seeking)
+                return;
+
+            Walks.Stepped(Creature.ID, From, To, GroundSpeedAt(To), Creature.Speed);
+        }
+
+        private void OnStepNorth(Packet props) { PlayerStepped(0, -1); }
+        private void OnStepSouth(Packet props) { PlayerStepped(0, 1); }
+        private void OnStepEast(Packet props) { PlayerStepped(1, 0); }
+        private void OnStepWest(Packet props) { PlayerStepped(-1, 0); }
+
+        private void PlayerStepped(int DX, int DY)
+        {
+            if (State.Seeking || Viewport.Player == null)
+                return;
+
+            MapPosition To = Viewport.ViewPosition;
+            MapPosition From = new MapPosition(To.X - DX, To.Y - DY, To.Z);
+
+            Walks.Stepped(Viewport.Player.ID, From, To, GroundSpeedAt(To), Viewport.Player.Speed);
+        }
+
+        private int GroundSpeedAt(MapPosition Position)
+        {
+            ClientTile Tile = Viewport.Map[Position];
+            if (Tile == null || Tile.Ground == null || Tile.Ground.Type == null)
+                return CreatureWalks.DefaultGroundSpeed;
+
+            return Tile.Ground.Type.WalkSpeed;
         }
 
         private void OnPlayerLogin(Packet props)
